@@ -1,0 +1,259 @@
+import 'dart:async';
+
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+
+import '../../application/usecases/open_archive.dart';
+import '../../data/format_registry.dart';
+import '../../l10n/app_localizations.dart';
+import '../archive_browser/archive_browser_screen.dart';
+import '../compress/compress_dialog.dart';
+import '../theme/locale_provider.dart';
+import '../theme/theme_mode_provider.dart';
+import 'recent_archives_provider.dart';
+
+/// 빈 상태(압축파일 없음) 화면 — UI_UX.md 6.1 목업 구현.
+///
+/// "열기"/드래그로 고른 압축파일은 [OpenArchive]로 열어 곧바로
+/// [ArchiveBrowserScreen](UI_UX.md 6.2)으로 넘어간다. "새 압축 만들기"나
+/// 압축파일이 아닌 것을 드롭하면 [CompressDialog](UI_UX.md 6.3)로 라우팅한다.
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _dragHovering = false;
+  bool _isOpening = false;
+
+  Future<void> _pickAndOpenArchive() async {
+    final l10n = AppLocalizations.of(context);
+    final typeGroup = XTypeGroup(
+      label: l10n.archiveFileTypeGroupLabel,
+      extensions: const ['zip', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'zst', '7z', 'rar'],
+    );
+    // 분할 압축 조각(`archive.zip.001` 등)은 숫자로 끝나 위 확장자 목록에
+    // 없다 — file_selector는 확장자 없는 XTypeGroup을 "모든 파일"로
+    // 취급하므로, 두 번째 그룹으로 추가해 파일 선택 창의 형식 드롭다운에서
+    // 전환할 수 있게 한다(PLAN.md 1.3 "분할 압축").
+    final anyFileTypeGroup = XTypeGroup(label: l10n.anyFileTypeGroupLabel);
+    final file = await openFile(acceptedTypeGroups: [typeGroup, anyFileTypeGroup]);
+    if (file != null) {
+      await _openArchivePath(file.path);
+    }
+  }
+
+  Future<void> _onFilesDropped(List<XFile> files) async {
+    if (files.isEmpty) return;
+
+    // 압축파일 하나만 드롭했으면 "연다", 그 외(파일 여러 개, 폴더, 압축파일이
+    // 아닌 파일 하나)는 전부 "새 압축 만들기"로 라우팅한다 — 폴더는 애초에
+    // 확장자가 없어 detectFromFileName이 null을 반환하므로 자연스럽게 이
+    // 분기를 탄다.
+    if (files.length == 1 &&
+        FormatRegistry.detectFromFileName(p.basename(files.single.path)) != null) {
+      await _openArchivePath(files.single.path);
+      return;
+    }
+
+    await _openCompressDialog(files.map((f) => Uri.file(f.path)).toList());
+  }
+
+  Future<void> _pickFilesAndCompress() async {
+    final files = await openFiles();
+    if (files.isEmpty) return;
+    await _openCompressDialog(files.map((f) => Uri.file(f.path)).toList());
+  }
+
+  Future<void> _openCompressDialog(List<Uri> sources) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => CompressDialog(sources: sources),
+    );
+  }
+
+  Future<void> _openArchivePath(String path) async {
+    setState(() => _isOpening = true);
+    try {
+      final handle = await const OpenArchive()(Uri.file(path));
+      unawaited(ref.read(recentArchivesProvider.notifier).addRecent(path));
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(builder: (_) => ArchiveBrowserScreen(handle: handle)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).openArchiveFailed('$e'))),
+      );
+    } finally {
+      if (mounted) setState(() => _isOpening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
+    final recentArchives = ref.watch(recentArchivesProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.languageToggleTooltip(_localeLabel(l10n, locale)),
+            onPressed: () => ref.read(localeProvider.notifier).cycle(),
+            icon: const Icon(Icons.language_outlined),
+          ),
+          IconButton(
+            tooltip: l10n.themeToggleTooltip(_themeModeLabel(l10n, themeMode)),
+            onPressed: () => ref.read(themeModeProvider.notifier).cycle(),
+            icon: Icon(switch (themeMode) {
+              ThemeMode.light => Icons.light_mode_outlined,
+              ThemeMode.dark => Icons.dark_mode_outlined,
+              ThemeMode.system => Icons.brightness_auto_outlined,
+            }),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: DropTarget(
+        onDragEntered: (_) => setState(() => _dragHovering = true),
+        onDragExited: (_) => setState(() => _dragHovering = false),
+        onDragDone: (details) {
+          setState(() => _dragHovering = false);
+          unawaited(_onFilesDropped(details.files));
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          color: _dragHovering
+              ? theme.colorScheme.primary.withValues(alpha: 0.06)
+              : Colors.transparent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.folder_zip_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.homeDropHint,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 24),
+                  if (_isOpening)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      ),
+                    )
+                  else
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _pickAndOpenArchive,
+                          icon: const Icon(Icons.folder_open_outlined, size: 18),
+                          label: Text(l10n.openButton),
+                        ),
+                        const SizedBox(width: 12),
+                        FilledButton.icon(
+                          onPressed: _pickFilesAndCompress,
+                          icon: const Icon(Icons.add_box_outlined, size: 18),
+                          label: Text(l10n.createArchiveButton),
+                        ),
+                      ],
+                    ),
+                  if (recentArchives.isNotEmpty && !_isOpening) ...[
+                    const SizedBox(height: 32),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(l10n.recentArchivesTitle, style: theme.textTheme.labelLarge),
+                    ),
+                    const SizedBox(height: 4),
+                    for (final path in recentArchives)
+                      _RecentArchiveTile(
+                        path: path,
+                        onTap: () => _openArchivePath(path),
+                        onRemove: () =>
+                            ref.read(recentArchivesProvider.notifier).remove(path),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _themeModeLabel(AppLocalizations l10n, ThemeMode mode) => switch (mode) {
+      ThemeMode.system => l10n.themeModeSystem,
+      ThemeMode.light => l10n.themeModeLight,
+      ThemeMode.dark => l10n.themeModeDark,
+    };
+
+String _localeLabel(AppLocalizations l10n, Locale? locale) => switch (locale?.languageCode) {
+      null => l10n.languageModeSystem,
+      'ko' => l10n.languageModeKorean,
+      'en' => l10n.languageModeEnglish,
+      _ => locale!.languageCode,
+    };
+
+class _RecentArchiveTile extends StatelessWidget {
+  const _RecentArchiveTile({required this.path, required this.onTap, required this.onRemove});
+
+  final String path;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.folder_zip_outlined, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                // 분할 압축의 특정 조각(.001 등)을 열었어도 목록엔 논리
+                // 압축파일 이름만 보여준다 — PLAN.md 1.3 "분할 압축".
+                FormatRegistry.stripSplitVolumeSuffix(p.basename(path)),
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 16),
+              tooltip: AppLocalizations.of(context).removeFromRecentTooltip,
+              onPressed: onRemove,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

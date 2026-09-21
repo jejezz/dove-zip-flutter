@@ -1,0 +1,161 @@
+{
+  "@@locale": "ko",
+
+  "appTitle": "Dove Zip",
+  "@appTitle": {"description": "앱 이름 — 번역하지 않는다."},
+
+  "themeToggleTooltip": "테마 전환 ({mode})",
+  "@themeToggleTooltip": {
+    "placeholders": {"mode": {"type": "String"}}
+  },
+  "themeModeSystem": "시스템",
+  "themeModeLight": "라이트",
+  "themeModeDark": "다크",
+
+  "languageToggleTooltip": "언어 전환 ({mode})",
+  "@languageToggleTooltip": {
+    "placeholders": {"mode": {"type": "String"}}
+  },
+  "languageModeSystem": "시스템",
+  "languageModeKorean": "한국어",
+  "languageModeEnglish": "영어",
+
+  "homeDropHint": "압축파일을 여기로 드래그하거나\n클릭해서 열기",
+  "openButton": "열기",
+  "createArchiveButton": "새 압축 만들기",
+  "openArchiveFailed": "압축파일을 열지 못했습니다: {error}",
+  "@openArchiveFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "recentArchivesTitle": "최근 연 압축파일",
+  "removeFromRecentTooltip": "목록에서 지우기",
+  "archiveFileTypeGroupLabel": "압축파일",
+  "anyFileTypeGroupLabel": "모든 파일 (분할 압축 조각 선택용)",
+
+  "parentFolderTooltip": "상위 폴더",
+  "closeTooltip": "닫기",
+  "searchTooltip": "검색",
+  "closeSearchTooltip": "검색 닫기",
+  "searchHint": "이 폴더에서 검색",
+  "emptyFolder": "빈 폴더입니다",
+  "previewFailed": "미리보기를 열지 못했습니다: {error}",
+  "@previewFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "extractCompleted": "압축 해제 완료: {path}",
+  "@extractCompleted": {
+    "placeholders": {"path": {"type": "String"}}
+  },
+  "extractCancelled": "압축 해제를 취소했습니다.",
+  "extractFailed": "압축 해제 실패: {error}",
+  "@extractFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "columnName": "이름",
+  "columnSize": "크기",
+  "columnCompressedSize": "압축크기",
+  "columnModified": "수정일",
+  "formatWritableTooltip": "이 형식은 압축 생성도 지원합니다",
+  "formatReadOnlyTooltip": "이 형식은 해제만 가능합니다(생성 불가)",
+  "statusBarItemCount": "{count, plural, other{{count}개 항목}}",
+  "@statusBarItemCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "extractHereButton": "여기에 압축 해제",
+  "extractSmartButton": "알아서 압축 해제",
+  "extractChooseFolderButton": "원하는 곳에...",
+
+  "conflictTitle": "이미 같은 이름의 파일이 있습니다",
+  "conflictSourceLabel": "압축파일 안: {size}",
+  "@conflictSourceLabel": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "conflictDestinationLabel": "기존 파일: {size}",
+  "@conflictDestinationLabel": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "cancel": "취소",
+  "skipAll": "모두 건너뛰기",
+  "skip": "건너뛰기",
+  "renameAndExtract": "이름 바꿔서 풀기",
+  "overwriteAll": "모두 덮어쓰기",
+  "overwrite": "덮어쓰기",
+
+  "extractingTitle": "압축 해제 중...",
+  "compressingTitle": "압축 생성 중...",
+  "preparing": "준비 중...",
+  "progressCount": "{done} / {total}",
+  "@progressCount": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "passwordRequiredTitle": "비밀번호가 필요합니다",
+  "passwordWrongHint": "비밀번호가 틀렸습니다. 다시 시도해 주세요.",
+  "passwordHint": "비밀번호",
+  "confirm": "확인",
+
+  "newArchiveTitle": "새 압축 만들기",
+  "compressTargetLabel": "대상: {summary}",
+  "@compressTargetLabel": {
+    "placeholders": {"summary": {"type": "String"}}
+  },
+  "sourcesSummaryMore": "외 {count}개",
+  "@sourcesSummaryMore": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "sourcesSummaryTotal": "{count, plural, other{({count}개)}}",
+  "@sourcesSummaryTotal": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "originalSizeLabel": "원본 크기: {size}",
+  "@originalSizeLabel": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "formatLabel": "포맷",
+  "compressionLevelLabel": "압축 레벨",
+  "compressionLevelStore": "저장",
+  "compressionLevelFast": "빠름",
+  "compressionLevelNormal": "보통",
+  "compressionLevelMax": "최대",
+  "passwordProtectSupportedFormats": "비밀번호로 보호 (ZIP/7Z만 지원)",
+  "splitArchiveLabel": "분할 압축",
+  "splitVolumeSizeHint": "볼륨 크기",
+  "splitVolumeSizeInvalid": "분할 볼륨 크기를 올바르게 입력해 주세요 (1 이상의 정수, MB 단위).",
+  "splitVolumesCreated": "{count, plural, other{ ({count}개 조각으로 분할됨)}}",
+  "@splitVolumesCreated": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "saveLocationLabel": "저장 위치: {path}",
+  "@saveLocationLabel": {
+    "placeholders": {"path": {"type": "String"}}
+  },
+  "changeButton": "변경",
+  "startCompressButton": "압축 시작",
+  "compressCompleted": "압축 생성 완료: {path}",
+  "@compressCompleted": {
+    "placeholders": {"path": {"type": "String"}}
+  },
+  "compressionRatioLabel": " ({original} → {compressed}, {percent}% 감소)",
+  "@compressionRatioLabel": {
+    "placeholders": {
+      "original": {"type": "String"},
+      "compressed": {"type": "String"},
+      "percent": {"type": "int"}
+    }
+  },
+  "compressFailed": "압축 생성 실패: {error}",
+  "@compressFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+
+  "unsupportedFormat": "이 형식은 아직 미리보기를 지원하지 않습니다",
+  "openWithDefaultAppButton": "OS 기본 앱으로 열기",
+  "imageLoadError": "이미지를 열지 못했습니다: {error}",
+  "@imageLoadError": {
+    "placeholders": {"error": {"type": "String"}}
+  }
+}

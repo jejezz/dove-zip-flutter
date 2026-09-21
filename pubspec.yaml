@@ -1,0 +1,123 @@
+name: dove_zip
+description: "광고 없는 올인원 압축/해제 유틸리티 (Windows/macOS/Linux)."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.1
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # i18n (한국어/영어) — daylight-commander-flutter와 동일 구성 (PLAN.md 1.4 P1)
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+  # 상태관리 — daylight와 동일
+  flutter_riverpod: ^2.6.1
+
+  # 포맷/파일 유형 컬러 아이콘(SVG). UI 크롬 아이콘은 Material Icons 사용
+  # (daylight UI_UX.md 4장 — phosphor_flutter는 Flutter SDK의 IconData
+  # final class 제약으로 컴파일이 깨져 채택하지 않음)
+  flutter_svg: ^2.0.17
+
+  # 경로 처리
+  path: ^1.9.1
+
+  # 압축/해제 — 스캐폴딩 단계 임시 백엔드. zip/tar 계열은 이 패키지가 담당.
+  # ARCHITECTURE.md 4장의 libarchive(FFI)+Rust 백엔드로 이후 교체 예정.
+  archive: ^4.3.0
+
+  # 7z/RAR/ZSTD — 순수 Dart 구현(koni_archive 프로젝트, MIT). 네이티브
+  # 백엔드가 아직 없어 임시로 채택했지만(PLAN.md 3장 포맷 매트릭스),
+  # 위 archive 패키지와 달리 이 세 포맷은 처음부터 이 패키지로만 지원한다.
+  # koni_rar는 RAR5(+대부분의 RAR4)만 해제하며 RAR 쓰기는 라이선스상
+  # 지원하지 않는다 — 이 앱의 기존 RAR 정책과 정확히 일치.
+  koni_archive_core: ^0.9.0
+  koni_sevenz: ^0.9.0
+  koni_rar: ^0.9.0
+  koni_codecs: ^0.9.0
+
+  # 데스크톱 창 제어 (커스텀 타이틀바 등)
+  window_manager: ^0.4.3
+
+  # OS → 앱 드래그앤드롭 (압축파일/일반 파일을 창에 드롭)
+  desktop_drop: ^0.6.0
+
+  # OS 네이티브 파일/폴더 선택 다이얼로그 ("열기", "원하는 곳에 압축 해제",
+  # 압축 생성 시 저장 위치 선택 — UI_UX.md 6장). flutter.dev 공식 패키지.
+  file_selector: ^1.0.3
+
+  # 최근 연 압축파일 목록, 앱 설정(테마 등) 저장
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # ARB 파일(lib/l10n/*.arb)로부터 AppLocalizations를 생성한다
+  # (daylight-commander-flutter와 동일 방식).
+  generate: true
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # daylight-commander-flutter에서 그대로 이식한 아이콘 자산(자매 앱, 동일 테마)
+  assets:
+    - assets/icons/filetypes/
+    - assets/icons/folders/
+    - assets/icons/ui/
+
+  fonts:
+    - family: SeoulNamsan
+      fonts:
+        - asset: assets/fonts/seoul_namsan_light.ttf
+          weight: 300
+        - asset: assets/fonts/seoul_namsan_regular.ttf
+          weight: 400
+        - asset: assets/fonts/seoul_namsan_bold.ttf
+          weight: 700
+        - asset: assets/fonts/seoul_namsan_extra_bold.ttf
+          weight: 800
