@@ -98,7 +98,11 @@
 - `P2` 위 3모드를 OS 컨텍스트 메뉴(daylight PLAN.md 2장의 셸 확장 항목과 동일선상)
   에도 동일한 3개 메뉴 항목("여기에 압축 풀기"/"압축 풀기"/"다른 이름으로 압축
   풀기")으로 그대로 노출 — 로직은 앱 내부와 100% 공유(아래 ARCHITECTURE.md
-  `ResolveExtractDestination` 유스케이스 참고)
+  `ResolveExtractDestination` 유스케이스 참고). **축소 완료**: macOS
+  NSServices는 지금 "여기에 풀기"(here 모드) 하나만 노출한다 — Services
+  메뉴 항목 하나당 별도 등록/핸들러가 필요해, 나머지 두 모드(스마트/다른
+  이름으로)는 필요해지면 Info.plist에 항목만 추가하고 같은 패턴
+  (`autoExtractMode`)을 재사용하면 된다.
 
 ### 1.3 압축 생성
 - `P0` 파일/폴더 선택(드래그앤드롭 또는 파일 피커) → 새 압축파일 생성 — ✅
@@ -127,10 +131,23 @@
 - `P1` 최근 연 압축파일 목록 — ✅ 완료 (최대 10개, 홈 화면 하단에 표시,
   개별 삭제 가능)
 - `P2` OS 파일 연결(더블클릭으로 Dove Zip이 열리도록 확장자 등록: zip/7z/tar 등)
-- `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — 3장 참고, 난이도 높아 후순위
+- `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — ✅ **macOS만** 완료.
+  Windows(COM `IContextMenu`/`IExplorerCommand`)와 Linux(파일관리자별 플러그인)는
+  여전히 범위 밖 — 아래 "1차 범위 밖" 항목 참고. macOS는 Finder Sync
+  Extension이 아니라 더 가벼운 **NSServices**(Finder 우클릭 → 서비스
+  메뉴)로 구현했다: `macos/Runner/Info.plist`에 "Compress Here"/"Extract
+  Here" 두 항목을 등록하고, `ServicesBridge.swift`가 선택된 파일/폴더
+  경로를 Flutter `MethodChannel`(`dove_zip/services`)로 그대로 넘긴다.
+  Dart 쪽(`HomeScreen._handleServiceCall`)은 그 경로를 앱 내부 버튼을
+  눌렀을 때와 **완전히 같은 코드 경로**로 이어붙인다 — "여기에 압축"은
+  `_openCompressDialog`(기존 `CompressDialog` 그대로), "여기에 풀기"는
+  `ArchiveBrowserScreen`에 새로 추가한 `autoExtractMode` 파라미터로 화면이
+  뜨자마자 기존 `_runExtraction(here)`을 자동 실행한다(진행률/충돌/부분
+  실패 처리 전부 동일하게 재사용, ARCHITECTURE.md 5장 참고).
 
 ## 2. 1차 범위 밖 (비목표)
-- OS 셸 확장(우클릭 "압축/풀기" 메뉴) — 플랫폼별 네이티브 개발 필요, MVP 이후 검토
+- OS 셸 확장 — **macOS(NSServices)는 위에서 완료**, Windows/Linux는 여전히
+  범위 밖(플랫폼별 네이티브 개발 필요, MVP 이후 검토)
 - RAR **생성**(압축) — 3장 참고, 라이선스상 사실상 불가능(업계 전체 공통 제약)
 - 클라우드 스토리지 업로드/연동
 - 파일 관리자 기능 전반(2-pane 탐색, 이동/복사 등) — 그건 daylight-commander의 역할

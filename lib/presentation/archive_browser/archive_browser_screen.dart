@@ -43,6 +43,7 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
     this.extractEntries = const ExtractEntries(),
     this.previewArchiveEntry = const PreviewArchiveEntry(),
     this.openArchive = const OpenArchive(),
+    this.autoExtractMode,
   });
 
   final ArchiveHandle handle;
@@ -58,6 +59,13 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
   /// [ArchiveBrowserScreen] 하나를 그 위에 더 쌓는다(재귀적으로 몇 단계든
   /// 들어갈 수 있음).
   final OpenArchive openArchive;
+
+  /// 값이 있으면 화면이 뜨자마자 그 모드로 [_runExtraction]을 자동 실행한다
+  /// — macOS Finder의 "서비스" 메뉴(NSServices) "여기에 풀기"(PLAN.md 1.4
+  /// "OS 컨텍스트 메뉴")가 쓰는 경로다. 진행률/충돌/완료 스낵바는 사용자가
+  /// 버튼을 직접 눌렀을 때와 완전히 동일한 `_runExtraction`을 그대로
+  /// 타므로 로직이 두 곳에 따로 있을 일이 없다(ARCHITECTURE.md 5장).
+  final ExtractDestinationMode? autoExtractMode;
 
   @override
   ConsumerState<ArchiveBrowserScreen> createState() =>
@@ -116,6 +124,17 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         password = entered;
         showWrongHint = true;
       }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final autoMode = widget.autoExtractMode;
+    if (autoMode != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_runExtraction(autoMode));
+      });
     }
   }
 

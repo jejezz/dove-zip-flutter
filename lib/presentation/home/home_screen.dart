@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../application/usecases/open_archive.dart';
 import '../../data/format_registry.dart';
+import '../../domain/entities/extract_destination_mode.dart';
 import '../../l10n/app_localizations.dart';
 import '../archive_browser/archive_browser_screen.dart';
 import '../compress/compress_dialog.dart';
@@ -15,6 +18,13 @@ import '../theme/locale_provider.dart';
 import '../theme/theme_mode_provider.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
+
+/// macOS Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist`에
+/// 등록·`ServicesBridge.swift`가 이 채널로 전달)로 들어오는 "여기에
+/// 압축"/"여기에 풀기" 요청을 받는 채널(PLAN.md 1.4 "OS 컨텍스트 메뉴",
+/// ARCHITECTURE.md 5장) — Windows/Linux는 이번 범위 밖이라 이 채널
+/// 자체가 macOS에서만 등록된다.
+const _servicesChannel = MethodChannel('dove_zip/services');
 
 /// 빈 상태(압축파일 없음) 화면 — UI_UX.md 6.1 목업 구현.
 ///
@@ -31,6 +41,63 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _dragHovering = false;
   bool _isOpening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isMacOS) {
+      _servicesChannel.setMethodCallHandler(_handleServiceCall);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (Platform.isMacOS) {
+      _servicesChannel.setMethodCallHandler(null);
+    }
+    super.dispose();
+  }
+
+  /// [ServicesBridge.swift]가 Finder 서비스 메뉴에서 넘겨준 파일/폴더
+  /// 경로를 받아, 앱 내부 버튼을 눌렀을 때와 완전히 같은 경로로 이어붙인다
+  /// (PLAN.md 1.4 "OS 컨텍스트 메뉴" — 로직 100% 공유가 목표).
+  Future<void> _handleServiceCall(MethodCall call) async {
+    final paths = (call.arguments as List).cast<String>();
+    if (paths.isEmpty) return;
+
+    switch (call.method) {
+      case 'compressHere':
+        await _openCompressDialog(paths.map(Uri.file).toList());
+      case 'extractHere':
+        for (final path in paths) {
+          if (FormatRegistry.detectFromFileName(p.basename(path)) == null) {
+            continue; // 압축파일이 아닌 항목이 섞여 있으면 조용히 건너뛴다.
+          }
+          await _openArchiveForAutoExtract(path);
+        }
+    }
+  }
+
+  /// 평소 "열기"([_openArchivePath])와 달리, 화면이 뜨자마자 곧바로 here
+  /// 모드 해제까지 자동 실행한다 — Finder의 "여기에 풀기" 서비스 전용.
+  Future<void> _openArchiveForAutoExtract(String path) async {
+    try {
+      final handle = await const OpenArchive()(Uri.file(path));
+      unawaited(ref.read(recentArchivesProvider.notifier).addRecent(path));
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => ArchiveBrowserScreen(
+            handle: handle,
+            autoExtractMode: ExtractDestinationMode.here,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, AppLocalizations.of(context).openArchiveFailed('$e'));
+    }
+  }
 
   Future<void> _pickAndOpenArchive() async {
     final l10n = AppLocalizations.of(context);

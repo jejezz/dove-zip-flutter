@@ -28,5 +28,52 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Dove Zip: Compress Here</string>
+				<key>ko</key>
+				<string>Dove Zip: 여기에 압축</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>compressHere</string>
+			<key>NSPortName</key>
+			<string>Dove Zip</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.item</string>
+			</array>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSFilenamesPboardType</string>
+				<string>public.file-url</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Dove Zip: Extract Here</string>
+				<key>ko</key>
+				<string>Dove Zip: 여기에 풀기</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>extractHere</string>
+			<key>NSPortName</key>
+			<string>Dove Zip</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.item</string>
+			</array>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSFilenamesPboardType</string>
+				<string>public.file-url</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

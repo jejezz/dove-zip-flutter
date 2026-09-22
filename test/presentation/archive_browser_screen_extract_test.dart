@@ -5,6 +5,7 @@ import 'package:dove_zip/core/cancel_token.dart';
 import 'package:dove_zip/domain/entities/archive_entry.dart';
 import 'package:dove_zip/domain/entities/archive_handle.dart';
 import 'package:dove_zip/domain/entities/extract_conflict.dart';
+import 'package:dove_zip/domain/entities/extract_destination_mode.dart';
 import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/entities/extract_progress.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
@@ -108,6 +109,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('압축 해제 중...'), findsNothing);
+    expect(find.textContaining('압축 해제 완료'), findsOneWidget);
+  });
+
+  testWidgets('autoExtractMode가 있으면 버튼을 누르지 않아도 화면이 뜨자마자 자동으로 해제된다', (tester) async {
+    // macOS Finder 서비스 메뉴 "여기에 풀기"(PLAN.md 1.4 "OS 컨텍스트
+    // 메뉴", HomeScreen._openArchiveForAutoExtract) 전용 경로 — 버튼 탭
+    // 없이도 initState의 postFrameCallback이 곧장 _runExtraction을
+    // 실행해야 한다.
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ArchiveBrowserScreen(
+          handle: handle,
+          extractEntries: ExtractEntries(_FakeReader()),
+          autoExtractMode: ExtractDestinationMode.here,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
     expect(find.textContaining('압축 해제 완료'), findsOneWidget);
   });
 
