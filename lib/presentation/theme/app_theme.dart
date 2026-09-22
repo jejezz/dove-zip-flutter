@@ -174,6 +174,20 @@ class AppTheme {
           ),
         ),
       ),
+      // colorScheme에 inverseSurface/inversePrimary를 직접 지정하지 않아
+      // SnackBar가 Material 3 기본값(우리 브랜드 팔레트와 무관한 값)을
+      // 쓰면 액션 버튼 글자색이 배경과 거의 구분되지 않는 문제가 있었다
+      // (showErrorSnackBar의 "복사" 버튼이 거의 안 보이던 원인) — 팝업
+      // 메뉴와 같은 surfaceHi 계열로 명시해 항상 대비를 보장한다.
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? AppColors.surfaceHi : AppColors.surfaceHiLight,
+        contentTextStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 13,
+          color: textHi,
+        ),
+        actionTextColor: isDark ? AppColors.primary : AppColors.primaryDeep,
+      ),
     );
   }
 }
