@@ -144,6 +144,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get extractChooseFolderButton => 'Choose Location...';
 
   @override
+  String get extractHereSelectedButton => 'Extract Selected Here';
+
+  @override
+  String get extractSmartSelectedButton => 'Extract Selected (Smart)';
+
+  @override
+  String get extractChooseFolderSelectedButton => 'Extract Selected To...';
+
+  @override
+  String statusBarSelectedCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected ($size)',
+      one: '$count selected ($size)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearSelectionTooltip => 'Clear selection';
+
+  @override
   String get conflictTitle => 'A file with the same name already exists';
 
   @override

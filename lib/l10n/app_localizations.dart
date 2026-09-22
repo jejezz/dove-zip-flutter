@@ -320,6 +320,36 @@ abstract class AppLocalizations {
   /// **'원하는 곳에...'**
   String get extractChooseFolderButton;
 
+  /// No description provided for @extractHereSelectedButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 항목 여기에 해제'**
+  String get extractHereSelectedButton;
+
+  /// No description provided for @extractSmartSelectedButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 항목 알아서 해제'**
+  String get extractSmartSelectedButton;
+
+  /// No description provided for @extractChooseFolderSelectedButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 항목 원하는 곳에...'**
+  String get extractChooseFolderSelectedButton;
+
+  /// No description provided for @statusBarSelectedCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count, plural, other{{count}개 선택됨 ({size})}}'**
+  String statusBarSelectedCount(int count, String size);
+
+  /// No description provided for @clearSelectionTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 해제'**
+  String get clearSelectionTooltip;
+
   /// No description provided for @conflictTitle.
   ///
   /// In ko, this message translates to:

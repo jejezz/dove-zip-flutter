@@ -50,8 +50,9 @@ List<ArchiveBrowserEntry> childrenOf(
     // "docs/"(이 깊이의 폴더 자신) 항목이 "docs/뭔가"(더 깊은 중간 폴더)로
     // 잘못 분류되지 않는다.
     final hasTrailingSlash = remainder.endsWith('/');
-    final withoutTrailingSlash =
-        hasTrailingSlash ? remainder.substring(0, remainder.length - 1) : remainder;
+    final withoutTrailingSlash = hasTrailingSlash
+        ? remainder.substring(0, remainder.length - 1)
+        : remainder;
     final slashIndex = withoutTrailingSlash.indexOf('/');
 
     if (slashIndex == -1) {
@@ -73,9 +74,37 @@ List<ArchiveBrowserEntry> childrenOf(
     }
   }
 
-  return children.values.toList()
-    ..sort((a, b) {
-      if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-    });
+  return children.values.toList()..sort((a, b) {
+    if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+}
+
+/// [selectedPaths](화면에서 고른 항목들의 전체 가상 경로 — 실제 엔트리가
+/// 있든 파일 경로로만 유추된 가상 폴더든 상관없다)를 압축파일 전체
+/// [entries] 기준으로 펼친다. 파일은 그대로 한 항목, 폴더는 그 안의 모든
+/// 하위 엔트리(파일 + 디렉터리, 몇 단계든)까지 전부 포함한다 — 반환값은
+/// 실제 [ArchiveEntry.pathInArchive] 값들의 집합이라 `ExtractEntries`의
+/// `entryPaths`로 그대로 넘길 수 있다(PLAN.md 1.2 "선택 항목만 해제").
+///
+/// 폴더 자신의 디렉터리 엔트리가 없어도(가상 폴더) 동작한다 — 그 아래
+/// 파일들의 경로가 이미 `$selected/`로 시작하므로 prefix 매칭만으로
+/// 충분하고, 해제 시 빈 디렉터리 생성은 [DartArchiveReader]가 파일을 쓰기
+/// 전 상위 폴더를 자동으로 만들어주는 기존 로직에 맡긴다.
+Set<String> expandSelectionToEntryPaths(
+  List<ArchiveEntry> entries,
+  Set<String> selectedPaths,
+) {
+  final result = <String>{};
+  for (final entry in entries) {
+    final normalized = entry.pathInArchive.endsWith('/')
+        ? entry.pathInArchive.substring(0, entry.pathInArchive.length - 1)
+        : entry.pathInArchive;
+    final matches = selectedPaths.any(
+      (selected) =>
+          normalized == selected || normalized.startsWith('$selected/'),
+    );
+    if (matches) result.add(entry.pathInArchive);
+  }
+  return result;
 }

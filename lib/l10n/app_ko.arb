@@ -65,6 +65,17 @@
   "extractHereButton": "여기에 압축 해제",
   "extractSmartButton": "알아서 압축 해제",
   "extractChooseFolderButton": "원하는 곳에...",
+  "extractHereSelectedButton": "선택 항목 여기에 해제",
+  "extractSmartSelectedButton": "선택 항목 알아서 해제",
+  "extractChooseFolderSelectedButton": "선택 항목 원하는 곳에...",
+  "statusBarSelectedCount": "{count, plural, other{{count}개 선택됨 ({size})}}",
+  "@statusBarSelectedCount": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "size": {"type": "String"}
+    }
+  },
+  "clearSelectionTooltip": "선택 해제",
 
   "conflictTitle": "이미 같은 이름의 파일이 있습니다",
   "conflictSourceLabel": "압축파일 안: {size}",

@@ -91,4 +91,61 @@ void main() {
       expect(docsChildren.map((e) => e.name).toList(), ['a.txt']);
     });
   });
+
+  group('expandSelectionToEntryPaths (PLAN.md 1.2 "선택 항목만 해제")', () {
+    const entries = [
+      ArchiveEntry(pathInArchive: 'root.txt', isDirectory: false),
+      ArchiveEntry(pathInArchive: 'docs/', isDirectory: true),
+      ArchiveEntry(pathInArchive: 'docs/a.txt', isDirectory: false),
+      ArchiveEntry(pathInArchive: 'docs/sub/', isDirectory: true),
+      ArchiveEntry(pathInArchive: 'docs/sub/b.txt', isDirectory: false),
+      ArchiveEntry(pathInArchive: 'documents/c.txt', isDirectory: false),
+    ];
+
+    test('파일 하나를 선택하면 그 파일 하나만 포함한다', () {
+      final result = expandSelectionToEntryPaths(entries, {'root.txt'});
+      expect(result, {'root.txt'});
+    });
+
+    test('폴더를 선택하면 그 안의 모든 하위 엔트리(몇 단계든)를 포함한다', () {
+      final result = expandSelectionToEntryPaths(entries, {'docs'});
+      expect(result, {
+        'docs/',
+        'docs/a.txt',
+        'docs/sub/',
+        'docs/sub/b.txt',
+      });
+    });
+
+    test('가상 폴더(디렉터리 엔트리 없음)를 선택해도 하위 파일들을 포함한다', () {
+      const virtualOnly = [
+        ArchiveEntry(pathInArchive: 'photos/a.jpg', isDirectory: false),
+        ArchiveEntry(pathInArchive: 'photos/b.jpg', isDirectory: false),
+        ArchiveEntry(pathInArchive: 'other.txt', isDirectory: false),
+      ];
+      final result = expandSelectionToEntryPaths(virtualOnly, {'photos'});
+      expect(result, {'photos/a.jpg', 'photos/b.jpg'});
+    });
+
+    test('비슷한 이름의 다른 폴더까지 잘못 포함하지 않는다(prefix 오탐 방지)', () {
+      const similar = [
+        ArchiveEntry(pathInArchive: 'docs/a.txt', isDirectory: false),
+        ArchiveEntry(pathInArchive: 'docs2/b.txt', isDirectory: false),
+      ];
+      final result = expandSelectionToEntryPaths(similar, {'docs'});
+      expect(result, {'docs/a.txt'});
+    });
+
+    test('여러 개를 동시에 선택하면 합쳐서 반환한다', () {
+      final result = expandSelectionToEntryPaths(entries, {
+        'root.txt',
+        'docs/sub',
+      });
+      expect(result, {'root.txt', 'docs/sub/', 'docs/sub/b.txt'});
+    });
+
+    test('빈 선택은 빈 결과를 반환한다', () {
+      expect(expandSelectionToEntryPaths(entries, {}), isEmpty);
+    });
+  });
 }

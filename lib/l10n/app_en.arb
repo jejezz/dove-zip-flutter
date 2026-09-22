@@ -43,6 +43,11 @@
   "extractHereButton": "Extract Here",
   "extractSmartButton": "Smart Extract",
   "extractChooseFolderButton": "Choose Location...",
+  "extractHereSelectedButton": "Extract Selected Here",
+  "extractSmartSelectedButton": "Extract Selected (Smart)",
+  "extractChooseFolderSelectedButton": "Extract Selected To...",
+  "statusBarSelectedCount": "{count, plural, one{{count} selected ({size})} other{{count} selected ({size})}}",
+  "clearSelectionTooltip": "Clear selection",
 
   "conflictTitle": "A file with the same name already exists",
   "conflictSourceLabel": "In archive: {size}",

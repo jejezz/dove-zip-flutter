@@ -3,11 +3,25 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/extract_destination_mode.dart';
 import '../../l10n/app_localizations.dart';
 
-String _label(AppLocalizations l10n, ExtractDestinationMode mode) => switch (mode) {
-      ExtractDestinationMode.here => l10n.extractHereButton,
-      ExtractDestinationMode.smart => l10n.extractSmartButton,
-      ExtractDestinationMode.chooseFolder => l10n.extractChooseFolderButton,
+String _label(
+  AppLocalizations l10n,
+  ExtractDestinationMode mode,
+  bool hasSelection,
+) {
+  if (hasSelection) {
+    return switch (mode) {
+      ExtractDestinationMode.here => l10n.extractHereSelectedButton,
+      ExtractDestinationMode.smart => l10n.extractSmartSelectedButton,
+      ExtractDestinationMode.chooseFolder =>
+        l10n.extractChooseFolderSelectedButton,
     };
+  }
+  return switch (mode) {
+    ExtractDestinationMode.here => l10n.extractHereButton,
+    ExtractDestinationMode.smart => l10n.extractSmartButton,
+    ExtractDestinationMode.chooseFolder => l10n.extractChooseFolderButton,
+  };
+}
 
 /// 압축 해제 위치 3가지 모드 버튼 (UI_UX.md 7장) — 이 앱의 핵심 편의 기능.
 ///
@@ -17,21 +31,29 @@ String _label(AppLocalizations l10n, ExtractDestinationMode mode) => switch (mod
 /// 누르면 클릭 즉시 실행되고(추가 확인 다이얼로그 없음), "원하는 곳에"만
 /// 폴더 선택 다이얼로그가 먼저 뜬다 — 그 처리는 이 위젯이 아니라 호출하는
 /// 화면(`onSelectMode`)의 몫이다.
+///
+/// [hasSelection]이 true면(PLAN.md 1.2 "선택 항목만 해제") 라벨이 "선택
+/// 항목 ..."으로 바뀌어 전체 해제와 구분된다 — 실제로 선택된 항목만
+/// 골라내는 로직은 호출하는 화면(`ArchiveBrowserScreen`)의 몫이다.
 class ExtractModeBar extends StatelessWidget {
   const ExtractModeBar({
     super.key,
     required this.onSelectMode,
     this.enabled = true,
     this.highlightedMode = ExtractDestinationMode.smart,
+    this.hasSelection = false,
   });
 
   final ValueChanged<ExtractDestinationMode> onSelectMode;
   final bool enabled;
   final ExtractDestinationMode highlightedMode;
+  final bool hasSelection;
 
   Widget _button(BuildContext context, ExtractDestinationMode mode) {
     final onPressed = enabled ? () => onSelectMode(mode) : null;
-    final label = Text(_label(AppLocalizations.of(context), mode));
+    final label = Text(
+      _label(AppLocalizations.of(context), mode, hasSelection),
+    );
     return Expanded(
       flex: mode == highlightedMode ? 2 : 1,
       child: mode == highlightedMode

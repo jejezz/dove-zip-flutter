@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path/path.dart' as p;
@@ -16,7 +17,8 @@ import '../../data/format_registry.dart';
 import '../../domain/entities/archive_handle.dart';
 import '../../domain/entities/extract_destination_mode.dart';
 import '../../domain/entities/extract_progress.dart';
-import '../../domain/repositories/archive_reader.dart' show ArchivePasswordRequiredException;
+import '../../domain/repositories/archive_reader.dart'
+    show ArchivePasswordRequiredException;
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../theme/file_type_style.dart';
@@ -50,7 +52,8 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
   final PreviewArchiveEntry previewArchiveEntry;
 
   @override
-  ConsumerState<ArchiveBrowserScreen> createState() => _ArchiveBrowserScreenState();
+  ConsumerState<ArchiveBrowserScreen> createState() =>
+      _ArchiveBrowserScreenState();
 }
 
 class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
@@ -60,6 +63,16 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 미리보기를 위해 지금 임시 폴더로 꺼내는 중인 항목의 `pathInArchive`.
   /// 그 행에 스피너를 보여주고, 겹쳐 누르는 것도 막는다.
   String? _previewingPath;
+
+  /// 선택된 항목들의 전체 가상 경로(PLAN.md 1.2 "선택 항목만 해제") —
+  /// 실제 압축파일 경로 형식(`docs/sub/file.txt`)과 동일하게 저장한다.
+  /// 폴더 이동과 무관하게 유지된다 — 다른 폴더의 항목까지 함께 골라서 한
+  /// 번에 해제할 수 있어야 하므로 폴더를 나갈 때 지우지 않는다.
+  final _selectedPaths = <String>{};
+
+  /// Shift+클릭 범위 선택의 기준점 — 현재 폴더의 [_visibleEntries] 안
+  /// 인덱스다(다른 폴더로 이동하면 의미가 없어지므로 폴더 전환 시 지운다).
+  int? _lastInteractedIndex;
 
   bool _isSearching = false;
   String _searchQuery = '';
@@ -73,7 +86,9 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 나면 다이얼로그로 물어본 뒤 그 비밀번호로 다시 시도한다. 사용자가
   /// 다이얼로그를 취소하면 [OperationCancelledException]을 던져 호출부의
   /// 취소 처리 분기를 그대로 재사용한다.
-  Future<T> _withPasswordRetry<T>(Future<T> Function(String? password) action) async {
+  Future<T> _withPasswordRetry<T>(
+    Future<T> Function(String? password) action,
+  ) async {
     var password = _sessionPassword;
     var showWrongHint = false;
     while (true) {
@@ -83,8 +98,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         return result;
       } on ArchivePasswordRequiredException {
         if (!mounted) throw const OperationCancelledException();
-        final entered =
-            await showPasswordPromptDialog(context, wrongPasswordHint: showWrongHint);
+        final entered = await showPasswordPromptDialog(
+          context,
+          wrongPasswordHint: showWrongHint,
+        );
         if (entered == null || entered.isEmpty) {
           throw const OperationCancelledException();
         }
@@ -122,6 +139,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   void _enterFolder(String name) {
     setState(() {
       _currentPath = _currentPath.isEmpty ? name : '$_currentPath/$name';
+      _lastInteractedIndex = null;
     });
   }
 
@@ -129,7 +147,54 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     if (_currentPath.isEmpty) return;
     final slashIndex = _currentPath.lastIndexOf('/');
     setState(() {
-      _currentPath = slashIndex == -1 ? '' : _currentPath.substring(0, slashIndex);
+      _currentPath = slashIndex == -1
+          ? ''
+          : _currentPath.substring(0, slashIndex);
+      _lastInteractedIndex = null;
+    });
+  }
+
+  /// [entry]의 전체 가상 경로(현재 폴더 기준) — `_selectedPaths`에 저장하는
+  /// 형식과 동일하다.
+  String _fullPathOf(ArchiveBrowserEntry entry) =>
+      _currentPath.isEmpty ? entry.name : '$_currentPath/${entry.name}';
+
+  /// 항목 하나의 선택 여부를 뒤집는다(Ctrl/Cmd+클릭 — PLAN.md 1.2 "선택
+  /// 항목만 해제"). 폴더든 파일이든 동일하게 동작하고, 실제 해제 시
+  /// 폴더는 [expandSelectionToEntryPaths]가 하위 전부로 펼친다.
+  void _toggleSelectionAt(int index, List<ArchiveBrowserEntry> visible) {
+    final path = _fullPathOf(visible[index]);
+    setState(() {
+      if (!_selectedPaths.remove(path)) _selectedPaths.add(path);
+      _lastInteractedIndex = index;
+    });
+  }
+
+  /// [_lastInteractedIndex]부터 [index]까지(둘 다 포함) 전부 선택에
+  /// 더한다(Shift+클릭 범위 선택). 기준점이 아직 없으면 이 항목 하나만
+  /// 선택한 것과 같다.
+  void _selectRangeTo(int index, List<ArchiveBrowserEntry> visible) {
+    final anchor = _lastInteractedIndex ?? index;
+    final start = anchor < index ? anchor : index;
+    final end = anchor < index ? index : anchor;
+    setState(() {
+      for (var i = start; i <= end; i++) {
+        _selectedPaths.add(_fullPathOf(visible[i]));
+      }
+      _lastInteractedIndex = index;
+    });
+  }
+
+  void _clearSelection() {
+    if (_selectedPaths.isEmpty) return;
+    setState(_selectedPaths.clear);
+  }
+
+  void _selectAllVisible(List<ArchiveBrowserEntry> visible) {
+    setState(() {
+      for (final entry in visible) {
+        _selectedPaths.add(_fullPathOf(entry));
+      }
     });
   }
 
@@ -138,8 +203,11 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     setState(() => _previewingPath = entryPath);
     try {
       final tempUri = await _withPasswordRetry(
-        (password) =>
-            widget.previewArchiveEntry(widget.handle, entryPath, password: password),
+        (password) => widget.previewArchiveEntry(
+          widget.handle,
+          entryPath,
+          password: password,
+        ),
       );
       if (!mounted) return;
       // 로딩 스피너는 임시 파일을 꺼내는 동안만 보여준다 — 뷰어 화면을
@@ -148,8 +216,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
       setState(() => _previewingPath = null);
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
-          builder: (_) =>
-              EntryViewerScreen(tempFilePath: tempUri.toFilePath(), name: entry.name),
+          builder: (_) => EntryViewerScreen(
+            tempFilePath: tempUri.toFilePath(),
+            name: entry.name,
+          ),
         ),
       );
     } on OperationCancelledException {
@@ -158,7 +228,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _previewingPath = null);
-      showErrorSnackBar(context, AppLocalizations.of(context).previewFailed('$e'));
+      showErrorSnackBar(
+        context,
+        AppLocalizations.of(context).previewFailed('$e'),
+      );
     }
   }
 
@@ -166,7 +239,9 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 목적지 계산(`resolveExtractDestination`)과 실제 디스크 쓰기는
   /// `ExtractEntries` 유스케이스에 전부 위임하고, 이 메서드는 UI(폴더
   /// 선택 다이얼로그·진행률 다이얼로그·충돌 다이얼로그·결과 스낵바)만
-  /// 책임진다 — 지금은 선택 UI가 없어 항상 전체 해제(`entryPaths: null`).
+  /// 책임진다. 선택된 항목이 있으면(PLAN.md 1.2 "선택 항목만 해제")
+  /// [expandSelectionToEntryPaths]로 펼친 목록만, 없으면 전체(`null`)를
+  /// 해제 대상으로 넘긴다.
   Future<void> _runExtraction(ExtractDestinationMode mode) async {
     Uri? userChosenFolder;
     if (mode == ExtractDestinationMode.chooseFolder) {
@@ -177,23 +252,35 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
 
     unawaited(ref.read(lastExtractModeProvider.notifier).remember(mode));
 
+    final entryPaths = _selectedPaths.isEmpty
+        ? null
+        : expandSelectionToEntryPaths(
+            widget.handle.entries,
+            _selectedPaths,
+          ).toList();
+
     final cancelToken = CancelToken();
     final progress = ValueNotifier<ExtractProgress?>(null);
     setState(() => _isExtracting = true);
 
     if (!mounted) return;
-    unawaited(showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) =>
-          ExtractProgressDialog(progress: progress, onCancel: cancelToken.cancel),
-    ));
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ExtractProgressDialog(
+          progress: progress,
+          onCancel: cancelToken.cancel,
+        ),
+      ),
+    );
 
     try {
       final destination = await _withPasswordRetry(
         (password) => widget.extractEntries(
           handle: widget.handle,
           mode: mode,
+          entryPaths: entryPaths,
           userChosenFolder: userChosenFolder,
           password: password,
           onConflict: (conflict) => showConflictDialog(context, conflict),
@@ -204,10 +291,13 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pop(); // 진행률 다이얼로그 닫기
+      _clearSelection(); // 해제가 끝났으니 선택 상태를 정리한다(성공 시에만)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(AppLocalizations.of(context).extractCompleted(destination.toFilePath())),
+          content: Text(
+            AppLocalizations.of(context)
+                .extractCompleted(destination.toFilePath()),
+          ),
         ),
       );
     } on OperationCancelledException {
@@ -219,7 +309,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      showErrorSnackBar(context, AppLocalizations.of(context).extractFailed('$e'));
+      showErrorSnackBar(
+        context,
+        AppLocalizations.of(context).extractFailed('$e'),
+      );
     } finally {
       progress.dispose();
       if (mounted) setState(() => _isExtracting = false);
@@ -232,8 +325,9 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     final l10n = AppLocalizations.of(context);
     // 분할 압축의 특정 조각(.001 등)을 열었어도 제목엔 논리 압축파일
     // 이름만 보여준다 — PLAN.md 1.3 "분할 압축".
-    final fileName =
-        FormatRegistry.stripSplitVolumeSuffix(p.basename(widget.handle.location.toFilePath()));
+    final fileName = FormatRegistry.stripSplitVolumeSuffix(
+      p.basename(widget.handle.location.toFilePath()),
+    );
     final capability = FormatRegistry.of(widget.handle.format);
     final entries = _visibleEntries;
 
@@ -250,21 +344,34 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                decoration: InputDecoration(hintText: l10n.searchHint, border: InputBorder.none),
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
+                  border: InputBorder.none,
+                ),
                 onChanged: (value) => setState(() => _searchQuery = value),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(child: Text(fileName, overflow: TextOverflow.ellipsis)),
+                  Flexible(
+                    child: Text(fileName, overflow: TextOverflow.ellipsis),
+                  ),
                   const SizedBox(width: 8),
                   _FormatBadge(canWrite: capability.canWrite),
                 ],
               ),
         actions: [
+          if (_selectedPaths.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.deselect),
+              tooltip: l10n.clearSelectionTooltip,
+              onPressed: _clearSelection,
+            ),
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
-            tooltip: _isSearching ? l10n.closeSearchTooltip : l10n.searchTooltip,
+            tooltip: _isSearching
+                ? l10n.closeSearchTooltip
+                : l10n.searchTooltip,
             onPressed: _toggleSearch,
           ),
           if (!_isSearching)
@@ -276,44 +383,114 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          if (_currentPath.isNotEmpty) _BreadcrumbBar(path: _currentPath),
-          const _ColumnHeader(),
-          const Divider(height: 1),
-          Expanded(
-            child: entries.isEmpty
-                ? Center(
-                    child: Text(l10n.emptyFolder, style: theme.textTheme.bodyMedium),
-                  )
-                : ListView.builder(
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      final isLoading = _previewingPath != null &&
-                          entry.sourceEntry?.pathInArchive == _previewingPath;
-                      return _EntryRow(
-                        entry: entry,
-                        isLoading: isLoading,
-                        onTap: _previewingPath != null
-                            ? null
-                            : entry.isDirectory
-                                ? () => _enterFolder(entry.name)
-                                : () => _openFile(entry),
-                      );
-                    },
-                  ),
-          ),
-          ExtractModeBar(
-            onSelectMode: _runExtraction,
-            enabled: !_isExtracting,
-            highlightedMode: ref.watch(lastExtractModeProvider),
-          ),
-          const Divider(height: 1),
-          _StatusBar(entryCount: entries.length),
-        ],
+      body: Focus(
+        autofocus: true,
+        // Ctrl/Cmd+A만 여기서 직접 처리한다(UI_UX.md 8장) — Escape 등
+        // 나머지 단축키는 아직 앱 전체에 키보드 단축키 인프라 자체가 없어
+        // 이 기능만 앞서가지 않도록 범위를 좁혔다. 선택 해제는 앱바의
+        // 아이콘 버튼으로 충분히 가능하다.
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+          final isCtrlOrCmd =
+              HardwareKeyboard.instance.isControlPressed ||
+              HardwareKeyboard.instance.isMetaPressed;
+          if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyA) {
+            _selectAllVisible(entries);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Column(
+          children: [
+            if (_currentPath.isNotEmpty) _BreadcrumbBar(path: _currentPath),
+            const _ColumnHeader(),
+            const Divider(height: 1),
+            Expanded(
+              child: entries.isEmpty
+                  ? Center(
+                      child: Text(
+                        l10n.emptyFolder,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: entries.length,
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        final isLoading =
+                            _previewingPath != null &&
+                            entry.sourceEntry?.pathInArchive == _previewingPath;
+                        return _EntryRow(
+                          entry: entry,
+                          isLoading: isLoading,
+                          isSelected: _selectedPaths.contains(
+                            _fullPathOf(entry),
+                          ),
+                          onTap: _previewingPath != null
+                              ? null
+                              : () => _onRowTap(index, entry, entries),
+                        );
+                      },
+                    ),
+            ),
+            ExtractModeBar(
+              onSelectMode: _runExtraction,
+              enabled: !_isExtracting,
+              highlightedMode: ref.watch(lastExtractModeProvider),
+              hasSelection: _selectedPaths.isNotEmpty,
+            ),
+            const Divider(height: 1),
+            _StatusBar(
+              entryCount: entries.length,
+              selectedCount: _selectedPaths.length,
+              selectedSizeBytes: _selectedSizeBytes(entries),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  /// 상태바에 보여줄 선택된 항목들의 원본 크기 합 — 폴더가 선택돼 있으면
+  /// [expandSelectionToEntryPaths]로 펼친 실제 파일들의 크기를 더한다.
+  int _selectedSizeBytes(List<ArchiveBrowserEntry> visible) {
+    if (_selectedPaths.isEmpty) return 0;
+    final expanded = expandSelectionToEntryPaths(
+      widget.handle.entries,
+      _selectedPaths,
+    );
+    var total = 0;
+    for (final entry in widget.handle.entries) {
+      if (expanded.contains(entry.pathInArchive)) {
+        total += entry.uncompressedSize ?? 0;
+      }
+    }
+    return total;
+  }
+
+  /// 목록 한 행을 눌렀을 때: Ctrl/Cmd는 하나씩, Shift는 범위로 선택하고
+  /// (PLAN.md 1.2 "선택 항목만 해제"), 그 외(일반 클릭)는 기존과 동일하게
+  /// 폴더 진입/파일 미리보기로 이어간다 — UI_UX.md 8장 "마우스 클릭과
+  /// 다중선택 모델 분리" 원칙대로, 일반 클릭은 선택 상태를 건드리지 않는다.
+  void _onRowTap(
+    int index,
+    ArchiveBrowserEntry entry,
+    List<ArchiveBrowserEntry> visible,
+  ) {
+    final keyboard = HardwareKeyboard.instance;
+    if (keyboard.isControlPressed || keyboard.isMetaPressed) {
+      _toggleSelectionAt(index, visible);
+      return;
+    }
+    if (keyboard.isShiftPressed) {
+      _selectRangeTo(index, visible);
+      return;
+    }
+    if (entry.isDirectory) {
+      _enterFolder(entry.name);
+    } else {
+      _openFile(entry);
+    }
   }
 }
 
@@ -350,7 +527,10 @@ class _ColumnHeader extends StatelessWidget {
         children: [
           Expanded(child: Text(l10n.columnName, style: style)),
           SizedBox(width: 72, child: Text(l10n.columnSize, style: style)),
-          SizedBox(width: 72, child: Text(l10n.columnCompressedSize, style: style)),
+          SizedBox(
+            width: 72,
+            child: Text(l10n.columnCompressedSize, style: style),
+          ),
           SizedBox(width: 96, child: Text(l10n.columnModified, style: style)),
         ],
       ),
@@ -359,59 +539,76 @@ class _ColumnHeader extends StatelessWidget {
 }
 
 class _EntryRow extends StatelessWidget {
-  const _EntryRow({required this.entry, required this.onTap, this.isLoading = false});
+  const _EntryRow({
+    required this.entry,
+    required this.onTap,
+    this.isLoading = false,
+    this.isSelected = false,
+  });
 
   final ArchiveBrowserEntry entry;
   final VoidCallback? onTap;
   final bool isLoading;
 
+  /// Ctrl/Cmd+클릭이나 Shift+클릭으로 선택된 상태(PLAN.md 1.2 "선택 항목만
+  /// 해제") — daylight-commander-flutter의 선택 행 강조와 동일하게 Primary
+  /// 색을 낮은 알파로 배경에 깐다.
+  final bool isSelected;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final source = entry.sourceEntry;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: Row(
-          children: [
-            isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : _EntryIcon(entry: entry),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                entry.name,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyLarge,
+    return ColoredBox(
+      color: isSelected
+          ? theme.colorScheme.primary.withValues(alpha: 0.12)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : _EntryIcon(entry: entry),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  entry.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge,
+                ),
               ),
-            ),
-            SizedBox(
-              width: 72,
-              child: Text(
-                entry.isDirectory ? '' : formatBytes(source?.uncompressedSize),
-                style: theme.textTheme.bodyMedium,
+              SizedBox(
+                width: 72,
+                child: Text(
+                  entry.isDirectory
+                      ? ''
+                      : formatBytes(source?.uncompressedSize),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
-            ),
-            SizedBox(
-              width: 72,
-              child: Text(
-                entry.isDirectory ? '' : formatBytes(source?.compressedSize),
-                style: theme.textTheme.bodyMedium,
+              SizedBox(
+                width: 72,
+                child: Text(
+                  entry.isDirectory ? '' : formatBytes(source?.compressedSize),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
-            ),
-            SizedBox(
-              width: 96,
-              child: Text(
-                formatModified(source?.modifiedAt),
-                style: theme.textTheme.bodyMedium,
+              SizedBox(
+                width: 96,
+                child: Text(
+                  formatModified(source?.modifiedAt),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -427,11 +624,17 @@ class _EntryIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     const size = 22.0;
     if (entry.isDirectory) {
-      return SvgPicture.asset(FileTypeStyle.genericFolderAsset, width: size, height: size);
+      return SvgPicture.asset(
+        FileTypeStyle.genericFolderAsset,
+        width: size,
+        height: size,
+      );
     }
 
     final extension = p.extension(entry.name).replaceFirst('.', '');
-    final asset = FileTypeStyle.assetForExtension(extension) ?? FileTypeStyle.unknownAsset;
+    final asset =
+        FileTypeStyle.assetForExtension(extension) ??
+        FileTypeStyle.unknownAsset;
     return SvgPicture.asset(asset, width: size, height: size);
   }
 }
@@ -447,7 +650,9 @@ class _FormatBadge extends StatelessWidget {
     final color = canWrite ? AppColors.success : AppColors.warning;
     final l10n = AppLocalizations.of(context);
     return Tooltip(
-      message: canWrite ? l10n.formatWritableTooltip : l10n.formatReadOnlyTooltip,
+      message: canWrite
+          ? l10n.formatWritableTooltip
+          : l10n.formatReadOnlyTooltip,
       child: Container(
         width: 8,
         height: 8,
@@ -458,19 +663,32 @@ class _FormatBadge extends StatelessWidget {
 }
 
 class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.entryCount});
+  const _StatusBar({
+    required this.entryCount,
+    this.selectedCount = 0,
+    this.selectedSizeBytes = 0,
+  });
 
   final int entryCount;
 
+  /// 0이면 평소처럼 전체 항목 수를 보여주고, 1개 이상이면 선택 개수+크기로
+  /// 바꿔 보여준다(PLAN.md 1.2 "선택 항목만 해제").
+  final int selectedCount;
+  final int selectedSizeBytes;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = selectedCount > 0
+        ? l10n.statusBarSelectedCount(
+            selectedCount,
+            formatBytes(selectedSizeBytes),
+          )
+        : l10n.statusBarItemCount(entryCount);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Text(
-        AppLocalizations.of(context).statusBarItemCount(entryCount),
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
+      child: Text(text, style: Theme.of(context).textTheme.labelSmall),
     );
   }
 }

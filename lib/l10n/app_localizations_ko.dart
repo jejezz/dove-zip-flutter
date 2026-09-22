@@ -140,6 +140,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get extractChooseFolderButton => '원하는 곳에...';
 
   @override
+  String get extractHereSelectedButton => '선택 항목 여기에 해제';
+
+  @override
+  String get extractSmartSelectedButton => '선택 항목 알아서 해제';
+
+  @override
+  String get extractChooseFolderSelectedButton => '선택 항목 원하는 곳에...';
+
+  @override
+  String statusBarSelectedCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 선택됨 ($size)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearSelectionTooltip => '선택 해제';
+
+  @override
   String get conflictTitle => '이미 같은 이름의 파일이 있습니다';
 
   @override
