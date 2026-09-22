@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 
 import '../../application/archive_browser_entries.dart';
 import '../../application/usecases/extract_entries.dart';
+import '../../application/usecases/open_archive.dart';
 import '../../application/usecases/preview_archive_entry.dart';
 import '../../core/bytes_format.dart';
 import '../../core/cancel_token.dart';
@@ -41,6 +42,7 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
     required this.handle,
     this.extractEntries = const ExtractEntries(),
     this.previewArchiveEntry = const PreviewArchiveEntry(),
+    this.openArchive = const OpenArchive(),
   });
 
   final ArchiveHandle handle;
@@ -50,6 +52,12 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
   /// 그대로 쓴다.
   final ExtractEntries extractEntries;
   final PreviewArchiveEntry previewArchiveEntry;
+
+  /// 중첩 압축 드릴다운(PLAN.md 1.1)에 쓴다 — 압축파일 안의 항목이 그
+  /// 자체로 또 압축파일이면, 임시 폴더로 꺼낸 뒤 이 유스케이스로 열어
+  /// [ArchiveBrowserScreen] 하나를 그 위에 더 쌓는다(재귀적으로 몇 단계든
+  /// 들어갈 수 있음).
+  final OpenArchive openArchive;
 
   @override
   ConsumerState<ArchiveBrowserScreen> createState() =>
@@ -210,9 +218,42 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         ),
       );
       if (!mounted) return;
+
+      // 중첩 압축 드릴다운(PLAN.md 1.1) — 이름으로 압축 형식이 인식되면
+      // 미리보기 대신 곧장 그 안으로 들어간다. 지금 리더가 실제로 못
+      // 읽는 형식(예: iso9660처럼 FormatRegistry엔 있지만 아직 구현이
+      // 없는 것)이면 UnsupportedArchiveFormatException을 잡아 평소
+      // 미리보기 경로로 계속 진행한다 — 이미 꺼낸 [tempUri]를 그대로
+      // 재사용하니 다시 압축을 풀지 않는다.
+      //
+      // 알려진 한계: `archive` 패키지의 Zip/TarDecoder는 매직 바이트가
+      // 전혀 없는 데이터도 에러 없이 "항목 0개"로 관대하게 디코딩한다 —
+      // 그래서 이름만 `.zip`/`.tar`인 진짜 깨진 파일은 에러 대신 빈
+      // 압축파일로 열린다. 최상위 "열기"를 포함해 이 앱 전체가 이미
+      // 겪는 특성이라 드릴다운만의 문제는 아니다.
+      if (FormatRegistry.detectFromFileName(entry.name) != null) {
+        try {
+          final nestedHandle = await _withPasswordRetry(
+            (password) => widget.openArchive(tempUri, password: password),
+          );
+          if (!mounted) return;
+          setState(() => _previewingPath = null);
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) => ArchiveBrowserScreen(handle: nestedHandle),
+            ),
+          );
+          return;
+        } on UnsupportedArchiveFormatException {
+          // 이 형식은 아직 못 읽는다 — 아래 평소 미리보기로 계속 진행.
+          if (!mounted) return;
+        }
+      }
+
       // 로딩 스피너는 임시 파일을 꺼내는 동안만 보여준다 — 뷰어 화면을
       // 닫을 때까지 기다리면(push의 Future는 pop돼야 완료됨) 이 화면이
       // 뒤에서 계속 스피너 애니메이션을 돌리게 된다.
+      if (!mounted) return;
       setState(() => _previewingPath = null);
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
