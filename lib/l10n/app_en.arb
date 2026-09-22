@@ -48,6 +48,8 @@
   "conflictSourceLabel": "In archive: {size}",
   "conflictDestinationLabel": "Existing file: {size}",
   "cancel": "Cancel",
+  "copyButton": "Copy",
+  "errorMessageCopied": "Copied the error message",
   "skipAll": "Skip All",
   "skip": "Skip",
   "renameAndExtract": "Rename and Extract",

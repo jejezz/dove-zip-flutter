@@ -13,6 +13,7 @@ import '../archive_browser/archive_browser_screen.dart';
 import '../compress/compress_dialog.dart';
 import '../theme/locale_provider.dart';
 import '../theme/theme_mode_provider.dart';
+import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 
 /// 빈 상태(압축파일 없음) 화면 — UI_UX.md 6.1 목업 구현.
@@ -89,9 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).openArchiveFailed('$e'))),
-      );
+      showErrorSnackBar(context, AppLocalizations.of(context).openArchiveFailed('$e'));
     } finally {
       if (mounted) setState(() => _isOpening = false);
     }

@@ -76,6 +76,8 @@
     "placeholders": {"size": {"type": "String"}}
   },
   "cancel": "취소",
+  "copyButton": "복사",
+  "errorMessageCopied": "오류 메시지를 복사했습니다",
   "skipAll": "모두 건너뛰기",
   "skip": "건너뛰기",
   "renameAndExtract": "이름 바꿔서 풀기",

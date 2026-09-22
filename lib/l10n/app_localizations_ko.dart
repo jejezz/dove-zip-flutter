@@ -156,6 +156,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cancel => '취소';
 
   @override
+  String get copyButton => '복사';
+
+  @override
+  String get errorMessageCopied => '오류 메시지를 복사했습니다';
+
+  @override
   String get skipAll => '모두 건너뛰기';
 
   @override

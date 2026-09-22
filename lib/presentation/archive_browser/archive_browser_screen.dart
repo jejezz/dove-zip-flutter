@@ -22,6 +22,7 @@ import '../theme/app_theme.dart';
 import '../theme/file_type_style.dart';
 import '../viewer/entry_viewer_screen.dart';
 import '../widgets/conflict_dialog.dart';
+import '../widgets/error_snackbar.dart';
 import '../widgets/extract_progress_dialog.dart';
 import '../widgets/password_prompt_dialog.dart';
 import 'extract_mode_bar.dart';
@@ -157,9 +158,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _previewingPath = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).previewFailed('$e'))),
-      );
+      showErrorSnackBar(context, AppLocalizations.of(context).previewFailed('$e'));
     }
   }
 
@@ -220,9 +219,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).extractFailed('$e'))),
-      );
+      showErrorSnackBar(context, AppLocalizations.of(context).extractFailed('$e'));
     } finally {
       progress.dispose();
       if (mounted) setState(() => _isExtracting = false);

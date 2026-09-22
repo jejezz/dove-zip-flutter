@@ -344,6 +344,18 @@ abstract class AppLocalizations {
   /// **'취소'**
   String get cancel;
 
+  /// No description provided for @copyButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'복사'**
+  String get copyButton;
+
+  /// No description provided for @errorMessageCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류 메시지를 복사했습니다'**
+  String get errorMessageCopied;
+
   /// No description provided for @skipAll.
   ///
   /// In ko, this message translates to:

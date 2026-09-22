@@ -15,6 +15,7 @@ import '../../domain/entities/compress_progress.dart';
 import '../../domain/entities/compression_options.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/compress_progress_dialog.dart';
+import '../widgets/error_snackbar.dart';
 
 /// 새 압축 만들기 다이얼로그 (UI_UX.md 6.3).
 ///
@@ -231,11 +232,7 @@ class _CompressDialogState extends State<CompressDialog> {
       if (!mounted) return;
       Navigator.of(context).pop(); // 진행률 다이얼로그만 닫고 설정은 유지
       setState(() => _isCompressing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).compressFailed('$e')),
-        ),
-      );
+      showErrorSnackBar(context, AppLocalizations.of(context).compressFailed('$e'));
     }
   }
 

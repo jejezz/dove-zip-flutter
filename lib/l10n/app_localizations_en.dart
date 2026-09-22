@@ -160,6 +160,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get copyButton => 'Copy';
+
+  @override
+  String get errorMessageCopied => 'Copied the error message';
+
+  @override
   String get skipAll => 'Skip All';
 
   @override
