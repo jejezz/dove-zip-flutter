@@ -48,6 +48,13 @@
   "@extractCompleted": {
     "placeholders": {"path": {"type": "String"}}
   },
+  "extractCompletedWithFailures": "압축 해제 완료: {path}\n({count, plural, other{{count}개 항목은 손상되어 건너뜀}})",
+  "@extractCompletedWithFailures": {
+    "placeholders": {
+      "path": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
   "extractCancelled": "압축 해제를 취소했습니다.",
   "extractFailed": "압축 해제 실패: {error}",
   "@extractFailed": {

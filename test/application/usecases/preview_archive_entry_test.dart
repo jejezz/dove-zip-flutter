@@ -3,6 +3,7 @@ import 'package:dove_zip/application/usecases/preview_archive_entry.dart';
 import 'package:dove_zip/core/cancel_token.dart';
 import 'package:dove_zip/domain/entities/archive_entry.dart';
 import 'package:dove_zip/domain/entities/archive_handle.dart';
+import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,7 +20,7 @@ class _FakeReader implements ArchiveReader {
   Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
 
   @override
-  Future<void> extractAll(
+  Future<List<ExtractFailure>> extractAll(
     Uri archiveLocation, {
     required Uri destination,
     List<String>? entryPaths,

@@ -317,7 +317,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     );
 
     try {
-      final destination = await _withPasswordRetry(
+      final result = await _withPasswordRetry(
         (password) => widget.extractEntries(
           handle: widget.handle,
           mode: mode,
@@ -333,14 +333,28 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(); // 진행률 다이얼로그 닫기
       _clearSelection(); // 해제가 끝났으니 선택 상태를 정리한다(성공 시에만)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)
-                .extractCompleted(destination.toFilePath()),
+      final destinationPath = result.destination.toFilePath();
+      if (result.failures.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).extractCompleted(destinationPath),
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // 손상된 항목이 있어도 나머지는 전부 풀렸다(PLAN.md 1.2 "손상된
+        // 압축파일 복구/부분 해제 시도") — 실패 목록을 복사할 수 있도록
+        // showErrorSnackBar를 재사용한다.
+        final l10n = AppLocalizations.of(context);
+        final summary = l10n.extractCompletedWithFailures(
+          destinationPath,
+          result.failures.length,
+        );
+        final detail =
+            result.failures.map((f) => '- ${f.entryPath}: ${f.message}').join('\n');
+        showErrorSnackBar(context, '$summary\n$detail');
+      }
     } on OperationCancelledException {
       if (!mounted) return;
       Navigator.of(context).pop();

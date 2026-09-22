@@ -260,6 +260,12 @@ abstract class AppLocalizations {
   /// **'압축 해제 완료: {path}'**
   String extractCompleted(String path);
 
+  /// No description provided for @extractCompletedWithFailures.
+  ///
+  /// In ko, this message translates to:
+  /// **'압축 해제 완료: {path}\n({count, plural, other{{count}개 항목은 손상되어 건너뜀}})'**
+  String extractCompletedWithFailures(String path, int count);
+
   /// No description provided for @extractCancelled.
   ///
   /// In ko, this message translates to:

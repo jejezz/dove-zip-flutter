@@ -5,6 +5,7 @@ import 'package:dove_zip/core/cancel_token.dart';
 import 'package:dove_zip/domain/entities/archive_entry.dart';
 import 'package:dove_zip/domain/entities/archive_handle.dart';
 import 'package:dove_zip/domain/entities/extract_conflict.dart';
+import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/entities/extract_progress.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
 import 'package:dove_zip/l10n/app_localizations.dart';
@@ -18,10 +19,20 @@ import 'package:flutter_test/flutter_test.dart';
 /// 스낵바)만 검증하기 위한 가짜 리더. 진짜 압축 해제 동작 자체는
 /// dart_archive_reader_extract_test.dart가 실제 파일로 검증한다.
 class _FakeReader implements ArchiveReader {
-  _FakeReader({this.conflictOnFirstFile = false, this.failWith, this.gate});
+  _FakeReader({
+    this.conflictOnFirstFile = false,
+    this.failWith,
+    this.gate,
+    this.entryFailures = const [],
+  });
 
   final bool conflictOnFirstFile;
   final Object? failWith;
+
+  /// [extractAll]이 정상적으로 끝나되 일부 항목은 손상돼 건너뛴 것처럼
+  /// 보고하게 한다 — PLAN.md 1.2 "손상된 압축파일 복구/부분 해제 시도"의
+  /// UI 배선(부분 성공 스낵바)만 검증하기 위한 장치.
+  final List<ExtractFailure> entryFailures;
 
   /// 넘기면 이 Future가 완료될 때까지 해제를 멈춰둔다 — 테스트가 "진행
   /// 중" 상태(진행률 다이얼로그가 실제로 보이는 순간)를 직접 통제하기
@@ -36,7 +47,7 @@ class _FakeReader implements ArchiveReader {
   Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
 
   @override
-  Future<void> extractAll(
+  Future<List<ExtractFailure>> extractAll(
     Uri archiveLocation, {
     required Uri destination,
     List<String>? entryPaths,
@@ -59,6 +70,7 @@ class _FakeReader implements ArchiveReader {
       }
     }
     onProgress?.call(const ExtractProgress(done: 1, total: 1, currentName: 'a.txt'));
+    return entryFailures;
   }
 
   @override
@@ -151,6 +163,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('압축 해제를 취소했습니다.'), findsOneWidget);
+  });
+
+  testWidgets('일부 항목만 손상돼 건너뛰면 완료 스낵바에 손상 개수와 목록이 함께 뜬다', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ArchiveBrowserScreen(
+          handle: handle,
+          extractEntries: ExtractEntries(_FakeReader(
+            entryFailures: const [
+              ExtractFailure(entryPath: 'broken.txt', message: '압축 스트림이 손상됨'),
+            ],
+          )),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('알아서 압축 해제'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('압축 해제 완료'), findsOneWidget);
+    expect(find.textContaining('1개 항목은 손상되어 건너뜀'), findsOneWidget);
+    expect(find.textContaining('broken.txt: 압축 스트림이 손상됨'), findsOneWidget);
+    // 복사할 정보가 있는 부분 실패는 완료 스낵바가 아니라 copy 버튼이 있는
+    // showErrorSnackBar 쪽 경로를 타야 한다(PLAN.md 1.2).
+    expect(find.text('복사'), findsOneWidget);
   });
 
   testWidgets('리더가 실패하면 에러 스낵바가 뜬다', (tester) async {

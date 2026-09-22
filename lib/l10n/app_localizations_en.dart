@@ -102,6 +102,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String extractCompletedWithFailures(String path, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items were skipped as damaged',
+      one: '$count item was skipped as damaged',
+    );
+    return 'Extraction complete: $path\n($_temp0)';
+  }
+
+  @override
   String get extractCancelled => 'Extraction cancelled.';
 
   @override

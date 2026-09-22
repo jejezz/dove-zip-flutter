@@ -101,6 +101,16 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String extractCompletedWithFailures(String path, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 항목은 손상되어 건너뜀',
+    );
+    return '압축 해제 완료: $path\n($_temp0)';
+  }
+
+  @override
   String get extractCancelled => '압축 해제를 취소했습니다.';
 
   @override

@@ -5,6 +5,7 @@ import 'package:dove_zip/domain/entities/archive_entry.dart';
 import 'package:dove_zip/domain/entities/archive_handle.dart';
 import 'package:dove_zip/domain/entities/extract_conflict.dart';
 import 'package:dove_zip/domain/entities/extract_destination_mode.dart';
+import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,9 +13,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// 가짜 리더 — 목적지 계산(resolveExtractDestination 연동)과 예외 처리
 /// 로직만 검증한다. 실제 디스크 I/O는 dart_archive_reader_extract_test.dart가 맡는다.
 class _RecordingReader implements ArchiveReader {
-  _RecordingReader({this.supportedFormat = ArchiveFormat.zip});
+  _RecordingReader({this.supportedFormat = ArchiveFormat.zip, this.failuresToReturn = const []});
 
   final ArchiveFormat supportedFormat;
+  final List<ExtractFailure> failuresToReturn;
   Uri? lastDestination;
   List<String>? lastEntryPaths;
 
@@ -25,7 +27,7 @@ class _RecordingReader implements ArchiveReader {
   Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
 
   @override
-  Future<void> extractAll(
+  Future<List<ExtractFailure>> extractAll(
     Uri archiveLocation, {
     required Uri destination,
     List<String>? entryPaths,
@@ -36,6 +38,7 @@ class _RecordingReader implements ArchiveReader {
   }) async {
     lastDestination = destination;
     lastEntryPaths = entryPaths;
+    return failuresToReturn;
   }
 
   @override
@@ -59,27 +62,27 @@ void main() {
     final reader = _RecordingReader();
     final extractEntries = ExtractEntries(reader);
 
-    final destination = await extractEntries(
+    final result = await extractEntries(
       handle: handle,
       mode: ExtractDestinationMode.here,
       onConflict: _neverCalled,
     );
 
-    expect(destination, Uri.file('/tmp/downloads'));
-    expect(reader.lastDestination, destination);
+    expect(result.destination, Uri.file('/tmp/downloads'));
+    expect(reader.lastDestination, result.destination);
   });
 
   test('smart 모드는 압축파일명 폴더로 해제를 넘긴다', () async {
     final reader = _RecordingReader();
     final extractEntries = ExtractEntries(reader);
 
-    final destination = await extractEntries(
+    final result = await extractEntries(
       handle: handle,
       mode: ExtractDestinationMode.smart,
       onConflict: _neverCalled,
     );
 
-    expect(destination, Uri.file('/tmp/downloads/photos'));
+    expect(result.destination, Uri.file('/tmp/downloads/photos'));
   });
 
   test('chooseFolder 모드는 사용자가 고른 폴더를 그대로 쓴다', () async {
@@ -87,14 +90,28 @@ void main() {
     final extractEntries = ExtractEntries(reader);
     final chosen = Uri.file('/Volumes/External');
 
-    final destination = await extractEntries(
+    final result = await extractEntries(
       handle: handle,
       mode: ExtractDestinationMode.chooseFolder,
       userChosenFolder: chosen,
       onConflict: _neverCalled,
     );
 
-    expect(destination, chosen);
+    expect(result.destination, chosen);
+  });
+
+  test('리더가 보고한 손상 항목 목록을 그대로 전달한다', () async {
+    const failures = [ExtractFailure(entryPath: 'a.jpg', message: '데이터가 손상됨')];
+    final reader = _RecordingReader(failuresToReturn: failures);
+    final extractEntries = ExtractEntries(reader);
+
+    final result = await extractEntries(
+      handle: handle,
+      mode: ExtractDestinationMode.here,
+      onConflict: _neverCalled,
+    );
+
+    expect(result.failures, failures);
   });
 
   test('entryPaths를 그대로 리더에 전달한다', () async {

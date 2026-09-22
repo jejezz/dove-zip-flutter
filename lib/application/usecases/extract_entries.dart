@@ -4,9 +4,20 @@ import '../../core/cancel_token.dart';
 import '../../data/dart_archive_reader.dart';
 import '../../domain/entities/archive_handle.dart';
 import '../../domain/entities/extract_destination_mode.dart';
+import '../../domain/entities/extract_failure.dart';
 import '../../domain/repositories/archive_reader.dart';
 import 'open_archive.dart' show UnsupportedArchiveFormatException;
 import '../resolve_extract_destination.dart';
+
+/// [ExtractEntries.call]의 결과 — 어디에 풀렸는지와, 손상돼 건너뛴 항목이
+/// 있다면 그 목록(PLAN.md 1.2 "손상된 압축파일 복구/부분 해제 시도").
+/// [failures]가 비어 있으면 전부 성공한 것이다.
+class ExtractResult {
+  const ExtractResult({required this.destination, required this.failures});
+
+  final Uri destination;
+  final List<ExtractFailure> failures;
+}
 
 /// [handle]을 3가지 해제 모드 중 하나로 디스크에 푼다 (ARCHITECTURE.md 1장
 /// 유스케이스 목록의 `ExtractEntries` — PLAN.md 1.2 "가장 중요한 편의 기능").
@@ -19,7 +30,7 @@ class ExtractEntries {
 
   final ArchiveReader _reader;
 
-  Future<Uri> call({
+  Future<ExtractResult> call({
     required ArchiveHandle handle,
     required ExtractDestinationMode mode,
     List<String>? entryPaths,
@@ -41,7 +52,7 @@ class ExtractEntries {
       userChosenFolder: userChosenFolder,
     );
 
-    await _reader.extractAll(
+    final failures = await _reader.extractAll(
       handle.location,
       destination: destination,
       entryPaths: entryPaths,
@@ -51,6 +62,6 @@ class ExtractEntries {
       cancelToken: cancelToken,
     );
 
-    return destination;
+    return ExtractResult(destination: destination, failures: failures);
   }
 }

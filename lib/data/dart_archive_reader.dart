@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import '../core/cancel_token.dart';
 import '../domain/entities/archive_entry.dart';
 import '../domain/entities/extract_conflict.dart';
+import '../domain/entities/extract_failure.dart';
 import '../domain/entities/extract_progress.dart';
 import '../domain/repositories/archive_reader.dart';
 import 'format_registry.dart';
@@ -94,7 +95,7 @@ class DartArchiveReader implements ArchiveReader {
   }
 
   @override
-  Future<void> extractAll(
+  Future<List<ExtractFailure>> extractAll(
     Uri archiveLocation, {
     required Uri destination,
     List<String>? entryPaths,
@@ -115,7 +116,7 @@ class DartArchiveReader implements ArchiveReader {
             if (wanted == null || wanted.contains(koniEntry.path))
               (_toDomainEntry(koniEntry), () => _readKoniEntryContent(reader, koniEntry)),
         ];
-        await _extractEntries(
+        return await _extractEntries(
           targets: targets,
           destinationDir: destination.toFilePath(),
           onConflict: onConflict,
@@ -125,7 +126,6 @@ class DartArchiveReader implements ArchiveReader {
       } finally {
         await reader.close();
       }
-      return;
     }
 
     final (archive, _) = await _decodeArchive(archiveLocation, password: password);
@@ -145,7 +145,7 @@ class DartArchiveReader implements ArchiveReader {
             () async => _readContent(file),
           ),
     ];
-    await _extractEntries(
+    return _extractEntries(
       targets: targets,
       destinationDir: destination.toFilePath(),
       onConflict: onConflict,
@@ -157,7 +157,12 @@ class DartArchiveReader implements ArchiveReader {
   /// 해제 루프의 공통부 — 어느 백엔드든 충돌 처리·진행률·취소는 이 하나의
   /// 로직을 공유한다. [targets]의 각 항목은 (엔트리, 그 엔트리의 실제
   /// 바이트를 가져오는 콜백) 쌍이다.
-  Future<void> _extractEntries({
+  ///
+  /// [readContent]가 실패하면(손상된 데이터, 깨진 압축 스트림 등) 그 항목만
+  /// [ExtractFailure]로 기록하고 나머지는 계속 해제한다 — 단, 비밀번호
+  /// 문제([ArchivePasswordRequiredException])는 예외로, 이 항목 하나가 아니라
+  /// 호출부의 재시도 흐름으로 곧장 넘겨야 하므로 그대로 다시 던진다.
+  Future<List<ExtractFailure>> _extractEntries({
     required List<(ArchiveEntry entry, Future<List<int>> Function() readContent)> targets,
     required String destinationDir,
     required ConflictResolver onConflict,
@@ -167,6 +172,7 @@ class DartArchiveReader implements ArchiveReader {
     final total = targets.where((t) => !t.$1.isDirectory).length;
     var done = 0;
     ConflictAction? bulkAction;
+    final failures = <ExtractFailure>[];
 
     for (final (entry, readContent) in targets) {
       cancelToken?.throwIfCancelled();
@@ -208,10 +214,21 @@ class DartArchiveReader implements ArchiveReader {
         }
       }
 
-      await File(finalDestPath).writeAsBytes(await readContent());
+      try {
+        await File(finalDestPath).writeAsBytes(await readContent());
+      } on ArchivePasswordRequiredException {
+        rethrow;
+      } catch (e) {
+        failures.add(ExtractFailure(entryPath: entry.pathInArchive, message: '$e'));
+        done++;
+        onProgress?.call(ExtractProgress(done: done, total: total, currentName: entry.pathInArchive));
+        continue;
+      }
       done++;
       onProgress?.call(ExtractProgress(done: done, total: total, currentName: entry.pathInArchive));
     }
+
+    return failures;
   }
 
   @override

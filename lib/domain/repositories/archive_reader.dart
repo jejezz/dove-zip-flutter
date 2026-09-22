@@ -1,6 +1,7 @@
 import '../../core/cancel_token.dart';
 import '../entities/archive_entry.dart';
 import '../entities/extract_conflict.dart';
+import '../entities/extract_failure.dart';
 import '../entities/extract_progress.dart';
 
 /// 압축 해제 중 대상 위치에 동일 이름 파일이 있으면 호출돼 처리 방법을
@@ -47,7 +48,14 @@ abstract class ArchiveReader {
   /// 충돌·취소·진행률 처리 방식은 daylight의 `FileOperationService`와
   /// 동일한 패턴이다: 파일 단위 경계에서 [cancelToken]을 확인하고, 대상에
   /// 이미 파일이 있으면 [onConflict]로 물어본다.
-  Future<void> extractAll(
+  ///
+  /// 항목 하나가 손상돼 읽지 못해도 전체 작업을 멈추지 않는다 — 그 항목만
+  /// 건너뛰고 나머지를 계속 해제한 뒤, 건너뛴 항목들을 반환값으로 알려준다
+  /// (PLAN.md 1.2 "손상된 압축파일 복구/부분 해제 시도"). 비어 있는 리스트는
+  /// 전부 성공했다는 뜻이다. 비밀번호 문제나 사용자 취소는 이 목록에 담기지
+  /// 않고 그대로 예외로 던져진다 — 둘 다 "건너뛰고 계속"이 아니라 각자의
+  /// 흐름(재시도, 취소)으로 이어져야 하기 때문이다.
+  Future<List<ExtractFailure>> extractAll(
     Uri archiveLocation, {
     required Uri destination,
     List<String>? entryPaths,

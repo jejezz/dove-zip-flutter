@@ -32,6 +32,7 @@
   "emptyFolder": "This folder is empty",
   "previewFailed": "Couldn't open the preview: {error}",
   "extractCompleted": "Extraction complete: {path}",
+  "extractCompletedWithFailures": "Extraction complete: {path}\n({count, plural, one{{count} item was skipped as damaged} other{{count} items were skipped as damaged}})",
   "extractCancelled": "Extraction cancelled.",
   "extractFailed": "Extraction failed: {error}",
   "columnName": "Name",
