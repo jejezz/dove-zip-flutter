@@ -155,8 +155,10 @@
   (`_openArchivePath`)로 그대로 이어붙인다 — 자동 해제 없이 그냥 연다는
   점에서 "여기에 풀기" 서비스와 다르다.
 - `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — ✅ **macOS만** 완료.
-  Windows(COM `IContextMenu`/`IExplorerCommand`)와 Linux(파일관리자별 플러그인)는
-  여전히 범위 밖 — 아래 "1차 범위 밖" 항목 참고. macOS는 Finder Sync
+  Windows는 실제 Windows 머신에서 이어가고(COM `IContextMenu`/
+  `IExplorerCommand` DLL — 이 macOS 개발 환경에서는 툴체인이 없어 진행
+  불가), Linux(파일관리자별 플러그인)는 보류 — 아래 "1차 범위 밖" 항목
+  참고. macOS는 Finder Sync
   Extension이 아니라 더 가벼운 **NSServices**(Finder 우클릭 → 서비스
   메뉴)로 구현했다: `macos/Runner/Info.plist`에 "Compress Here"/"Extract
   Here" 두 항목을 등록하고, `ServicesBridge.swift`가 선택된 파일/폴더
@@ -169,8 +171,12 @@
   실패 처리 전부 동일하게 재사용, ARCHITECTURE.md 5장 참고).
 
 ## 2. 1차 범위 밖 (비목표)
-- OS 셸 확장 — **macOS(NSServices)는 위에서 완료**, Windows/Linux는 여전히
-  범위 밖(플랫폼별 네이티브 개발 필요, MVP 이후 검토)
+- OS 셸 확장 — **macOS(NSServices)는 위에서 완료**. **Windows는 실제 Windows
+  머신에서 이어간다**(2026-09-23 결정) — COM `IContextMenu`/`IExplorerCommand`
+  DLL 개발·등록·디버깅은 Windows 툴체인(Visual Studio, `regsvr32` 등)이
+  있어야 해서 이 macOS 개발 환경에서는 진행할 수 없다. **Linux는 보류**
+  (같은 날 결정) — 데스크톱 환경별(GNOME/KDE 등 Nautilus/Dolphin/Thunar)
+  로 구현이 전부 다르고 공유 API가 없어, 지금 당장 계획이 없다.
 - RAR **생성**(압축) — 3장 참고, 라이선스상 사실상 불가능(업계 전체 공통 제약)
 - 클라우드 스토리지 업로드/연동
 - 파일 관리자 기능 전반(2-pane 탐색, 이동/복사 등) — 그건 daylight-commander의 역할
