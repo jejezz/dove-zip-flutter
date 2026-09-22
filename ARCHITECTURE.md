@@ -373,11 +373,20 @@ abstract class FileViewer {
 
 ## 11. 플랫폼별 고려사항
 
-- **macOS**: App Sandbox 비활성화 여부는 daylight와 같은 이유(임의 경로 접근,
-  Finder에서 드래그된 임의 파일 압축)로 **비활성화 유지**가 유력 — 단, 이 앱은
-  파일 매니저보다 접근 범위가 좁을 수 있어(사용자가 명시적으로 선택/드롭한 파일만
-  다룸) Sandbox + 보안 스코프 북마크(security-scoped bookmark)로 App Store 배포
-  가능성을 열어두는 것도 검토 가치 있음 — PoC 단계에서 확정
+- **macOS**: App Sandbox는 **비활성화**로 확정(`com.apple.security.app-sandbox`
+  false, `DebugProfile.entitlements`/`Release.entitlements`). 처음엔 켜져
+  있었는데, `desktop_drop`으로 드롭한 파일을 열 때 `PathAccessException`
+  (`OS Error: Operation not permitted, errno = 1`)이 나는 걸 실제로 겪고서
+  껐다 — Sandbox 상태에서 `file_selector`(열기/저장 다이얼로그)로 고른
+  파일은 macOS가 자동으로 임시 접근 권한을 주지만, 드래그앤드롭으로 받은
+  파일은 그렇지 않아서 앱이 매번 보안 스코프 북마크(security-scoped
+  bookmark)를 직접 열고 닫아야 한다. "여기에"/"알아서" 해제처럼 최초에
+  고른 파일 바로 옆에 새 파일을 쓰는 편의 기능도 원본 파일의 권한 범위
+  밖이라 같은 문제를 겪을 가능성이 높다 — 이 앱의 핵심 가치(드래그앤드롭
+  우선, 매번 다시 물어보지 않는 편의성)가 Sandbox의 "새 경로마다 명시적
+  재승인" 전제와 근본적으로 어긋나므로, Mac App Store 배포가 아닌 직접
+  배포 도구라는 점을 고려해 Sandbox 자체를 껐다. App Store 배포를 나중에
+  고려하게 되면 그때 보안 스코프 북마크 배선을 다시 검토한다.
 - **Windows**: libarchive 동적 라이브러리(.dll) 벤더링 필수(6.1/6.4 참고), 확장자
   연결(`.zip`/`.7z`/`.tar` 등 "연결 프로그램"에 Dove Zip 등록)은 P2, 설치 프로그램이
   레지스트리에 등록
