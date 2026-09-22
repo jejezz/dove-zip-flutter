@@ -390,6 +390,64 @@ abstract class FileViewer {
 - **Windows**: libarchive 동적 라이브러리(.dll) 벤더링 필수(6.1/6.4 참고), 확장자
   연결(`.zip`/`.7z`/`.tar` 등 "연결 프로그램"에 Dove Zip 등록)은 P2, 설치 프로그램이
   레지스트리에 등록
+
+  > **다음 버전 작업 메모 (Windows OS 컨텍스트 메뉴/파일 연결, 2026-09-23
+  > 결정 — 실제 Windows 머신에서 이어감)**: macOS는 완료했다(PLAN.md 1.4,
+  > `macos/Runner/ServicesBridge.swift` + `Info.plist`) — Finder의
+  > NSServices가 **앱 프로세스 안에서** 콜백을 실행해 주기 때문에
+  > `MethodChannel`로 바로 Flutter에 넘길 수 있었다. **Windows 셸 확장은
+  > 구조가 다르다**: 컨텍스트 메뉴 항목은 `explorer.exe`(또는 COM
+  > 서로게이트) 프로세스에서 실행되므로, 이미 떠 있는 Dove Zip 프로세스에
+  > 채널로 바로 말을 걸 수 없다 — 현실적인 방법은 메뉴 항목이
+  > `dove_zip.exe`를 **명령줄 인자와 함께 새로 실행**하는 것이다.
+  >
+  > 1. **등록 방식부터 재검토할 것** — PLAN.md/이 문서가 원래 가정한
+  >    COM `IContextMenu`/`IExplorerCommand` DLL(레지스트리에 CLSID 등록,
+  >    `regsvr32` 필요)은 동적 조건부 렌더링·아이콘·서브메뉴가 필요할 때만
+  >    쓰는 무거운 방법이다. "여기에 압축"/"여기에 풀기"처럼 **고정된 항목
+  >    하나를 실행 파일 하나로 넘기는 정도**라면 DLL/COM 없이 레지스트리
+  >    키만으로 되는 고전적인 "셸 verb" 등록으로 충분할 가능성이 높다 —
+  >    예를 들어 `HKEY_CLASSES_ROOT\*\shell\DoveZipCompress\command`에
+  >    `"C:\...\dove_zip.exe" --compress-here "%1"`을 등록하면 COM 개발이
+  >    아예 필요 없다. "여기에 풀기"만 압축파일에서 보이게 하려면 `*` 대신
+  >    `.zip`/`.7z`/`.tar` 등 확장자별 키에 등록하면 된다(조건부 표시는
+  >    이걸로 해결됨 — COM이 꼭 필요한 이유가 아니다). 실제로 여러 파일을
+  >    한꺼번에 선택했을 때 explorer가 명령을 파일마다 한 번씩 부르는지,
+  >    경로들을 한 번에 넘기는지는 Windows 머신에서 직접 확인 필요.
+  > 2. **Dart 쪽 진입점**: `lib/main.dart`의 `main()`은 지금 인자를 받지
+  >    않는다(`Future<void> main() async`) — `main(List<String> args)`로
+  >    바꾸고, `HomeScreen._handleServiceCall`의 세 케이스(`compressHere`/
+  >    `extractHere`/`openFiles`)와 같은 모양으로 `args`를 파싱해 똑같은
+  >    Dart 로직(`_openCompressDialog`/`ArchiveBrowserScreen.autoExtractMode`/
+  >    `_openArchivePath`)으로 이어붙인다 — 이 부분은 이미 만들어져 있어
+  >    거의 그대로 재사용 가능. `HomeScreen`이 아직 마운트되기 전에 인자가
+  >    이미 있으므로(네이티브 콜백을 기다릴 필요 없음), `ServicesBridge`의
+  >    `pendingCalls` 같은 버퍼링은 필요 없고 `DoveZipApp`/`HomeScreen`
+  >    생성자로 그냥 넘기면 된다.
+  > 3. **미결정 사항 — 시작 전에 사용자와 확인**: Windows는 항목을 클릭할
+  >    때마다 `dove_zip.exe`를 매번 새로 띄운다(macOS NSServices처럼 이미
+  >    떠 있는 인스턴스로 자동으로 들어가 주지 않는다). 이미 Dove Zip이
+  >    떠 있는 상태에서 컨텍스트 메뉴를 또 쓰면 창을 하나 더 띄울지, 아니면
+  >    이미 떠 있는 인스턴스에 이름 있는 파이프/뮤텍스로 요청을 넘기고 새
+  >    프로세스는 바로 종료하는 단일 인스턴스 패턴을 만들지 — 이건 구현
+  >    전에 명시적으로 정해야 한다(이번 세션에서 "macOS Services 범위"나
+  >    "기본 프로그램 여부"를 먼저 물어봤던 것과 같은 이유).
+  > 4. **파일 연결도 같은 정신으로**: `.zip` 등을 시스템 기본 프로그램으로
+  >    바로 가로채지 말고(사용자가 macOS 파일 연결 때 명시적으로 고른
+  >    "옵션으로만 추가" 방침과 동일하게), "다른 이름으로 열기" 목록에만
+  >    추가되도록 레지스트리를 구성한다 — 관리자 권한 없이 되는
+  >    `HKEY_CURRENT_USER\Software\Classes\...` 쪽을 우선 검토.
+  > 5. **가장 먼저 할 일**: 이 프로젝트는 `flutter build windows`를 이번
+  >    세션 포함 지금까지 단 한 번도 실행/검증한 적이 없다 — 새 통합
+  >    기능을 얹기 전에 기본 빌드와 기존 기능(드래그앤드롭, 파일 피커 등)이
+  >    Windows에서 정상 동작하는지부터 확인할 것.
+  >
+  > 재사용 가능한 것(플랫폼 무관, 그대로 씀): `ArchiveReader`/`ArchiveWriter`
+  > 인터페이스, `OpenArchive`/`ExtractEntries`/`CreateArchive` 유스케이스,
+  > `resolveExtractDestination`(5장), `CompressDialog`,
+  > `ArchiveBrowserScreen.autoExtractMode`(macOS 작업에서 바로 이 재사용을
+  > 위해 추가함), `HomeScreen`의 `_openCompressDialog`/
+  > `_openArchiveForAutoExtract`/`_openArchivePath`.
 - **Linux**: 배포판별 압축 유틸리티(예: `unrar` 비패키지 배포판)와 무관하게 동작해야
   하므로 libarchive를 반드시 정적 링크 또는 AppImage/Flatpak 내부에 동봉,
   `.desktop` 파일의 MIME 타입 연결(`application/zip` 등)은 P2
