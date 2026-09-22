@@ -1,12 +1,18 @@
 import Cocoa
 import FlutterMacOS
 
-/// Finder의 "서비스" 메뉴(`Info.plist`의 `NSServices`, PLAN.md 1.4 "OS
-/// 컨텍스트 메뉴")로 들어오는 "여기에 압축"/"여기에 풀기" 요청을 Flutter
-/// 쪽 `MethodChannel`로 그대로 넘긴다. 실제 압축/해제 로직은 전혀 없다 —
-/// 이 클래스는 선택된 파일/폴더 경로를 꺼내 전달하는 얇은 다리일 뿐이고,
-/// 나머지는 Dart 쪽 기존 `CreateArchive`/`ExtractEntries` 유스케이스가
-/// 앱 내부 버튼과 100% 동일하게 처리한다(ARCHITECTURE.md 5장).
+/// macOS 쪽에서 Flutter로 파일 경로를 넘겨야 하는 두 가지 네이티브 이벤트를
+/// 한 곳에서 다리 놓는다:
+/// 1. Finder의 "서비스" 메뉴(`Info.plist`의 `NSServices`, PLAN.md 1.4 "OS
+///    컨텍스트 메뉴")로 들어오는 "여기에 압축"/"여기에 풀기" 요청.
+/// 2. `Info.plist`의 `CFBundleDocumentTypes`로 등록해 둔 확장자(zip/tar/7z
+///    등, PLAN.md 1.4 "OS 파일 연결")를 더블클릭했을 때 AppDelegate가 받는
+///    `application(_:open:)` 이벤트, 또는 앱 아이콘에 파일을 드래그한 경우.
+///
+/// 실제 압축/해제/열기 로직은 전혀 없다 — 이 클래스는 경로를 꺼내 전달하는
+/// 얇은 다리일 뿐이고, 나머지는 Dart 쪽 기존 `CreateArchive`/`ExtractEntries`/
+/// `OpenArchive` 유스케이스가 앱 내부 버튼과 100% 동일하게 처리한다
+/// (ARCHITECTURE.md 5장).
 ///
 /// Finder 서비스는 앱이 아직 실행 중이 아니어도 실행시키며 곧바로 메시지를
 /// 보낼 수 있어, `FlutterViewController`/엔진이 준비되기 전에 이 메서드가
@@ -47,6 +53,12 @@ final class ServicesBridge: NSObject {
     error: AutoreleasingUnsafeMutablePointer<NSString>
   ) {
     send("extractHere", paths: Self.filePaths(from: pasteboard))
+  }
+
+  /// 파일 연결(더블클릭)이나 Dock 아이콘 드래그로 열린 파일들 — `AppDelegate`가
+  /// `application(_:open:)`에서 호출한다.
+  func openFiles(_ paths: [String]) {
+    send("openFiles", paths: paths)
   }
 
   private func send(_ method: String, paths: [String]) {

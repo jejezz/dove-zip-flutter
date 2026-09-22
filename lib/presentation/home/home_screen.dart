@@ -19,11 +19,14 @@ import '../theme/theme_mode_provider.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 
-/// macOS Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist`에
-/// 등록·`ServicesBridge.swift`가 이 채널로 전달)로 들어오는 "여기에
-/// 압축"/"여기에 풀기" 요청을 받는 채널(PLAN.md 1.4 "OS 컨텍스트 메뉴",
-/// ARCHITECTURE.md 5장) — Windows/Linux는 이번 범위 밖이라 이 채널
-/// 자체가 macOS에서만 등록된다.
+/// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
+/// 이 채널로 전달) — Windows/Linux는 이번 범위 밖이라 채널 자체가 macOS
+/// 에서만 등록된다.
+/// - Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist`)로
+///   들어오는 "여기에 압축"/"여기에 풀기" 요청(PLAN.md 1.4 "OS 컨텍스트
+///   메뉴", ARCHITECTURE.md 5장).
+/// - 파일 연결(`CFBundleDocumentTypes`)로 등록해 둔 확장자를 더블클릭했을
+///   때, 또는 Dock 아이콘에 파일을 드래그했을 때(PLAN.md 1.4 "OS 파일 연결").
 const _servicesChannel = MethodChannel('dove_zip/services');
 
 /// 빈 상태(압축파일 없음) 화면 — UI_UX.md 6.1 목업 구현.
@@ -58,9 +61,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  /// [ServicesBridge.swift]가 Finder 서비스 메뉴에서 넘겨준 파일/폴더
-  /// 경로를 받아, 앱 내부 버튼을 눌렀을 때와 완전히 같은 경로로 이어붙인다
-  /// (PLAN.md 1.4 "OS 컨텍스트 메뉴" — 로직 100% 공유가 목표).
+  /// [ServicesBridge.swift]가 Finder 서비스 메뉴/파일 연결(더블클릭)에서
+  /// 넘겨준 파일/폴더 경로를 받아, 앱 내부 버튼을 눌렀을 때와 완전히 같은
+  /// 경로로 이어붙인다(PLAN.md 1.4 — 로직 100% 공유가 목표).
   Future<void> _handleServiceCall(MethodCall call) async {
     final paths = (call.arguments as List).cast<String>();
     if (paths.isEmpty) return;
@@ -74,6 +77,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             continue; // 압축파일이 아닌 항목이 섞여 있으면 조용히 건너뛴다.
           }
           await _openArchiveForAutoExtract(path);
+        }
+      case 'openFiles':
+        for (final path in paths) {
+          if (FormatRegistry.detectFromFileName(p.basename(path)) == null) {
+            continue;
+          }
+          await _openArchivePath(path);
         }
     }
   }

@@ -10,12 +10,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// macOS Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist` +
-/// `ServicesBridge.swift`)가 실제로 앱을 실행/활성화하는 부분은 이
-/// 테스트로 검증할 수 없다(네이티브 Finder 통합) — 여기서는 그 네이티브
-/// 쪽이 채널로 파일 경로를 전달했다고 가정하고, `HomeScreen`이 그
-/// MethodChannel 호출을 받아 앱 내부 버튼과 똑같은 경로로 잘 이어붙이는지만
-/// 검증한다(PLAN.md 1.4 "OS 컨텍스트 메뉴").
+/// macOS Finder의 "서비스" 메뉴(NSServices)와 파일 연결(더블클릭,
+/// `CFBundleDocumentTypes`) — 둘 다 `macos/Runner/Info.plist`에 등록하고
+/// `ServicesBridge.swift`가 같은 채널로 전달한다 — 가 실제로 앱을
+/// 실행/활성화하는 부분은 이 테스트로 검증할 수 없다(네이티브 Finder
+/// 통합) — 여기서는 그 네이티브 쪽이 채널로 파일 경로를 전달했다고
+/// 가정하고, `HomeScreen`이 그 MethodChannel 호출을 받아 앱 내부 버튼과
+/// 똑같은 경로로 잘 이어붙이는지만 검증한다(PLAN.md 1.4 "OS 컨텍스트
+/// 메뉴"/"OS 파일 연결").
 const _servicesChannel = MethodChannel('dove_zip/services');
 
 /// 채널 호출을 "던지기만" 한다 — `compressHere`/`extractHere` 핸들러는
@@ -101,6 +103,39 @@ void main() {
 
     await pumpHome(tester);
     _sendServiceCall('extractHere', ['${tempDir.path}/notes.txt']);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  testWidgets('openFiles가 오면(더블클릭/Dock 드래그) 자동 해제 없이 그냥 연다', (tester) async {
+    final archive = Archive()..addFile(ArchiveFile.string('a.txt', 'hello'));
+    final zipFile = File('${tempDir.path}/sample.zip')
+      ..writeAsBytesSync(ZipEncoder().encode(archive));
+
+    await pumpHome(tester);
+
+    // extractHere 테스트와 같은 이유로 runAsync 안에서만 대기하고, pump는
+    // 그 바깥에서 확인한다 — `_openArchivePath`도 `Navigator.push`를 그대로
+    // 기다리는 평소 "열기" 경로라 이 테스트에서는 끝까지 settle되지 않는다.
+    await tester.runAsync(() async {
+      _sendServiceCall('openFiles', [zipFile.path]);
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.widgetWithText(AppBar, 'sample.zip'), findsOneWidget);
+    // 더블클릭으로 연 것뿐이니 자동으로 해제되지는 않아야 한다 — 그건
+    // "여기에 풀기" 서비스 전용이다.
+    expect(find.textContaining('압축 해제 완료'), findsNothing);
+  });
+
+  testWidgets('openFiles에 압축파일이 아닌 항목이 섞여 있으면 조용히 건너뛴다', (tester) async {
+    File('${tempDir.path}/notes.txt').writeAsStringSync('not an archive');
+
+    await pumpHome(tester);
+    _sendServiceCall('openFiles', ['${tempDir.path}/notes.txt']);
     await tester.pumpAndSettle();
 
     expect(find.byType(HomeScreen), findsOneWidget);

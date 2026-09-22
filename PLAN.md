@@ -131,6 +131,17 @@
 - `P1` 최근 연 압축파일 목록 — ✅ 완료 (최대 10개, 홈 화면 하단에 표시,
   개별 삭제 가능)
 - `P2` OS 파일 연결(더블클릭으로 Dove Zip이 열리도록 확장자 등록: zip/7z/tar 등)
+  — ✅ **macOS만** 완료(Windows/Linux는 미검증). `macos/Runner/Info.plist`의
+  `CFBundleDocumentTypes`에 이 앱이 실제로 열 수 있는 확장자
+  (zip/tar/gz/tgz/bz2/tbz2/tbz/xz/txz/7z/rar — `DartArchiveReader.supports`
+  기준, `FormatRegistry`의 미구현 포맷인 zstd/lz4/브로틀리/iso 등은 제외)를
+  등록했다. `LSHandlerRank`는 **Alternate**로 설정 — 사용자가 명시적으로
+  선택하기 전까지는 시스템 기본 프로그램을 가로채지 않고 "다른 앱으로
+  열기" 목록에만 추가된다(사용자 요청). 더블클릭/Dock 아이콘 드래그는
+  `AppDelegate.application(_:open:)`가 받아 `ServicesBridge`(위 OS
+  컨텍스트 메뉴와 같은 다리)를 거쳐 `HomeScreen`의 평소 "열기" 경로
+  (`_openArchivePath`)로 그대로 이어붙인다 — 자동 해제 없이 그냥 연다는
+  점에서 "여기에 풀기" 서비스와 다르다.
 - `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — ✅ **macOS만** 완료.
   Windows(COM `IContextMenu`/`IExplorerCommand`)와 Linux(파일관리자별 플러그인)는
   여전히 범위 밖 — 아래 "1차 범위 밖" 항목 참고. macOS는 Finder Sync
