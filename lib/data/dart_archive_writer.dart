@@ -114,7 +114,11 @@ class DartArchiveWriter implements ArchiveWriter {
     CompressProgressCallback? onProgress,
     CancelToken? cancelToken,
   }) async {
-    final entries = await _collectEntries(sources);
+    final entries = await _collectEntries(
+      sources,
+      excludedExtensions: options.excludedExtensions,
+      followSymlinks: options.followSymlinks,
+    );
     final fileEntries = entries.where((e) => !e.isDirectory).toList();
     final total = fileEntries.length;
     var done = 0;
@@ -171,7 +175,11 @@ class DartArchiveWriter implements ArchiveWriter {
     CancelToken? cancelToken,
   }) async {
 
-    final entries = await _collectEntries(sources);
+    final entries = await _collectEntries(
+      sources,
+      excludedExtensions: options.excludedExtensions,
+      followSymlinks: options.followSymlinks,
+    );
     final fileEntries = entries.where((e) => !e.isDirectory).toList();
     final total = fileEntries.length;
     var done = 0;
@@ -308,8 +316,24 @@ class DartArchiveWriter implements ArchiveWriter {
   /// 안에서 쓰일 posix 스타일 이름과 함께 담는다. 폴더 자신의 이름이
   /// 압축파일 최상위 폴더 이름이 된다 — 예: `/Users/me/docs`를 압축하면
   /// 안에 `docs/a.txt`가 생긴다(Finder/탐색기 관례).
-  Future<List<_PendingEntry>> _collectEntries(List<Uri> sources) async {
+  ///
+  /// [excludedExtensions]에 걸리는 파일과(디렉터리는 대상이 아니다),
+  /// [followSymlinks]가 false일 때 만나는 심볼릭 링크는 건너뛴다(PLAN.md
+  /// 1.3 "압축 시 파일 필터"). `followLinks: false`로 순회하면 심볼릭
+  /// 링크가 [Link] 타입으로 나와 아래 `if (entity is Directory) ... else if
+  /// (entity is File)`에 걸리지 않고 자연히 빠진다 — 최상위 소스 자체가
+  /// 심볼릭 링크인 경우도 [FileSystemEntity.type]에 같은 `followLinks`를
+  /// 넘겨 동일하게 처리한다.
+  Future<List<_PendingEntry>> _collectEntries(
+    List<Uri> sources, {
+    required Set<String> excludedExtensions,
+    required bool followSymlinks,
+  }) async {
     final entries = <_PendingEntry>[];
+    final normalizedExclusions = {
+      for (final ext in excludedExtensions)
+        (ext.startsWith('.') ? ext.substring(1) : ext).toLowerCase(),
+    };
 
     for (final source in sources) {
       final rawPath = source.toFilePath();
@@ -318,28 +342,40 @@ class DartArchiveWriter implements ArchiveWriter {
               ? rawPath.substring(0, rawPath.length - 1)
               : rawPath;
       final baseName = p.basename(sourcePath);
-      final type = await FileSystemEntity.type(sourcePath);
+      final type = await FileSystemEntity.type(sourcePath, followLinks: followSymlinks);
 
       if (type == FileSystemEntityType.file) {
+        if (_isExcluded(sourcePath, normalizedExclusions)) continue;
         entries.add(_PendingEntry(archiveName: baseName, file: File(sourcePath)));
       } else if (type == FileSystemEntityType.directory) {
         entries.add(_PendingEntry(archiveName: '$baseName/', isDirectory: true));
         final dir = Directory(sourcePath);
-        await for (final entity in dir.list(recursive: true, followLinks: false)) {
+        await for (final entity in dir.list(recursive: true, followLinks: followSymlinks)) {
           final relative = p.split(p.relative(entity.path, from: sourcePath));
           final archiveName = [baseName, ...relative].join('/');
           if (entity is Directory) {
             entries.add(_PendingEntry(archiveName: '$archiveName/', isDirectory: true));
           } else if (entity is File) {
+            if (_isExcluded(entity.path, normalizedExclusions)) continue;
             entries.add(_PendingEntry(archiveName: archiveName, file: entity));
           }
         }
       }
-      // 심볼릭 링크나 이미 사라진 경로는 조용히 건너뛴다 — 드롭 직후
-      // 파일이 옮겨지는 등 경합 상황에서 전체 압축이 실패하지 않도록.
+      // 심볼릭 링크(followSymlinks가 false일 때)나 이미 사라진 경로는
+      // 조용히 건너뛴다 — 드롭 직후 파일이 옮겨지는 등 경합 상황에서 전체
+      // 압축이 실패하지 않도록.
     }
 
     return entries;
+  }
+
+  /// [path]의 확장자가 [normalizedExclusions](이미 점 없이 소문자로 정규화된
+  /// 집합)에 있는지. 확장자가 없는 파일(`Makefile` 등)은 절대 걸리지 않는다.
+  bool _isExcluded(String path, Set<String> normalizedExclusions) {
+    if (normalizedExclusions.isEmpty) return false;
+    final ext = p.extension(path);
+    if (ext.isEmpty) return false;
+    return normalizedExclusions.contains(ext.substring(1).toLowerCase());
   }
 }
 

@@ -310,6 +310,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get excludedExtensionsLabel => '제외할 확장자';
+
+  @override
+  String get excludedExtensionsHint => '쉼표로 구분 (예: tmp, log)';
+
+  @override
+  String get followSymlinksLabel => '심볼릭 링크 따라가기';
+
+  @override
   String saveLocationLabel(String path) {
     return '저장 위치: $path';
   }

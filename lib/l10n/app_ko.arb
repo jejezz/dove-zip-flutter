@@ -151,6 +151,9 @@
   "@splitVolumesCreated": {
     "placeholders": {"count": {"type": "int"}}
   },
+  "excludedExtensionsLabel": "제외할 확장자",
+  "excludedExtensionsHint": "쉼표로 구분 (예: tmp, log)",
+  "followSymlinksLabel": "심볼릭 링크 따라가기",
   "saveLocationLabel": "저장 위치: {path}",
   "@saveLocationLabel": {
     "placeholders": {"path": {"type": "String"}}

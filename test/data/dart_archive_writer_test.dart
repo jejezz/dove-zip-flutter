@@ -232,6 +232,119 @@ void main() {
     });
   });
 
+  group('파일 필터 (PLAN.md 1.3 "압축 시 파일 필터")', () {
+    test('excludedExtensions에 있는 확장자는 폴더 압축에서 제외된다', () async {
+      final docsDir = Directory('${tempDir.path}/docs')..createSync();
+      File('${docsDir.path}/a.txt').writeAsStringSync('hello');
+      File('${docsDir.path}/b.tmp').writeAsStringSync('temp');
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [docsDir.uri],
+        destination: destination.uri,
+        options: const CompressionOptions(
+          format: ArchiveFormat.zip,
+          excludedExtensions: {'tmp'},
+        ),
+      );
+
+      final names =
+          ZipDecoder().decodeBytes(await destination.readAsBytes()).map((f) => f.name).toSet();
+      expect(names, contains('docs/a.txt'));
+      expect(names, isNot(contains('docs/b.tmp')));
+    });
+
+    test('제외 확장자는 앞의 점과 대소문자를 무시하고 비교한다', () async {
+      final docsDir = Directory('${tempDir.path}/docs')..createSync();
+      File('${docsDir.path}/a.LOG').writeAsStringSync('log');
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [docsDir.uri],
+        destination: destination.uri,
+        options: const CompressionOptions(
+          format: ArchiveFormat.zip,
+          excludedExtensions: {'.log'}, // 점을 붙여 넘겨도 동작해야 한다
+        ),
+      );
+
+      final names =
+          ZipDecoder().decodeBytes(await destination.readAsBytes()).map((f) => f.name).toSet();
+      expect(names, isNot(contains('docs/a.LOG')));
+    });
+
+    test('확장자가 없는 파일은 필터에 걸리지 않는다', () async {
+      final docsDir = Directory('${tempDir.path}/docs')..createSync();
+      File('${docsDir.path}/Makefile').writeAsStringSync('all:');
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [docsDir.uri],
+        destination: destination.uri,
+        options: const CompressionOptions(
+          format: ArchiveFormat.zip,
+          excludedExtensions: {'tmp'},
+        ),
+      );
+
+      final names =
+          ZipDecoder().decodeBytes(await destination.readAsBytes()).map((f) => f.name).toSet();
+      expect(names, contains('docs/Makefile'));
+    });
+
+    test('followSymlinks 기본값(false)이면 폴더 안 심볼릭 링크를 건너뛴다', () async {
+      final docsDir = Directory('${tempDir.path}/docs')..createSync();
+      final realFile = File('${docsDir.path}/real.txt')..writeAsStringSync('real content');
+      Link('${docsDir.path}/link.txt').createSync(realFile.path);
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [docsDir.uri],
+        destination: destination.uri,
+        options: const CompressionOptions(format: ArchiveFormat.zip),
+      );
+
+      final names =
+          ZipDecoder().decodeBytes(await destination.readAsBytes()).map((f) => f.name).toSet();
+      expect(names, contains('docs/real.txt'));
+      expect(names, isNot(contains('docs/link.txt')));
+    });
+
+    test('followSymlinks: true면 폴더 안 심볼릭 링크가 가리키는 실제 내용을 담는다', () async {
+      final docsDir = Directory('${tempDir.path}/docs')..createSync();
+      final realFile = File('${docsDir.path}/real.txt')..writeAsStringSync('real content');
+      Link('${docsDir.path}/link.txt').createSync(realFile.path);
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [docsDir.uri],
+        destination: destination.uri,
+        options: const CompressionOptions(format: ArchiveFormat.zip, followSymlinks: true),
+      );
+
+      final archive = ZipDecoder().decodeBytes(await destination.readAsBytes());
+      final names = archive.map((f) => f.name).toSet();
+      expect(names, contains('docs/real.txt'));
+      expect(names, contains('docs/link.txt'));
+      expect(archive.findFile('docs/link.txt')!.content, 'real content'.codeUnits);
+    });
+
+    test('최상위 소스 자체가 심볼릭 링크면 followSymlinks: true일 때만 포함된다', () async {
+      final realFile = File('${tempDir.path}/real.txt')..writeAsStringSync('real content');
+      final linkFile = Link('${tempDir.path}/link.txt')..createSync(realFile.path);
+      final destination = File('${tempDir.path}/out.zip');
+
+      await writer.compress(
+        sources: [Uri.file(linkFile.path)],
+        destination: destination.uri,
+        options: const CompressionOptions(format: ArchiveFormat.zip, followSymlinks: true),
+      );
+
+      final archive = ZipDecoder().decodeBytes(await destination.readAsBytes());
+      expect(archive.findFile('link.txt')!.content, 'real content'.codeUnits);
+    });
+  });
+
   test('취소 토큰이 이미 취소돼 있으면 결과 파일을 만들지 않는다', () async {
     final file = File('${tempDir.path}/a.txt')..writeAsStringSync('hello');
     final destination = File('${tempDir.path}/out.zip');

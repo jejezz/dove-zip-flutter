@@ -12,6 +12,8 @@ class CompressionOptions {
     this.level = CompressionLevel.normal,
     this.password,
     this.splitVolumeBytes,
+    this.excludedExtensions = const {},
+    this.followSymlinks = false,
   });
 
   /// `FormatRegistry.canWrite(format) == true`인 것만 유효하다.
@@ -28,4 +30,18 @@ class CompressionOptions {
   /// 스킴이라 DoveZip 스스로만 다시 이어붙일 수 있다(PLAN.md 1.3,
   /// `FormatRegistry.isSplitVolumePart` 문서 참고).
   final int? splitVolumeBytes;
+
+  /// 폴더를 압축할 때 이 확장자(점 없이, 소문자, 예: `{"tmp", "log"}`)를
+  /// 가진 파일은 건너뛴다 — 대소문자와 앞의 점 유무는 비교 시점에
+  /// 정규화하므로 호출자가 어떤 형태로 넘겨도 된다(PLAN.md 1.3 "압축 시
+  /// 파일 필터"). 폴더 자체나 확장자가 없는 파일에는 적용되지 않는다.
+  /// 소스로 직접 고른 파일 하나짜리 압축(gzip/bzip2/xz)에는 적용하지
+  /// 않는다 — 사용자가 명시적으로 고른 파일 하나를 필터로 걸러 아무것도
+  /// 안 만드는 혼란스러운 상황을 피하기 위해서다.
+  final Set<String> excludedExtensions;
+
+  /// true면 심볼릭 링크를 따라가 그 대상의 실제 내용을 담는다. false(기본값)면
+  /// 심볼릭 링크를 완전히 건너뛴다 — 순환 링크로 인한 무한 루프나 예상 밖의
+  /// 거대한 대상을 조용히 압축에 끌어들이는 것을 막는 보수적인 기본값이다.
+  final bool followSymlinks;
 }

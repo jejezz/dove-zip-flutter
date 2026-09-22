@@ -578,6 +578,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, other{ ({count}개 조각으로 분할됨)}}'**
   String splitVolumesCreated(int count);
 
+  /// No description provided for @excludedExtensionsLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'제외할 확장자'**
+  String get excludedExtensionsLabel;
+
+  /// No description provided for @excludedExtensionsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'쉼표로 구분 (예: tmp, log)'**
+  String get excludedExtensionsHint;
+
+  /// No description provided for @followSymlinksLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'심볼릭 링크 따라가기'**
+  String get followSymlinksLabel;
+
   /// No description provided for @saveLocationLabel.
   ///
   /// In ko, this message translates to:

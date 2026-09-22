@@ -23,7 +23,12 @@ import '../widgets/error_snackbar.dart';
 /// 아직 zip만 만들 수 있어서다. 분할 압축(볼륨 크기 지정)은 포맷과 무관하게
 /// 지원한다 — 완성된 압축파일을 고정 크기로 잘라 붙이는 후처리라서다
 /// (`FormatRegistry.isSplitVolumePart` 문서 참고, DoveZip 자신만 다시
-/// 이어붙일 수 있는 실용적 절충).
+/// 이어붙일 수 있는 실용적 절충). 제외할 확장자/심볼릭 링크 옵션(PLAN.md
+/// 1.3 "압축 시 파일 필터")은 체크박스 뒤에 숨기지 않고 항상 노출한다 —
+/// 조건부로 나타나는 TextField 뒤에 새 `showDialog`(진행률)를 띄우면
+/// 이 Flutter SDK에서 시맨틱스 단정문이 깨지는 알려진 문제가 있어(아래
+/// 비밀번호/분할 압축 테스트의 `skip: true` 참고), 애초에 조건부 마운트를
+/// 만들지 않는 쪽을 택했다.
 class CompressDialog extends StatefulWidget {
   const CompressDialog({
     super.key,
@@ -52,6 +57,9 @@ class _CompressDialogState extends State<CompressDialog> {
 
   bool _splitEnabled = false;
   final _splitVolumeSizeController = TextEditingController();
+
+  final _excludedExtensionsController = TextEditingController();
+  bool _followSymlinks = false;
 
   /// 압축 시작 전 미리 계산해 두는 원본(압축 전) 총 크기 — 폴더는 재귀
   /// 합산한다(PLAN.md 1.3 P1 "압축 전 예상 크기"). 계산이 끝나기 전엔
@@ -88,7 +96,21 @@ class _CompressDialogState extends State<CompressDialog> {
   void dispose() {
     _passwordController.dispose();
     _splitVolumeSizeController.dispose();
+    _excludedExtensionsController.dispose();
     super.dispose();
+  }
+
+  /// `"tmp, .LOG  png"` 같은 입력을 쉼표/공백 아무거나로 갈라 앞의 점과
+  /// 대소문자를 정규화한 집합으로 만든다(PLAN.md 1.3 "압축 시 파일 필터").
+  /// 빈 입력은 빈 집합(필터 없음)이 된다.
+  Set<String> _parseExcludedExtensions(String text) {
+    return text
+        .split(RegExp(r'[,\s]+'))
+        .map((token) => token.trim())
+        .where((token) => token.isNotEmpty)
+        .map((token) =>
+            (token.startsWith('.') ? token.substring(1) : token).toLowerCase())
+        .toSet();
   }
 
   Uri _suggestDestination() {
@@ -182,6 +204,9 @@ class _CompressDialogState extends State<CompressDialog> {
           level: _level,
           password: password,
           splitVolumeBytes: splitVolumeBytes,
+          excludedExtensions:
+              _parseExcludedExtensions(_excludedExtensionsController.text),
+          followSymlinks: _followSymlinks,
         ),
         onProgress: (value) => progress.value = value,
         cancelToken: cancelToken,
@@ -389,6 +414,36 @@ class _CompressDialogState extends State<CompressDialog> {
                     ],
                   ),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: TextField(
+                  controller: _excludedExtensionsController,
+                  enabled: !_isCompressing,
+                  decoration: InputDecoration(
+                    labelText: l10n.excludedExtensionsLabel,
+                    hintText: l10n.excludedExtensionsHint,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: _isCompressing
+                    ? null
+                    : () => setState(() => _followSymlinks = !_followSymlinks),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _followSymlinks,
+                      onChanged: _isCompressing
+                          ? null
+                          : (checked) => setState(
+                              () => _followSymlinks = checked ?? false,
+                            ),
+                    ),
+                    Text(l10n.followSymlinksLabel),
+                  ],
+                ),
+              ),
               Row(
                 children: [
                   Expanded(

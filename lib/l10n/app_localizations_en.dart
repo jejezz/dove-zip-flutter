@@ -319,6 +319,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get excludedExtensionsLabel => 'Exclude extensions';
+
+  @override
+  String get excludedExtensionsHint => 'Comma-separated (e.g. tmp, log)';
+
+  @override
+  String get followSymlinksLabel => 'Follow symbolic links';
+
+  @override
   String saveLocationLabel(String path) {
     return 'Save to: $path';
   }

@@ -126,7 +126,7 @@ void main() {
 
       await tester.tap(find.text('비밀번호로 보호 (ZIP/7Z만 지원)'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'hunter2');
+      await tester.enterText(find.byType(TextField).first, 'hunter2');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('압축 시작'));
@@ -149,15 +149,16 @@ void main() {
 
     await tester.tap(find.text('비밀번호로 보호 (ZIP/7Z만 지원)'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'hunter2');
+    await tester.enterText(find.byType(TextField).first, 'hunter2');
 
     await tester.tap(find.text('ZIP'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('TAR.GZ').last);
     await tester.pumpAndSettle();
 
-    // 비밀번호 입력창 자체가 사라졌는지 확인(체크가 꺼졌다는 뜻).
-    expect(find.byType(TextField), findsNothing);
+    // 비밀번호 입력창 자체가 사라졌는지 확인(체크가 꺼졌다는 뜻) — 제외할
+    // 확장자 입력창은 항상 떠 있으니 하나만 남아야 한다.
+    expect(find.byType(TextField), findsOneWidget);
 
     await tester.tap(find.text('압축 시작'));
     await tester.pump();
@@ -171,7 +172,7 @@ void main() {
 
     await tester.tap(find.text('비밀번호로 보호 (ZIP/7Z만 지원)'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'hunter2');
+    await tester.enterText(find.byType(TextField).first, 'hunter2');
 
     await tester.tap(find.text('ZIP'));
     await tester.pumpAndSettle();
@@ -181,8 +182,9 @@ void main() {
     await tester.tap(find.text('7Z').last, warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    // TAR.GZ와 달리 7z는 비밀번호를 지원하니 입력창이 그대로 남아있어야 한다.
-    expect(find.byType(TextField), findsOneWidget);
+    // TAR.GZ와 달리 7z는 비밀번호를 지원하니 입력창이 그대로 남아있어야
+    // 한다 — 항상 떠 있는 "제외할 확장자" 입력창까지 합쳐 둘이어야 한다.
+    expect(find.byType(TextField), findsNWidgets(2));
   });
 
   testWidgets(
@@ -193,7 +195,7 @@ void main() {
 
       await tester.tap(find.text('분할 압축'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), '50');
+      await tester.enterText(find.byType(TextField).first, '50');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('압축 시작'));
@@ -215,11 +217,13 @@ void main() {
 
     await tester.tap(find.text('분할 압축'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), '50');
+    await tester.enterText(find.byType(TextField).first, '50');
     await tester.tap(find.text('분할 압축'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(TextField), findsNothing);
+    // 볼륨 크기 입력창은 사라지고, 항상 떠 있는 "제외할 확장자" 입력창만
+    // 남아야 한다.
+    expect(find.byType(TextField), findsOneWidget);
 
     await tester.tap(find.text('압축 시작'));
     await tester.pump();
@@ -233,7 +237,7 @@ void main() {
 
     await tester.tap(find.text('분할 압축'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), '0');
+    await tester.enterText(find.byType(TextField).first, '0');
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('압축 시작'));
@@ -241,6 +245,43 @@ void main() {
 
     expect(writer.lastOptions, isNull);
     expect(find.textContaining('분할 볼륨 크기'), findsOneWidget);
+  });
+
+  testWidgets('기본값은 확장자 필터 없음, 심볼릭 링크 건너뛰기다', (tester) async {
+    final writer = _FakeWriter();
+    await _pumpDialog(tester, sources, CreateArchive(writer));
+
+    await tester.tap(find.text('압축 시작'));
+    await tester.pump();
+
+    expect(writer.lastOptions?.excludedExtensions, isEmpty);
+    expect(writer.lastOptions?.followSymlinks, isFalse);
+  });
+
+  testWidgets('제외할 확장자를 입력하면 정규화돼 압축 옵션에 전달된다', (tester) async {
+    final writer = _FakeWriter();
+    await _pumpDialog(tester, sources, CreateArchive(writer));
+
+    await tester.enterText(find.byType(TextField).first, 'tmp, .LOG');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('압축 시작'));
+    await tester.pump();
+
+    expect(writer.lastOptions?.excludedExtensions, {'tmp', 'log'});
+  });
+
+  testWidgets('심볼릭 링크 따라가기를 켜면 옵션에 반영된다', (tester) async {
+    final writer = _FakeWriter();
+    await _pumpDialog(tester, sources, CreateArchive(writer));
+
+    await tester.tap(find.text('심볼릭 링크 따라가기'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('압축 시작'));
+    await tester.pump();
+
+    expect(writer.lastOptions?.followSymlinks, isTrue);
   });
 
   testWidgets('라이터가 실패하면 에러 스낵바가 뜨고 폼은 남아있다', (tester) async {
