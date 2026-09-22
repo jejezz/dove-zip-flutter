@@ -53,9 +53,14 @@ class ExtractModeBar extends StatelessWidget {
     final onPressed = enabled ? () => onSelectMode(mode) : null;
     final label = Text(
       _label(AppLocalizations.of(context), mode, hasSelection),
+      overflow: TextOverflow.ellipsis,
     );
+    // 셋 다 항상 같은 너비로 "동급"으로 노출한다(UI_UX.md 7장) — 강조는
+    // Filled(Primary)/Outlined 스타일 차이만으로 표현한다. 예전엔 강조된
+    // 버튼에 flex: 2를 줘서 더 넓게 그렸는데, 마지막 선택 모드가 바뀔
+    // 때마다(`highlightedMode`, PLAN.md 1.2 P1) 버튼 폭이 눈에 띄게
+    // 들썩여서 없앴다.
     return Expanded(
-      flex: mode == highlightedMode ? 2 : 1,
       child: mode == highlightedMode
           ? FilledButton(onPressed: onPressed, child: label)
           : OutlinedButton(onPressed: onPressed, child: label),
