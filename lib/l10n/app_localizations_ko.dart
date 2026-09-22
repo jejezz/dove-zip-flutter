@@ -50,6 +50,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get createArchiveButton => '새 압축 만들기';
 
   @override
+  String get pickFilesMenuItem => '파일 선택...';
+
+  @override
+  String get pickFolderMenuItem => '폴더 선택...';
+
+  @override
   String openArchiveFailed(String error) {
     return '압축파일을 열지 못했습니다: $error';
   }

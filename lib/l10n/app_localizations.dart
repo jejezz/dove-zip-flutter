@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'새 압축 만들기'**
   String get createArchiveButton;
 
+  /// No description provided for @pickFilesMenuItem.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 선택...'**
+  String get pickFilesMenuItem;
+
+  /// No description provided for @pickFolderMenuItem.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 선택...'**
+  String get pickFolderMenuItem;
+
   /// No description provided for @openArchiveFailed.
   ///
   /// In ko, this message translates to:

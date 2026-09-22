@@ -50,6 +50,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createArchiveButton => 'New Archive';
 
   @override
+  String get pickFilesMenuItem => 'Pick Files...';
+
+  @override
+  String get pickFolderMenuItem => 'Pick Folder...';
+
+  @override
   String openArchiveFailed(String error) {
     return 'Couldn\'t open the archive: $error';
   }

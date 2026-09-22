@@ -71,6 +71,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _openCompressDialog(files.map((f) => Uri.file(f.path)).toList());
   }
 
+  /// `file_selector`의 `openFiles()`는 macOS에서 `canChooseDirectories`를
+  /// 항상 false로 고정해 둬(플러그인 자체 제약 — 네이티브 NSOpenPanel은
+  /// 파일+폴더 동시 선택을 지원하지만 이 패키지가 그 조합을 노출하지
+  /// 않는다) 폴더를 통째로 고를 수 없다. 그래서 폴더 선택은 별도
+  /// `getDirectoryPaths()`로 분리한다 — 드래그앤드롭은 이미 폴더를
+  /// 지원하므로(파일시스템 경로일 뿐이라 구분이 없다), 이건 파일 피커
+  /// 쪽에서만 겪는 제약이다.
+  Future<void> _pickFolderAndCompress() async {
+    final folders = await getDirectoryPaths();
+    if (folders.isEmpty) return;
+    await _openCompressDialog(
+      folders.whereType<String>().map(Uri.directory).toList(),
+    );
+  }
+
   Future<void> _openCompressDialog(List<Uri> sources) async {
     if (!mounted) return;
     await showDialog<void>(
@@ -174,10 +189,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           label: Text(l10n.openButton),
                         ),
                         const SizedBox(width: 12),
-                        FilledButton.icon(
-                          onPressed: _pickFilesAndCompress,
-                          icon: const Icon(Icons.add_box_outlined, size: 18),
-                          label: Text(l10n.createArchiveButton),
+                        MenuAnchor(
+                          menuChildren: [
+                            MenuItemButton(
+                              onPressed: _pickFilesAndCompress,
+                              child: Text(l10n.pickFilesMenuItem),
+                            ),
+                            MenuItemButton(
+                              onPressed: _pickFolderAndCompress,
+                              child: Text(l10n.pickFolderMenuItem),
+                            ),
+                          ],
+                          builder: (context, controller, child) {
+                            return FilledButton.icon(
+                              onPressed: () => controller.isOpen
+                                  ? controller.close()
+                                  : controller.open(),
+                              icon: const Icon(Icons.add_box_outlined, size: 18),
+                              label: Text(l10n.createArchiveButton),
+                            );
+                          },
                         ),
                       ],
                     ),

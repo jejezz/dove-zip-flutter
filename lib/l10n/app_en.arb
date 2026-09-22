@@ -16,6 +16,8 @@
   "homeDropHint": "Drag an archive here\nor click to open",
   "openButton": "Open",
   "createArchiveButton": "New Archive",
+  "pickFilesMenuItem": "Pick Files...",
+  "pickFolderMenuItem": "Pick Folder...",
   "openArchiveFailed": "Couldn't open the archive: {error}",
   "recentArchivesTitle": "Recent Archives",
   "removeFromRecentTooltip": "Remove from list",
