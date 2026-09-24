@@ -197,5 +197,24 @@
   "imageLoadError": "이미지를 열지 못했습니다: {error}",
   "@imageLoadError": {
     "placeholders": {"error": {"type": "String"}}
-  }
+  },
+  "aboutMenuTooltip": "정보",
+  "aboutDialogTitle": "Dove Zip 정보",
+  "aboutTagline": "광고 없는 올인원 압축/해제 유틸리티",
+  "aboutVersionLabel": "버전 {version}",
+  "@aboutVersionLabel": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "aboutDescription": "Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.",
+  "aboutFeaturesTitle": "주요 기능",
+  "aboutFeatureBrowse": "압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운",
+  "aboutFeatureExtract": "3가지 해제 모드(여기에·알아서·원하는 곳에), 선택 항목만 해제, 손상된 압축파일 부분 해제",
+  "aboutFeatureCompress": "압축 레벨·파일 필터 선택, AES-256 비밀번호(ZIP·7Z), 분할 압축",
+  "aboutFeatureFormats": "ZIP·TAR·GZIP·BZIP2·XZ·7Z 압축/해제, RAR 해제",
+  "aboutFeatureDragDrop": "드래그앤드롭으로 열기·압축하기, Finder/탐색기로 끌어내서 해제",
+  "aboutFeatureLocaleTheme": "한국어·영어 다국어 지원, 라이트·다크 테마",
+  "aboutTechStackLabel": "Flutter(Dart)로 제작",
+  "aboutLicenseLabel": "라이선스: MIT",
+  "aboutGithubButton": "GitHub 저장소 열기",
+  "close": "닫기"
 }

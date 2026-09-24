@@ -86,6 +86,9 @@ dependencies:
   # 최근 연 압축파일 목록, 앱 설정(테마 등) 저장
   shared_preferences: ^2.3.3
 
+  # 정보(About) 다이얼로그에 실제 빌드 버전을 표시 — daylight와 동일
+  package_info_plus: ^9.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -117,6 +120,7 @@ flutter:
     - assets/icons/filetypes/
     - assets/icons/folders/
     - assets/icons/ui/
+    - assets/images/
 
   fonts:
     - family: SeoulNamsan
