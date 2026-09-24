@@ -8,8 +8,7 @@
 
 릴리스·버전·패키징·정보 창·아이콘·라이선스·UI/UX·글꼴·언어·테마는
 https://github.com/jejezz/application-release-templates/tree/main/conventions
-규약을 따른다. 이 앱에 적용된 규약 버전: conventions-v1 (미적용: README
-데모 GIF)
+규약을 따른다. 이 앱에 적용된 규약 버전: conventions-v1 (전 영역 적용)
 
 - 식별자 `com.ptype.doveZip`(macOS) / `com.ptype.dove_zip`(Linux)과 Windows
   `AppId`는 이미 릴리스됐으므로 바꾸지 않는다 (identity.md §5).
