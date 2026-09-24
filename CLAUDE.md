@@ -9,7 +9,7 @@
 릴리스·버전·패키징·정보 창·아이콘·라이선스·UI/UX·글꼴·언어·테마는
 https://github.com/jejezz/application-release-templates/tree/main/conventions
 규약을 따른다. 이 앱에 적용된 규약 버전: conventions-v1 (미적용: 코드에
-남은 한국어 예외 메시지 22개의 번역 파일 이전, README 스크린샷·데모 GIF 캡처)
+남은 한국어 예외 메시지 22개의 번역 파일 이전, README 데모 GIF)
 
 - 식별자 `com.ptype.doveZip`(macOS) / `com.ptype.dove_zip`(Linux)과 Windows
   `AppId`는 이미 릴리스됐으므로 바꾸지 않는다 (identity.md §5).
