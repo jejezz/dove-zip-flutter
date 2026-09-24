@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
 import '../../l10n/app_localizations.dart';
+import '../widgets/error_message.dart';
 
 /// 미리보기(F3) 확장 포인트 (ARCHITECTURE.md 9장).
 ///
@@ -83,7 +84,7 @@ class _TextViewState extends State<_TextView> {
       }
       if (mounted) setState(() => _content = text);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = describeError(AppLocalizations.of(context), e));
     }
   }
 

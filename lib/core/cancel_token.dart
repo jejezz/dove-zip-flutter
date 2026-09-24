@@ -18,5 +18,5 @@ class OperationCancelledException implements Exception {
   const OperationCancelledException();
 
   @override
-  String toString() => '작업이 취소되었습니다.';
+  String toString() => 'Operation cancelled.';
 }

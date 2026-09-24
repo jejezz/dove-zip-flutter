@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:dove_zip/data/dart_archive_reader.dart';
 import 'package:dove_zip/domain/entities/extract_conflict.dart';
+import 'package:dove_zip/domain/repositories/archive_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// PLAN.md 1.3 "분할 압축"의 읽기 쪽 — `DartArchiveWriter`가 실제로 만드는
@@ -105,11 +106,7 @@ void main() {
     await expectLater(
       reader.listEntries(parts.first.uri),
       throwsA(
-        isA<ArgumentError>().having(
-          (e) => e.toString(),
-          'message',
-          contains('조각'),
-        ),
+        isA<MissingSplitVolumeException>().having((e) => e.missingIndex, 'missingIndex', 2),
       ),
     );
   });
@@ -127,7 +124,7 @@ void main() {
 
     await expectLater(
       reader.listEntries(chosenUri),
-      throwsA(isA<ArgumentError>()),
+      throwsA(isA<MissingSplitVolumeException>().having((e) => e.missingIndex, 'missingIndex', isNull)),
     );
   });
 }

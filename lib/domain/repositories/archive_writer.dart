@@ -5,6 +5,23 @@ import '../entities/compression_options.dart';
 
 typedef CompressProgressCallback = void Function(CompressProgress progress);
 
+/// gzip·bzip2·xz처럼 파일 하나만 감싸는 형식에 여러 항목이나 폴더를 넘겼을
+/// 때. 압축 대화상자는 이 조합을 막지 않으므로 사용자에게 그대로 보인다 —
+/// tar.gz 등으로 먼저 묶으라고 안내한다.
+class SingleFileFormatException implements Exception {
+  const SingleFileFormatException(this.formatName, {required this.isDirectory});
+
+  final String formatName;
+
+  /// true면 폴더 하나를, false면 여러 항목을 넘긴 경우.
+  final bool isDirectory;
+
+  @override
+  String toString() => isDirectory
+      ? '$formatName can only compress a single file, not a folder'
+      : '$formatName can only compress a single file';
+}
+
 /// 파일/폴더 목록을 압축파일로 만드는 백엔드의 공통 인터페이스
 /// (ARCHITECTURE.md 4장) — [ArchiveReader]의 쓰기 쪽 대응.
 ///

@@ -428,4 +428,42 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonClose => '닫기';
+
+  @override
+  String get errorCancelled => '작업이 취소되었습니다.';
+
+  @override
+  String errorUnsupportedFormat(String fileName) {
+    return '$fileName의 압축 형식을 알 수 없거나 아직 지원하지 않습니다.';
+  }
+
+  @override
+  String errorPasswordRequired(String entryPath) {
+    return '\"$entryPath\" 항목에 비밀번호가 필요하거나 비밀번호가 틀렸습니다.';
+  }
+
+  @override
+  String errorSplitVolumeMissing(int index, String fileName) {
+    return '분할 압축 조각이 빠졌습니다 (조각 $index번을 찾을 수 없음): $fileName';
+  }
+
+  @override
+  String errorSplitVolumesNotFound(String fileName) {
+    return '분할 압축 조각을 찾을 수 없습니다: $fileName';
+  }
+
+  @override
+  String errorSingleFileFormatMultiple(String format) {
+    return '$format 형식은 파일 하나만 압축할 수 있습니다 — 폴더나 여러 항목은 tar.gz 등으로 먼저 묶어야 합니다.';
+  }
+
+  @override
+  String errorSingleFileFormatFolder(String format) {
+    return '$format 형식은 폴더를 압축할 수 없습니다 — tar.gz 등을 사용하세요.';
+  }
+
+  @override
+  String errorTargetExists(String name) {
+    return '이미 같은 이름의 항목이 있습니다: $name';
+  }
 }

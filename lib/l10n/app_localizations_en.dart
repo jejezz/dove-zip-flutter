@@ -443,4 +443,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonClose => 'Close';
+
+  @override
+  String get errorCancelled => 'The operation was cancelled.';
+
+  @override
+  String errorUnsupportedFormat(String fileName) {
+    return 'Unknown or not yet supported archive format: $fileName';
+  }
+
+  @override
+  String errorPasswordRequired(String entryPath) {
+    return '\"$entryPath\" needs a password, or the password is wrong.';
+  }
+
+  @override
+  String errorSplitVolumeMissing(int index, String fileName) {
+    return 'A split volume is missing (part $index not found): $fileName';
+  }
+
+  @override
+  String errorSplitVolumesNotFound(String fileName) {
+    return 'Couldn\'t find the split volumes: $fileName';
+  }
+
+  @override
+  String errorSingleFileFormatMultiple(String format) {
+    return '$format can compress only a single file — bundle folders or multiple items into tar.gz or similar first.';
+  }
+
+  @override
+  String errorSingleFileFormatFolder(String format) {
+    return '$format can\'t compress a folder — use tar.gz or similar.';
+  }
+
+  @override
+  String errorTargetExists(String name) {
+    return 'An item with the same name already exists: $name';
+  }
 }

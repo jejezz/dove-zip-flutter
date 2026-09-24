@@ -219,7 +219,7 @@ class DartArchiveReader implements ArchiveReader {
       } on ArchivePasswordRequiredException {
         rethrow;
       } catch (e) {
-        failures.add(ExtractFailure(entryPath: entry.pathInArchive, message: '$e'));
+        failures.add(ExtractFailure(entryPath: entry.pathInArchive, message: '$e', error: e));
         done++;
         onProgress?.call(ExtractProgress(done: done, total: total, currentName: entry.pathInArchive));
         continue;
@@ -245,7 +245,7 @@ class DartArchiveReader implements ArchiveReader {
       try {
         final koniEntry = reader.entries.where((e) => e.path == entryPath).firstOrNull;
         if (koniEntry == null) {
-          throw ArgumentError('압축파일 안에 "$entryPath" 항목이 없습니다.');
+          throw ArgumentError('No entry "$entryPath" in the archive');
         }
         final content = await _readKoniEntryContent(reader, koniEntry);
         return await _writeToTempFile(entryPath, content);
@@ -257,7 +257,7 @@ class DartArchiveReader implements ArchiveReader {
     final (archive, _) = await _decodeArchive(archiveLocation, password: password);
     final entry = archive.findFile(entryPath);
     if (entry == null) {
-      throw ArgumentError('압축파일 안에 "$entryPath" 항목이 없습니다.');
+      throw ArgumentError('No entry "$entryPath" in the archive');
     }
     return _writeToTempFile(entryPath, _readContent(entry));
   }
@@ -286,7 +286,7 @@ class DartArchiveReader implements ArchiveReader {
     final koniFormat = switch (format) {
       ArchiveFormat.sevenZip => const koni_sevenz.SevenZFormat(),
       ArchiveFormat.rar => const koni_rar.RarFormat(),
-      _ => throw ArgumentError('koni 백엔드가 지원하지 않는 형식입니다: $format'),
+      _ => throw ArgumentError('Format not handled by the koni backend: $format'),
     };
 
     try {
@@ -354,7 +354,7 @@ class DartArchiveReader implements ArchiveReader {
     final fileName = p.basename(archiveLocation.toFilePath());
     final format = FormatRegistry.detectFromFileName(fileName);
     if (format == null || !supports(format)) {
-      throw ArgumentError('DartArchiveReader가 지원하지 않는 압축 형식입니다: $fileName');
+      throw ArgumentError('DartArchiveReader does not support: $fileName');
     }
 
     final bytes = await _readArchiveBytes(archiveLocation);
@@ -368,7 +368,7 @@ class DartArchiveReader implements ArchiveReader {
       ArchiveFormat.gzip => _singleFileArchive(fileName, GZipDecoder().decodeBytes(bytes)),
       ArchiveFormat.bzip2 => _singleFileArchive(fileName, BZip2Decoder().decodeBytes(bytes)),
       ArchiveFormat.xz => _singleFileArchive(fileName, XZDecoder().decodeBytes(bytes)),
-      _ => throw ArgumentError('DartArchiveReader가 지원하지 않는 압축 형식입니다: $format'),
+      _ => throw ArgumentError('DartArchiveReader does not support: $format'),
     };
 
     return (archive, format);
@@ -386,7 +386,7 @@ class DartArchiveReader implements ArchiveReader {
 
     final parts = await findSplitVolumeParts(archiveLocation);
     if (parts.isEmpty) {
-      throw ArgumentError('분할 압축 조각을 찾을 수 없습니다: $fileName');
+      throw MissingSplitVolumeException(fileName);
     }
     assertContiguousSplitVolumes(fileName, parts);
 

@@ -33,6 +33,7 @@ import '../widgets/extract_progress_dialog.dart';
 import '../widgets/password_prompt_dialog.dart';
 import 'extract_mode_bar.dart';
 import 'last_extract_mode_provider.dart';
+import '../widgets/error_message.dart';
 
 /// 압축파일 탐색 화면 (UI_UX.md 6.2).
 ///
@@ -327,10 +328,8 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _previewingPath = null);
-      showErrorSnackBar(
-        context,
-        AppLocalizations.of(context).previewFailed('$e'),
-      );
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, l10n.previewFailed(describeError(l10n, e)));
     }
   }
 
@@ -481,7 +480,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     if (batch.errors.isEmpty) {
       _showInfoSnackBar(l10n.extractCompleted(batch.destination ?? ''));
     } else {
-      showErrorSnackBar(context, l10n.dragOutFailed(batch.errors.join('\n')));
+      showErrorSnackBar(
+        context,
+        l10n.dragOutFailed(batch.errors.map((e) => describeError(l10n, e)).join('\n')),
+      );
     }
   }
 
@@ -507,7 +509,11 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
           l10n.dragOutTooLarge(formatBytes(DragOutStaging.maxBytes)),
         );
       case _DragOutStatus.failed:
-        showErrorSnackBar(context, l10n.dragOutFailed('${dragOut.error}'));
+        final error = dragOut.error;
+        showErrorSnackBar(
+          context,
+          l10n.dragOutFailed(error == null ? '' : describeError(l10n, error)),
+        );
       case _DragOutStatus.preparing:
         _showInfoSnackBar(l10n.dragOutStillPreparing);
       case _DragOutStatus.ready:
@@ -621,7 +627,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
           result.failures.length,
         );
         final detail =
-            result.failures.map((f) => '- ${f.entryPath}: ${f.message}').join('\n');
+            result.failures.map((f) => '- ${describeFailure(l10n, f)}').join('\n');
         showErrorSnackBar(context, '$summary\n$detail');
       }
     } on OperationCancelledException {
@@ -633,10 +639,8 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      showErrorSnackBar(
-        context,
-        AppLocalizations.of(context).extractFailed('$e'),
-      );
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, l10n.extractFailed(describeError(l10n, e)));
     } finally {
       progress.dispose();
       if (mounted) setState(() => _isExtracting = false);

@@ -5,10 +5,14 @@
 /// 않는다 — 그 둘은 전체 작업을 멈추고 각자의 흐름(재시도 다이얼로그,
 /// 취소 스낵바)으로 이어져야 하는 별개의 상황이기 때문이다.
 class ExtractFailure {
-  const ExtractFailure({required this.entryPath, required this.message});
+  const ExtractFailure({required this.entryPath, required this.message, this.error});
 
   final String entryPath;
   final String message;
+
+  /// [message]를 만든 예외 원본. 화면은 이것으로 번역된 문구를 고른다
+  /// (presentation/widgets/error_message.dart) — 없으면 [message]를 쓴다.
+  final Object? error;
 
   @override
   String toString() => '$entryPath: $message';

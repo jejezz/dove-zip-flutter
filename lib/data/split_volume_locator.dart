@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../domain/repositories/archive_reader.dart';
 import 'format_registry.dart';
 
 /// [location]과 같은 폴더에서, 같은 논리 압축파일 이름을 공유하는 분할
@@ -43,9 +44,7 @@ void assertContiguousSplitVolumes(String fileName, List<File> parts) {
   for (var i = 0; i < parts.length; i++) {
     final index = FormatRegistry.splitVolumeIndexOf(p.basename(parts[i].path))!;
     if (index != i + 1) {
-      throw ArgumentError(
-        '분할 압축 조각이 빠졌습니다 (조각 ${i + 1}번을 찾을 수 없음): $fileName',
-      );
+      throw MissingSplitVolumeException(fileName, missingIndex: i + 1);
     }
   }
 }

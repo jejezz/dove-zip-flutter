@@ -4,6 +4,7 @@ import 'package:archive/archive.dart';
 import 'package:dove_zip/data/dart_archive_writer.dart';
 import 'package:dove_zip/domain/entities/archive_entry.dart';
 import 'package:dove_zip/domain/entities/compression_options.dart';
+import 'package:dove_zip/domain/repositories/archive_writer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -135,7 +136,7 @@ void main() {
           destination: File('${tempDir.path}/out.gz').uri,
           options: const CompressionOptions(format: ArchiveFormat.gzip),
         ),
-        throwsArgumentError,
+        throwsA(isA<SingleFileFormatException>().having((e) => e.isDirectory, 'isDirectory', isFalse)),
       );
     });
 
@@ -148,7 +149,7 @@ void main() {
           destination: File('${tempDir.path}/out.gz').uri,
           options: const CompressionOptions(format: ArchiveFormat.gzip),
         ),
-        throwsArgumentError,
+        throwsA(isA<SingleFileFormatException>().having((e) => e.isDirectory, 'isDirectory', isTrue)),
       );
     });
   });

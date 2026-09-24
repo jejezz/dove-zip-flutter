@@ -120,5 +120,14 @@
   "aboutFeatureLocaleTheme": "Korean and English localization, light and dark themes",
   "aboutOpenSourceLicenses": "Open Source Licenses",
   "aboutRepository": "GitHub",
-  "commonClose": "Close"
+  "commonClose": "Close",
+
+  "errorCancelled": "The operation was cancelled.",
+  "errorUnsupportedFormat": "Unknown or not yet supported archive format: {fileName}",
+  "errorPasswordRequired": "\"{entryPath}\" needs a password, or the password is wrong.",
+  "errorSplitVolumeMissing": "A split volume is missing (part {index} not found): {fileName}",
+  "errorSplitVolumesNotFound": "Couldn't find the split volumes: {fileName}",
+  "errorSingleFileFormatMultiple": "{format} can compress only a single file — bundle folders or multiple items into tar.gz or similar first.",
+  "errorSingleFileFormatFolder": "{format} can't compress a folder — use tar.gz or similar.",
+  "errorTargetExists": "An item with the same name already exists: {name}"
 }

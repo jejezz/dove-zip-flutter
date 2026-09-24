@@ -22,7 +22,22 @@ class ArchivePasswordRequiredException implements Exception {
   final String entryPath;
 
   @override
-  String toString() => '"$entryPath" 항목에 비밀번호가 필요하거나 비밀번호가 틀렸습니다.';
+  String toString() => 'Password required or wrong for "$entryPath"';
+}
+
+/// 분할 압축(`name.zip.001`, `.002`, …)의 조각이 빠졌을 때. [missingIndex]가
+/// 있으면 그 번호의 조각이 없는 것이고, 없으면 조각을 하나도 찾지 못한 것이다.
+/// 이어붙인 바이트가 조용히 깨지는 대신 디코딩 전에 알린다.
+class MissingSplitVolumeException implements Exception {
+  const MissingSplitVolumeException(this.fileName, {this.missingIndex});
+
+  final String fileName;
+  final int? missingIndex;
+
+  @override
+  String toString() => missingIndex == null
+      ? 'No split volumes found: $fileName'
+      : 'Split volume #$missingIndex is missing: $fileName';
 }
 
 /// 압축파일을 읽어 엔트리 목록을 얻고, 필요하면 디스크에 해제하는 백엔드의
