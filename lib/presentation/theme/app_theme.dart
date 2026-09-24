@@ -70,6 +70,10 @@ class AppTheme {
 
   static const _fontFamily = 'SeoulNamsan';
 
+  /// SeoulNamsan에 없는 글자(일부 한자·기호·다른 언어의 파일 이름)를 OS 한글
+  /// 글꼴로 넘긴다 — 없으면 두부(□)로 보인다 (conventions/fonts.md §2).
+  static const _fontFallback = ['Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', 'Noto Sans KR'];
+
   static ThemeData dark() {
     const scheme = ColorScheme.dark(
       primary: AppColors.primary,
@@ -110,6 +114,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       fontFamily: _fontFamily,
+      fontFamilyFallback: _fontFallback,
       scaffoldBackgroundColor: background,
       canvasColor: background,
       splashFactory: InkSparkle.splashFactory,
