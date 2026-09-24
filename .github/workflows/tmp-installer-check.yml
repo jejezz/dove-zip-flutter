@@ -1,0 +1,72 @@
+# TEMPORARY — verifies the Windows installer step of release.yml on this PR
+# before re-tagging v0.1.0. Remove before merging.
+name: Installer check (temporary)
+
+on:
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build windows --release
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      # Diagnosis: does disabling Git Bash's argument path conversion fix
+      # ISCC's "more than one script filename"? A = template form (name as
+      # /D argument), B = name via environment. Both with conversion off.
+      - name: Package installer (A — template form, no path conversion)
+        shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | head -1 | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/' | tr -d '\r')
+          APP_NAME=$(grep '^PRODUCT_NAME' macos/Runner/Configs/AppInfo.xcconfig | head -1 | sed -E 's/^PRODUCT_NAME[[:space:]]*=[[:space:]]*//' | tr -d '\r')
+          BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppName=$APP_NAME" \
+            "/DMyAppVersion=$VERSION" \
+            "/DMyAppExeName=$BINARY_NAME.exe" \
+            installer/windows/app.iss
+          ls -la dist
+          rm -rf dist
+
+      - name: Package installer (B — name via environment, no path conversion)
+        if: always()
+        shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | head -1 | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/' | tr -d '\r')
+          APP_NAME=$(grep '^PRODUCT_NAME' macos/Runner/Configs/AppInfo.xcconfig | head -1 | sed -E 's/^PRODUCT_NAME[[:space:]]*=[[:space:]]*//' | tr -d '\r')
+          BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
+          APP_DISPLAY_NAME="$APP_NAME" \
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppVersion=$VERSION" \
+            "/DMyAppExeName=$BINARY_NAME.exe" \
+            installer/windows/app.iss
+
+      - name: Check output
+        shell: bash
+        run: |
+          ls -la dist
+          test -f "dist/DoveZipSetup-$(grep '^version:' pubspec.yaml | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/' | tr -d '\r').exe"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/*Setup-*.exe
+          if-no-files-found: error
