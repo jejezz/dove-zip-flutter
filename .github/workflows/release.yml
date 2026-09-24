@@ -1,0 +1,254 @@
+name: Release
+
+# From jejezz/application-release-templates (desktop/), validated end-to-end
+# (including macOS signing/notarization) on the Portside app. Dove Zip
+# changes from the template:
+#   - check-version: the tag must match pubspec.yaml's version, so a build
+#     is never published under another version's tag.
+#   - The display name "Dove Zip" comes from macos/Runner/Configs/
+#     AppInfo.xcconfig (PRODUCT_NAME), not pubspec.yaml's `name` (the Dart
+#     package id `dove_zip`).
+#   - The DMG and installer file names drop the display name's space
+#     (DoveZip-v0.1.0.dmg, DoveZipSetup-0.1.0.exe) — GitHub Release would
+#     otherwise turn it into a dot.
+#
+# Needs the macos/, windows/, and linux/ platform folders — if they don't
+# exist yet, run `flutter create --platforms=macos,windows,linux .` in the
+# project root first.
+#
+# Push a `v*.*.*` tag (e.g. v0.1.0) to build all three platforms in
+# parallel and upload each as a workflow artifact. Once every platform build
+# has succeeded, the final `release` job downloads all three artifacts and
+# creates a single GitHub Release with them attached. If any platform build
+# fails, no release is created at all — this avoids ever publishing a
+# release with only some platforms' assets attached.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches pubspec.yaml version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | head -1 | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/')
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pubspec.yaml version $PUBSPEC_VERSION"
+            exit 1
+          fi
+
+  build-macos:
+    needs: check-version
+    # Use a recent macOS runner so its default Xcode's SDK is new enough for
+    # your plugins' native deps; see release-ios.yml's comment for an example.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # brew install any native build tools your plugins need here (e.g. if
+      # a plugin's macOS podspec builds a C/C++ library from source, it may
+      # need autoconf/automake/libtool/pkg-config). create-dmg is required.
+      - name: Install native build tools
+        run: brew install create-dmg
+
+      - run: flutter pub get
+
+      - run: flutter build macos --release
+
+      # Requires the MACOS_CERTIFICATE_* / MACOS_KEYCHAIN_PASSWORD secrets
+      # below (see README). If you don't have a Developer ID certificate
+      # yet, delete this step and the "Notarize DMG" step — the DMG will
+      # ship ad-hoc signed instead, and Gatekeeper will show an
+      # "unidentified developer" warning on first launch.
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+
+          echo -n "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode -o "$CERT_PATH"
+
+          security create-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Sign app (Developer ID, hardened runtime)
+        run: |
+          APP_PATH="build/macos/Build/Products/Release/$(ls build/macos/Build/Products/Release | grep '\.app$' | head -1)"
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
+          test -n "$IDENTITY"
+
+          codesign --force --deep --options runtime \
+            --entitlements macos/Runner/Release.entitlements \
+            --sign "$IDENTITY" "$APP_PATH"
+
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+      - name: Package DMG
+        run: |
+          APP_PATH="build/macos/Build/Products/Release/$(ls build/macos/Build/Products/Release | grep '\.app$' | head -1)"
+          APP_NAME=$(basename "$APP_PATH" .app)
+          DMG_PATH="${APP_NAME// /}-${{ github.ref_name }}.dmg"
+
+          # create-dmg is known to sometimes exit non-zero over unrelated
+          # warnings even after producing a working DMG, so don't treat that
+          # as failure — just check the file actually got created.
+          create-dmg \
+            --volname "$APP_NAME" \
+            --window-size 500 300 \
+            --icon-size 100 \
+            --app-drop-link 380 120 \
+            "$DMG_PATH" \
+            "$APP_PATH" || true
+
+          test -f "$DMG_PATH"
+          echo "DMG_PATH=$DMG_PATH" >> "$GITHUB_ENV"
+
+      # APPLE_ID_PASSWORD must be an app-specific password generated at
+      # appleid.apple.com — your regular account password will not work.
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$DMG_PATH"
+
+      - name: Clean up keychain
+        if: always()
+        run: security delete-keychain "$KEYCHAIN_PATH" || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: ${{ env.DMG_PATH }}
+          if-no-files-found: error
+
+  build-windows:
+    needs: check-version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build windows --release
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      # Reads the app's display name (PRODUCT_NAME in macos/Runner/Configs/
+      # AppInfo.xcconfig — pubspec.yaml's `name` is the package id) and its built exe
+      # name (from windows/CMakeLists.txt's BINARY_NAME) so no placeholders
+      # are needed in installer/windows/app.iss for these two — only AppId
+      # (a GUID) needs to be edited by hand, see that file's comment.
+      - name: Package installer
+        shell: bash
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          # tr: the Windows checkout may have CRLF line endings.
+          APP_NAME=$(grep '^PRODUCT_NAME' macos/Runner/Configs/AppInfo.xcconfig | head -1 | sed -E 's/^PRODUCT_NAME[[:space:]]*=[[:space:]]*//' | tr -d '\r')
+          test -n "$APP_NAME"
+          BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
+
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppName=$APP_NAME" \
+            "/DMyAppVersion=$VERSION" \
+            "/DMyAppExeName=$BINARY_NAME.exe" \
+            installer/windows/app.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/*Setup-*.exe
+          if-no-files-found: error
+
+  build-linux:
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Standard toolchain flutter doctor recommends for Linux desktop
+      # builds. Add any extra apt packages your plugins need alongside these.
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - run: flutter pub get
+
+      - run: flutter build linux --release
+
+      - name: Package tarball
+        run: |
+          BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' linux/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
+
+          STAGE_DIR="$BINARY_NAME"
+          rm -rf "$STAGE_DIR"
+          cp -r build/linux/x64/release/bundle "$STAGE_DIR"
+
+          tar czf "${BINARY_NAME}-${{ github.ref_name }}-linux-x64.tar.gz" "$STAGE_DIR"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-tarball
+          path: "*-linux-x64.tar.gz"
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-windows, build-linux]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --title "${{ github.ref_name }}" \
+            --generate-notes

@@ -59,6 +59,32 @@ flutter run -d macos   # 또는 windows, linux
 flutter test
 ```
 
+## 릴리스
+
+[application-release-templates](https://github.com/jejezz/application-release-templates)의
+`desktop/` 템플릿을 그대로 가져와 이 앱에 맞게 조금 고친 구성입니다
+(`.github/workflows/release.yml`, `installer/windows/app.iss`).
+
+1. `pubspec.yaml`의 `version`을 올리고 `main`에 머지합니다.
+2. 같은 버전의 태그를 푸시합니다 — 태그와 `pubspec.yaml` 버전이 다르면
+   `check-version` 잡이 멈추고 릴리스를 만들지 않습니다.
+   ```bash
+   git tag v0.1.0 && git push origin v0.1.0
+   ```
+3. macOS/Windows/Linux 빌드가 모두 성공하면 GitHub Release 하나에 다음이
+   함께 올라갑니다. 하나라도 실패하면 릴리스 자체가 만들어지지 않습니다.
+
+| 플랫폼 | 산출물 | 비고 |
+|---|---|---|
+| macOS | `DoveZip-v0.1.0.dmg` | Developer ID 서명 + 공증 |
+| Windows | `DoveZipSetup-0.1.0.exe` | Inno Setup 설치 프로그램, 서명 없음(SmartScreen 경고) |
+| Linux | `dove_zip-v0.1.0-linux-x64.tar.gz` | 번들 tarball |
+
+macOS 서명/공증용 시크릿(`MACOS_CERTIFICATE_*`, `MACOS_KEYCHAIN_PASSWORD`,
+`APPLE_ID`, `APPLE_ID_PASSWORD`, `APPLE_TEAM_ID`)은 저장소에 등록돼 있습니다.
+Windows 설치 프로그램의 `AppId`(GUID)는 업그레이드/제거가 같은 앱으로
+인식되는 기준이라 **한 번 릴리스한 뒤에는 절대 바꾸지 않습니다.**
+
 ## 프로젝트 구조 및 설계 문서
 
 - [`PLAN.md`](PLAN.md) — 기능 목록, 포맷 지원 매트릭스, 우선순위
