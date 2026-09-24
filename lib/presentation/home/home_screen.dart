@@ -15,9 +15,8 @@ import '../../domain/entities/extract_destination_mode.dart';
 import '../../l10n/app_localizations.dart';
 import '../archive_browser/archive_browser_screen.dart';
 import '../compress/compress_dialog.dart';
-import '../theme/locale_provider.dart';
-import '../theme/theme_mode_provider.dart';
-import '../widgets/about_dialog.dart';
+import '../../about/dove_zip_about.dart';
+import '../../settings/settings_menus.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 
@@ -194,32 +193,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final themeMode = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeProvider);
     final recentArchives = ref.watch(recentArchivesProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
+        // conventions: 오른쪽 끝 순서는 테마 | 언어 | 정보, 전환은 체크 메뉴.
         actions: [
+          const ThemeMenuButton(),
+          const LanguageMenuButton(),
           IconButton(
-            tooltip: l10n.languageToggleTooltip(_localeLabel(l10n, locale)),
-            onPressed: () => ref.read(localeProvider.notifier).cycle(),
-            icon: const Icon(Icons.language_outlined),
-          ),
-          IconButton(
-            tooltip: l10n.themeToggleTooltip(_themeModeLabel(l10n, themeMode)),
-            onPressed: () => ref.read(themeModeProvider.notifier).cycle(),
-            icon: Icon(switch (themeMode) {
-              ThemeMode.light => Icons.light_mode_outlined,
-              ThemeMode.dark => Icons.dark_mode_outlined,
-              ThemeMode.system => Icons.brightness_auto_outlined,
-            }),
-          ),
-          IconButton(
-            tooltip: l10n.aboutMenuTooltip,
-            onPressed: () => showAboutInfoDialog(context),
-            icon: const Icon(Icons.info_outline),
+            tooltip: l10n.aboutTooltip,
+            onPressed: () => showDoveZipAbout(context),
+            icon: const Icon(Icons.info_outline_rounded),
           ),
           const SizedBox(width: 8),
         ],
@@ -323,19 +309,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
-
-String _themeModeLabel(AppLocalizations l10n, ThemeMode mode) => switch (mode) {
-      ThemeMode.system => l10n.themeModeSystem,
-      ThemeMode.light => l10n.themeModeLight,
-      ThemeMode.dark => l10n.themeModeDark,
-    };
-
-String _localeLabel(AppLocalizations l10n, Locale? locale) => switch (locale?.languageCode) {
-      null => l10n.languageModeSystem,
-      'ko' => l10n.languageModeKorean,
-      'en' => l10n.languageModeEnglish,
-      _ => locale!.languageCode,
-    };
 
 class _RecentArchiveTile extends StatelessWidget {
   const _RecentArchiveTile({required this.path, required this.onTap, required this.onRemove});

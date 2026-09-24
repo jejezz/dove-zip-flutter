@@ -4,21 +4,14 @@
   "appTitle": "Dove Zip",
   "@appTitle": {"description": "앱 이름 — 번역하지 않는다."},
 
-  "themeToggleTooltip": "테마 전환 ({mode})",
-  "@themeToggleTooltip": {
-    "placeholders": {"mode": {"type": "String"}}
-  },
-  "themeModeSystem": "시스템",
-  "themeModeLight": "라이트",
-  "themeModeDark": "다크",
+  "themeMenuTooltip": "테마",
+  "themeSystem": "시스템 설정 따르기",
+  "themeLight": "라이트",
+  "themeDark": "다크",
 
-  "languageToggleTooltip": "언어 전환 ({mode})",
-  "@languageToggleTooltip": {
-    "placeholders": {"mode": {"type": "String"}}
-  },
-  "languageModeSystem": "시스템",
-  "languageModeKorean": "한국어",
-  "languageModeEnglish": "영어",
+  "languageMenuTooltip": "언어",
+  "languageSystem": "시스템 설정 따르기 / System",
+  "languageSystemShort": "시스템",
 
   "homeDropHint": "압축파일을 여기로 드래그하거나\n클릭해서 열기",
   "openButton": "열기",
@@ -198,23 +191,24 @@
   "@imageLoadError": {
     "placeholders": {"error": {"type": "String"}}
   },
-  "aboutMenuTooltip": "정보",
-  "aboutDialogTitle": "Dove Zip 정보",
+  "aboutTooltip": "정보",
+  "aboutMenuItem": "{appName} 정보",
+  "@aboutMenuItem": {
+    "placeholders": {"appName": {"type": "String"}}
+  },
   "aboutTagline": "광고 없는 올인원 압축/해제 유틸리티",
-  "aboutVersionLabel": "버전 {version}",
-  "@aboutVersionLabel": {
-    "placeholders": {"version": {"type": "String"}}
+  "aboutVersion": "버전 {version} (빌드 {build})",
+  "@aboutVersion": {
+    "placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}
   },
   "aboutDescription": "Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.",
-  "aboutFeaturesTitle": "주요 기능",
   "aboutFeatureBrowse": "압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운",
   "aboutFeatureExtract": "3가지 해제 모드(여기에·알아서·원하는 곳에), 선택 항목만 해제, 손상된 압축파일 부분 해제",
   "aboutFeatureCompress": "압축 레벨·파일 필터 선택, AES-256 비밀번호(ZIP·7Z), 분할 압축",
   "aboutFeatureFormats": "ZIP·TAR·GZIP·BZIP2·XZ·7Z 압축/해제, RAR 해제",
   "aboutFeatureDragDrop": "드래그앤드롭으로 열기·압축하기, Finder/탐색기로 끌어내서 해제",
   "aboutFeatureLocaleTheme": "한국어·영어 다국어 지원, 라이트·다크 테마",
-  "aboutTechStackLabel": "Flutter(Dart)로 제작",
-  "aboutLicenseLabel": "라이선스: MIT",
-  "aboutGithubButton": "GitHub 저장소 열기",
-  "close": "닫기"
+  "aboutOpenSourceLicenses": "오픈소스 라이선스",
+  "aboutRepository": "GitHub",
+  "commonClose": "닫기"
 }

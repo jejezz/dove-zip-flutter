@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_settings_scope.dart';
+
 /// macOS Finder의 "서비스" 메뉴(NSServices)와 파일 연결(더블클릭,
 /// `CFBundleDocumentTypes`) — 둘 다 `macos/Runner/Info.plist`에 등록하고
 /// `ServicesBridge.swift`가 같은 채널로 전달한다 — 가 실제로 앱을
@@ -48,14 +50,14 @@ void main() {
   });
 
   Future<void> pumpHome(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(
+    await tester.pumpWidget(await withAppSettings(const ProviderScope(
       child: MaterialApp(
         locale: Locale('ko'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: HomeScreen(),
       ),
-    ));
+    )));
     await tester.pumpAndSettle();
   }
 
