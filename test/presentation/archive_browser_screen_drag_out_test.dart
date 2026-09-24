@@ -94,6 +94,9 @@ void main() {
           handle: ArchiveHandle(location: Uri.file('/tmp/photos.zip'), format: ArchiveFormat.zip, entries: entries),
           extractEntries: ExtractEntries(reader),
           dragOutRootPath: root.path,
+          // 이 파일은 미리 풀어 두는 방식을 검증한다(파일 프로미스는
+          // archive_browser_screen_drag_out_promise_test.dart).
+          dragOutWithPromises: false,
         ),
       ),
     ));

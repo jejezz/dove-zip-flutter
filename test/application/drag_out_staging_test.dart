@@ -192,4 +192,111 @@ void main() {
     expect(File(p.join(stage.directory.path, 'docs', 'a.txt')).readAsStringSync(), 'hello');
     expect(File(p.join(stage.directory.path, 'root.txt')).readAsStringSync(), 'world');
   });
+
+  group('extractItemTo (파일 프로미스)', () {
+    late Directory dest;
+
+    setUp(() async {
+      dest = await Directory(p.join(root.path, 'dest')).create();
+    });
+
+    List<String> leftovers() =>
+        dest.listSync().map((e) => p.basename(e.path)).where((n) => n.startsWith('.dove_zip_')).toList();
+
+    test('파일을 Finder가 고른 다른 이름의 경로에 풀고 임시 폴더를 남기지 않는다', () async {
+      final target = p.join(dest.path, 'a 2.txt');
+      await staging.extractItemTo(handle: handle, selectedPath: 'a.txt', targetPath: target);
+
+      expect(reader.lastEntryPaths, ['a.txt']);
+      expect(File(target).existsSync(), isTrue);
+      expect(leftovers(), isEmpty);
+    });
+
+    test('하위 폴더의 파일도 그 파일만 대상 경로에 둔다', () async {
+      final target = p.join(dest.path, 'c.txt');
+      await staging.extractItemTo(handle: handle, selectedPath: 'docs/c.txt', targetPath: target);
+
+      expect(dest.listSync().map((e) => p.basename(e.path)), ['c.txt']);
+    });
+
+    test('폴더는 하위 전부를 대상 경로 아래에 둔다', () async {
+      final target = p.join(dest.path, 'docs');
+      await staging.extractItemTo(handle: handle, selectedPath: 'docs', targetPath: target);
+
+      expect(File(p.join(target, 'c.txt')).existsSync(), isTrue);
+      expect(File(p.join(target, 'sub', 'd.txt')).existsSync(), isTrue);
+      expect(leftovers(), isEmpty);
+    });
+
+    test('대상 경로에 이미 무언가 있으면 덮어쓰지 않고 실패한다', () async {
+      final target = p.join(dest.path, 'a.txt');
+      await File(target).writeAsString('사용자 파일');
+
+      await expectLater(
+        staging.extractItemTo(handle: handle, selectedPath: 'a.txt', targetPath: target),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(File(target).readAsStringSync(), '사용자 파일');
+      expect(reader.calls, 0);
+    });
+
+    test('비밀번호를 모르는 암호화 항목은 풀기 전에 거절한다', () async {
+      await expectLater(
+        staging.extractItemTo(handle: handle, selectedPath: 'secret.txt', targetPath: p.join(dest.path, 'secret.txt')),
+        throwsA(isA<ArchivePasswordRequiredException>()),
+      );
+      expect(reader.calls, 0);
+    });
+
+    test('손상된 항목이 있으면 실패하고 대상에도 임시 폴더도 남기지 않는다', () async {
+      reader.failures = const [ExtractFailure(entryPath: 'a.txt', message: '깨짐')];
+      final target = p.join(dest.path, 'a.txt');
+
+      await expectLater(
+        staging.extractItemTo(handle: handle, selectedPath: 'a.txt', targetPath: target),
+        throwsA(isA<DragOutExtractFailedException>()),
+      );
+      expect(dest.listSync(), isEmpty);
+    });
+
+    test('크기 제한이 없다 — 드롭된 뒤에 풀기 때문', () async {
+      await staging.extractItemTo(handle: handle, selectedPath: 'huge.bin', targetPath: p.join(dest.path, 'huge.bin'));
+
+      expect(File(p.join(dest.path, 'huge.bin')).existsSync(), isTrue);
+    });
+
+    test('실제 zip의 폴더를 다른 이름의 대상 경로에 내용 그대로 푼다', () async {
+      final archive = Archive()
+        ..addFile(ArchiveFile.directory('docs/'))
+        ..addFile(ArchiveFile.string('docs/a.txt', 'hello'))
+        ..addFile(ArchiveFile.string('root.txt', 'world'));
+      final zipFile = File(p.join(root.path, 'sample.zip'));
+      await zipFile.writeAsBytes(ZipEncoder().encode(archive));
+      final realHandle = await const OpenArchive().call(zipFile.uri);
+      const realStaging = DragOutStaging();
+
+      final target = p.join(dest.path, 'docs 2');
+      await realStaging.extractItemTo(handle: realHandle, selectedPath: 'docs', targetPath: target);
+
+      expect(File(p.join(target, 'a.txt')).readAsStringSync(), 'hello');
+      expect(dest.listSync().map((e) => p.basename(e.path)), ['docs 2']);
+    });
+  });
+
+  test('isDirectoryIn은 디렉터리 엔트리 없는 가상 폴더도 폴더로 본다', () {
+    const entries = [
+      ArchiveEntry(pathInArchive: 'docs/', isDirectory: true),
+      ArchiveEntry(pathInArchive: 'virtual/x.txt', isDirectory: false),
+      ArchiveEntry(pathInArchive: 'a.txt', isDirectory: false),
+    ];
+    expect(DragOutStaging.isDirectoryIn(entries, 'docs'), isTrue);
+    expect(DragOutStaging.isDirectoryIn(entries, 'virtual'), isTrue);
+    expect(DragOutStaging.isDirectoryIn(entries, 'a.txt'), isFalse);
+  });
+
+  test('needsPassword는 비밀번호를 모를 때 암호화 항목이 섞였는지 본다', () {
+    expect(DragOutStaging.needsPassword(handle, {'a.txt'}, null), isFalse);
+    expect(DragOutStaging.needsPassword(handle, {'a.txt', 'secret.txt'}, null), isTrue);
+    expect(DragOutStaging.needsPassword(handle, {'secret.txt'}, 'pw'), isFalse);
+  });
 }

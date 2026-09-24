@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../core/cancel_token.dart';
+import '../domain/entities/archive_entry.dart';
 import '../domain/entities/archive_handle.dart';
 import '../domain/entities/extract_conflict.dart';
 import '../domain/entities/extract_destination_mode.dart';
@@ -56,13 +57,16 @@ class DragOutStage {
   }
 }
 
-/// 압축 목록의 항목을 창 밖(Finder/탐색기)으로 끌어낼 수 있도록 임시
-/// 폴더에 미리 풀어 둔다(PLAN.md 1.2 "끌어내서 해제").
+/// 압축 목록의 항목을 창 밖(Finder/탐색기)으로 끌어낼 때 디스크 쪽 일을
+/// 맡는다(PLAN.md 1.2 "끌어내서 해제"). 방식이 둘이다.
 ///
-/// `flutter_drag_out` 플러그인은 이미 디스크에 있는 경로만 넘길 수 있다.
-/// 드롭된 뒤에 파일을 만드는 "파일 프로미스"가 플러그인에 생기기 전까지는,
-/// 드래그를 시작할 때 풀기 시작해서 포인터가 창을 벗어날 즈음 끝나 있기를
-/// 기대하는 방식이다. 그래서 너무 큰 선택은 [maxBytes]에서 거절한다.
+/// - **파일 프로미스**(macOS, `FlutterDragOut.supportsPromises`): 드롭된
+///   뒤 Finder가 알려 준 위치에 [extractItemTo]로 곧바로 푼다. 미리 풀 것도
+///   크기 제한도 없다.
+/// - **미리 풀어 두기**(그 밖의 플랫폼): 플러그인이 이미 디스크에 있는
+///   경로만 넘길 수 있어, 드래그를 시작할 때 [prepare]로 임시 폴더에 풀기
+///   시작해서 포인터가 창을 벗어날 즈음 끝나 있기를 기대한다. 그래서 너무
+///   큰 선택은 [maxBytes]에서 거절한다.
 class DragOutStaging {
   const DragOutStaging({
     this.extractEntries = const ExtractEntries(),
@@ -98,7 +102,7 @@ class DragOutStaging {
     String? password,
     CancelToken? cancelToken,
   }) async {
-    final topLevel = _withoutNested(selectedPaths);
+    final topLevel = topLevelOf(selectedPaths);
     final entryPaths = expandSelectionToEntryPaths(handle.entries, topLevel);
     final selectedEntries = handle.entries
         .where((e) => entryPaths.contains(e.pathInArchive))
@@ -110,12 +114,7 @@ class DragOutStaging {
     );
     if (totalBytes > maxBytes) throw DragOutTooLargeException(totalBytes);
 
-    if (password == null) {
-      final encrypted = selectedEntries.where((e) => e.isEncrypted);
-      if (encrypted.isNotEmpty) {
-        throw ArchivePasswordRequiredException(encrypted.first.pathInArchive);
-      }
-    }
+    _checkPassword(selectedEntries, password);
 
     await cleanupStale();
     await _root.create(recursive: true);
@@ -154,6 +153,68 @@ class DragOutStaging {
     }
   }
 
+  /// 가상 경로 [selectedPath](파일 또는 폴더) 하나를 정확히 [targetPath]에
+  /// 푼다 — 파일 프로미스의 `write`가 쓴다. [targetPath]의 이름은 압축 안
+  /// 이름과 다를 수 있다(Finder가 겹치지 않게 `이름 2.txt`로 바꿔 줌).
+  ///
+  /// 해제 백엔드는 압축 안 경로를 그대로 살려 풀기 때문에, 같은 볼륨인
+  /// [targetPath] 옆의 숨김 임시 폴더에 푼 뒤 그 항목만 [targetPath]로
+  /// 옮긴다(이름 바꾸기라 복사가 없다). 이미 [targetPath]에 무언가 있으면
+  /// 덮어쓰지 않고 실패한다.
+  Future<void> extractItemTo({
+    required ArchiveHandle handle,
+    required String selectedPath,
+    required String targetPath,
+    String? password,
+    CancelToken? cancelToken,
+  }) async {
+    final entryPaths = expandSelectionToEntryPaths(handle.entries, {
+      selectedPath,
+    });
+    _checkPassword(
+      handle.entries.where((e) => entryPaths.contains(e.pathInArchive)),
+      password,
+    );
+    if (FileSystemEntity.typeSync(targetPath, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      throw FileSystemException('이미 같은 이름의 항목이 있습니다', targetPath);
+    }
+
+    final temp = await Directory(p.dirname(targetPath))
+        .createTemp('.dove_zip_drag_out_');
+    try {
+      final result = await extractEntries(
+        handle: handle,
+        mode: ExtractDestinationMode.chooseFolder,
+        userChosenFolder: Uri.directory(temp.path),
+        entryPaths: entryPaths.toList(),
+        password: password,
+        // 새로 만든 임시 폴더라 충돌할 일이 없다.
+        onConflict: (_) async => ConflictAction.overwriteAll,
+        cancelToken: cancelToken,
+      );
+      if (result.failures.isNotEmpty) {
+        throw DragOutExtractFailedException(result.failures);
+      }
+
+      final extracted = p.joinAll([temp.path, ...selectedPath.split('/')]);
+      switch (FileSystemEntity.typeSync(extracted, followLinks: false)) {
+        case FileSystemEntityType.directory:
+          await Directory(extracted).rename(targetPath);
+        case FileSystemEntityType.notFound:
+          throw StateError('풀린 항목을 찾지 못했습니다: $selectedPath');
+        default:
+          await File(extracted).rename(targetPath);
+      }
+    } finally {
+      try {
+        await temp.delete(recursive: true);
+      } on FileSystemException {
+        // 숨김 폴더라 남아도 보이지 않는다 — 다음에 사용자가 지울 수 있다.
+      }
+    }
+  }
+
   /// [staleAfter]보다 오래된 세션 폴더를 지운다. 실패는 무시한다(다음에
   /// 다시 시도).
   Future<void> cleanupStale({DateTime? now}) async {
@@ -177,9 +238,45 @@ class DragOutStaging {
     }
   }
 
+  /// 드래그 도중에는 비밀번호를 물을 수 없으므로, 암호화된 항목이 있는데
+  /// [password]가 없으면 풀기 전에 비밀번호 예외를 던진다.
+  static void _checkPassword(Iterable<ArchiveEntry> entries, String? password) {
+    if (password != null) return;
+    for (final entry in entries) {
+      if (entry.isEncrypted) {
+        throw ArchivePasswordRequiredException(entry.pathInArchive);
+      }
+    }
+  }
+
+  /// [selectedPaths] 가운데 비밀번호 없이는 풀 수 없는 항목이 있는지.
+  static bool needsPassword(
+    ArchiveHandle handle,
+    Set<String> selectedPaths,
+    String? password,
+  ) {
+    if (password != null) return false;
+    final entryPaths = expandSelectionToEntryPaths(
+      handle.entries,
+      selectedPaths,
+    );
+    return handle.entries.any(
+      (e) => e.isEncrypted && entryPaths.contains(e.pathInArchive),
+    );
+  }
+
+  /// 가상 경로 [path]가 폴더인지 — 디렉터리 엔트리가 있거나, 그 아래에
+  /// 항목이 있으면(디렉터리 엔트리 없이 경로로만 존재하는 가상 폴더) 폴더다.
+  static bool isDirectoryIn(List<ArchiveEntry> entries, String path) =>
+      entries.any(
+        (e) =>
+            e.pathInArchive.startsWith('$path/') ||
+            (e.isDirectory && e.pathInArchive == path),
+      );
+
   /// 폴더와 그 안의 항목이 함께 선택돼 있으면 폴더만 남긴다 — 안쪽 항목을
   /// 따로 한 번 더 넘기면 대상에 같은 파일이 두 번 생긴다.
-  static Set<String> _withoutNested(Set<String> selectedPaths) => {
+  static Set<String> topLevelOf(Set<String> selectedPaths) => {
     for (final path in selectedPaths)
       if (!selectedPaths.any(
         (other) => other != path && path.startsWith('$other/'),
