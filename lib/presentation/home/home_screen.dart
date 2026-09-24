@@ -5,6 +5,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
@@ -222,6 +223,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onDragExited: (_) => setState(() => _dragHovering = false),
         onDragDone: (details) {
           setState(() => _dragHovering = false);
+          // 압축 목록에서 끌어낸 임시 파일이 창으로 되돌아온 것이면 외부
+          // 드롭이 아니다(flutter_drag_out README "Ignoring your own files").
+          if (FlutterDragOut.inProgress) return;
           unawaited(_onFilesDropped(details.files));
         },
         child: AnimatedContainer(

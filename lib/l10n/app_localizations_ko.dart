@@ -119,6 +119,34 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String dragOutItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 항목',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dragOutStillPreparing =>
+      '아직 압축을 푸는 중이라 창 밖으로 넘기지 못했습니다. 잠시 뒤 다시 끌어 보세요.';
+
+  @override
+  String get dragOutPasswordRequired =>
+      '비밀번호가 필요한 항목입니다. 미리보기나 해제로 비밀번호를 한 번 입력한 뒤 끌어내 주세요.';
+
+  @override
+  String dragOutTooLarge(String limit) {
+    return '창 밖으로 끌어내기는 $limit 이하만 지원합니다. 아래 해제 버튼을 사용하세요.';
+  }
+
+  @override
+  String dragOutFailed(String error) {
+    return '끌어내기를 준비하지 못했습니다: $error';
+  }
+
+  @override
   String get columnName => '이름';
 
   @override

@@ -25,6 +25,8 @@ Flutter로 만든 Windows/macOS/Linux 데스크톱 전용 앱이며, 같은 제�
   보장하지 않음, 상세는 `PLAN.md` 참고)
 - **다국어(한국어/영어)** 및 라이트/다크 테마
 - **최근 연 압축파일 목록**, 드래그앤드롭으로 열기/압축하기
+- **끌어내서 해제** — 압축 목록의 항목을 Finder/탐색기로 끌어다 놓으면 그
+  자리에 풀림(원본 512MB 이하, 암호화된 항목은 비밀번호를 한 번 입력한 뒤)
 - **macOS Finder 통합**(macOS 전용) — 우클릭 서비스 메뉴로 "여기에 압축"/
   "여기에 풀기", zip/tar/7z 등 확장자를 더블클릭하면 바로 열기(시스템 기본
   프로그램을 가로채지는 않음)
@@ -69,6 +71,8 @@ flutter test
   [`koni_sevenz`/`koni_rar`](https://github.com/zenbaku/koni_archive)
   (7Z/RAR, 순수 Dart, MIT) — 자세한 설계 배경은 `ARCHITECTURE.md` 4장 참고
 - `flutter_localizations` + ARB 기반 다국어(`gen-l10n`)
+- [`flutter_drag_out`](https://github.com/jejezz/flutter_drag_out) — 앱 밖으로
+  끌어내기(자체 플러그인, daylight-commander와 공유)
 
 ## 상태
 

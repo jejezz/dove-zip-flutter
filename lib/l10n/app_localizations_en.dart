@@ -121,6 +121,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String dragOutItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '$count item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dragOutStillPreparing =>
+      'Still extracting, so the items couldn\'t leave the window yet. Try dragging again in a moment.';
+
+  @override
+  String get dragOutPasswordRequired =>
+      'These items need a password. Enter it once by previewing or extracting, then drag them out.';
+
+  @override
+  String dragOutTooLarge(String limit) {
+    return 'Dragging out of the window supports up to $limit. Use the extract buttons below instead.';
+  }
+
+  @override
+  String dragOutFailed(String error) {
+    return 'Couldn\'t prepare the drag: $error';
+  }
+
+  @override
   String get columnName => 'Name';
 
   @override
