@@ -470,8 +470,10 @@ abstract class FileViewer {
 - 네이티브 브리지: `flutter_rust_bridge`, `ffi`(dart:ffi 보조)
 - 드래그앤드롭(OS → 앱): `desktop_drop` (daylight에서 검증 완료된 패키지 재사용)
 - 드래그 아웃(앱 → OS): `flutter_drag_out` (자체 플러그인, git 태그 고정 —
-  daylight와 공유). 압축 항목은 디스크 경로가 없어 `DragOutStaging`이 임시
-  폴더에 미리 풀어 둔 경로를 넘긴다(PLAN.md 1.2 "끌어내서 해제")
+  daylight와 공유). 압축 항목은 디스크 경로가 없어, macOS는 파일
+  프로미스로 드롭된 위치에 곧바로 풀고(`DragOutStaging.extractItemTo`),
+  그 밖의 플랫폼은 `DragOutStaging.prepare`가 임시 폴더에 미리 풀어 둔
+  경로를 넘긴다(PLAN.md 1.2 "끌어내서 해제")
 - OS 네이티브 파일/폴더 선택 다이얼로그: `file_selector` (flutter.dev 공식 —
   "열기", "원하는 곳에 압축 해제", 압축 생성 시 저장 위치 선택에 사용)
 - 커스텀 타이틀바/창 제어: `window_manager`

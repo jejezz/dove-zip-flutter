@@ -48,6 +48,7 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
     this.openArchive = const OpenArchive(),
     this.autoExtractMode,
     this.dragOutRootPath,
+    this.dragOutWithPromises,
   });
 
   final ArchiveHandle handle;
@@ -74,6 +75,11 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
   /// 창 밖으로 끌어낼 항목을 미리 풀어 둘 임시 폴더의 상위 경로. 테스트가
   /// 격리된 폴더를 쓰도록 노출한다 — 앱에서는 기본값(시스템 임시 폴더).
   final String? dragOutRootPath;
+
+  /// 창 밖으로 끌어낼 때 파일 프로미스(드롭된 위치에 곧바로 풀기)를 쓸지.
+  /// null이면 플랫폼이 지원하는지(`FlutterDragOut.supportsPromises`)를
+  /// 따른다 — 테스트가 두 방식을 각각 검증하도록 노출한다.
+  final bool? dragOutWithPromises;
 
   @override
   ConsumerState<ArchiveBrowserScreen> createState() =>
@@ -117,6 +123,14 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     extractEntries: widget.extractEntries,
     rootPath: widget.dragOutRootPath,
   );
+
+  bool get _usePromises =>
+      widget.dragOutWithPromises ?? FlutterDragOut.supportsPromises;
+
+  /// 파일 프로미스 쓰기를 한 번에 하나씩 처리하기 위한 사슬 — 7z/RAR은
+  /// 항목 하나를 풀 때도 압축파일 전체를 메모리로 읽어서, 여러 항목을
+  /// 동시에 풀면 그만큼 메모리를 쓴다.
+  Future<void> _promiseWrites = Future.value();
 
   /// [action]을 비밀번호 없이 먼저 시도하고, [ArchivePasswordRequiredException]이
   /// 나면 다이얼로그로 물어본 뒤 그 비밀번호로 다시 시도한다. 사용자가
@@ -320,16 +334,28 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     }
   }
 
-  /// [entry] 행을 끌기 시작했을 때: 끌리는 항목(선택된 행이면 선택 전체,
-  /// 아니면 그 행 하나)을 임시 폴더에 풀기 시작한다(PLAN.md 1.2 "끌어내서
-  /// 해제"). 창 밖으로 넘기는 일은 [_onDragOutUpdate]가 맡는다.
+  /// [entry] 행을 끌기 시작했을 때(PLAN.md 1.2 "끌어내서 해제"). 끌리는
+  /// 항목은 선택된 행이면 선택 전체, 아니면 그 행 하나다.
+  ///
+  /// 파일 프로미스를 쓰면 드롭된 뒤에 풀므로 준비할 것이 없다 — 비밀번호만
+  /// 미리 확인한다(드래그 도중에는 물을 수 없음). 아니면 임시 폴더에 풀기
+  /// 시작한다. 창 밖으로 넘기는 일은 [_onDragOutUpdate]가 맡는다.
   void _onDragOutStarted(ArchiveBrowserEntry entry) {
     final path = _fullPathOf(entry);
     final selected = _selectedPaths.contains(path)
         ? Set.of(_selectedPaths)
         : {path};
-    final dragOut = _DragOut(selected);
+    final dragOut = _DragOut(selected, usePromises: _usePromises);
     _dragOut = dragOut;
+    if (dragOut.usePromises) {
+      final status =
+          DragOutStaging.needsPassword(widget.handle, selected, _sessionPassword)
+          ? _DragOutStatus.passwordRequired
+          : _DragOutStatus.ready;
+      dragOut.status = status;
+      _dragOutStatus.value = status;
+      return;
+    }
     _dragOutStatus.value = _DragOutStatus.preparing;
     unawaited(_prepareDragOut(dragOut));
   }
@@ -364,8 +390,9 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     if (identical(_dragOut, dragOut)) _dragOutStatus.value = status;
   }
 
-  /// 포인터가 창 밖에 있고 준비가 끝났으면 OS 드래그로 넘긴다. 준비가
-  /// 늦게 끝나도, 버튼을 누른 채 창 밖에서 조금 더 움직이면 그때 넘어간다.
+  /// 포인터가 창 밖에 있고 준비가 끝났으면 OS 드래그로 넘긴다(파일
+  /// 프로미스면 곧바로). 미리 풀어 두는 방식에서 준비가 늦게 끝나도,
+  /// 버튼을 누른 채 창 밖에서 조금 더 움직이면 그때 넘어간다.
   void _onDragOutUpdate(DragUpdateDetails details, Size viewSize) {
     final dragOut = _dragOut;
     if (dragOut == null) return;
@@ -375,11 +402,16 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     FlutterDragOut.maybeStartOnExit(
       details.globalPosition,
       viewSize: viewSize,
-      paths: () {
+      items: () {
+        if (dragOut.usePromises) {
+          if (dragOut.status != _DragOutStatus.ready) return null;
+          dragOut.handedOver = true;
+          return _promiseItemsFor(dragOut);
+        }
         final stage = dragOut.stage;
         if (stage == null) return null;
         dragOut.handedOver = true;
-        return stage.paths;
+        return [for (final path in stage.paths) DragOutItem.path(path)];
       },
       onEnded: (end) {
         // 받아들여진 드롭은 대상 앱이 아직 복사 중일 수 있어 남겨 두고,
@@ -387,6 +419,70 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         if (!end.dropped) unawaited(dragOut.stage?.discard());
       },
     );
+  }
+
+  /// 끌리는 최상위 항목마다 파일 프로미스 하나. Finder가 드롭된 위치
+  /// (겹치지 않는 이름으로 골라 줌)를 알려 주면 그 자리에 푼다.
+  List<DragOutItem> _promiseItemsFor(_DragOut dragOut) {
+    final handle = widget.handle;
+    final password = _sessionPassword;
+    final topLevel = DragOutStaging.topLevelOf(dragOut.selectedPaths);
+    final batch = _PromiseBatch(topLevel.length);
+    return [
+      for (final path in topLevel)
+        DragOutItem.promise(
+          name: p.posix.basename(path),
+          isDirectory: DragOutStaging.isDirectoryIn(handle.entries, path),
+          write: (request) => _writePromised(
+            batch,
+            handle: handle,
+            selectedPath: path,
+            targetPath: request.targetPath,
+            password: password,
+          ),
+        ),
+    ];
+  }
+
+  Future<void> _writePromised(
+    _PromiseBatch batch, {
+    required ArchiveHandle handle,
+    required String selectedPath,
+    required String targetPath,
+    String? password,
+  }) async {
+    final previous = _promiseWrites;
+    final done = Completer<void>();
+    _promiseWrites = done.future;
+    try {
+      await previous;
+      await _dragOutStaging.extractItemTo(
+        handle: handle,
+        selectedPath: selectedPath,
+        targetPath: targetPath,
+        password: password,
+      );
+      batch.destination = p.dirname(targetPath);
+    } catch (e) {
+      batch.errors.add(e);
+      rethrow; // Finder에 이 항목이 실패했다고 알린다.
+    } finally {
+      done.complete();
+      batch.remaining--;
+      if (batch.remaining == 0) _reportPromiseBatch(batch);
+    }
+  }
+
+  /// 한 번의 드롭으로 요청된 항목을 다 풀었으면 결과를 알린다 — 풀기는
+  /// Finder로 드롭한 뒤에 일어나서, 그동안 사용자는 이 창을 보고 있지 않다.
+  void _reportPromiseBatch(_PromiseBatch batch) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (batch.errors.isEmpty) {
+      _showInfoSnackBar(l10n.extractCompleted(batch.destination ?? ''));
+    } else {
+      showErrorSnackBar(context, l10n.dragOutFailed(batch.errors.join('\n')));
+    }
   }
 
   /// Flutter 드래그가 끝났을 때 — 창 안에서 놓았거나, OS 드래그로 넘어가
@@ -412,8 +508,14 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         );
       case _DragOutStatus.failed:
         showErrorSnackBar(context, l10n.dragOutFailed('${dragOut.error}'));
-      case _DragOutStatus.preparing || _DragOutStatus.ready:
+      case _DragOutStatus.preparing:
         _showInfoSnackBar(l10n.dragOutStillPreparing);
+      case _DragOutStatus.ready:
+        // 준비된 순간 창 밖에서 놓았다 — 다시 끌면 된다. 파일 프로미스는
+        // 처음부터 준비돼 있어 이 경우가 사실상 없다.
+        if (!dragOut.usePromises) {
+          _showInfoSnackBar(l10n.dragOutStillPreparing);
+        }
     }
   }
 
@@ -724,9 +826,12 @@ enum _DragOutStatus { preparing, ready, passwordRequired, tooLarge, failed }
 
 /// 행 드래그 하나의 상태 — 임시 폴더 준비와 OS 드래그로 넘겼는지 여부.
 class _DragOut {
-  _DragOut(this.selectedPaths);
+  _DragOut(this.selectedPaths, {required this.usePromises});
 
   final Set<String> selectedPaths;
+
+  /// 파일 프로미스(드롭된 위치에 곧바로 풀기)인지, 미리 풀어 두기인지.
+  final bool usePromises;
   final cancelToken = CancelToken();
   _DragOutStatus status = _DragOutStatus.preparing;
   DragOutStage? stage;
@@ -738,6 +843,19 @@ class _DragOut {
   /// OS 드래그로 넘겼는지. 넘긴 뒤에는 임시 폴더를 드래그 종료와 함께
   /// 지우지 않는다.
   bool handedOver = false;
+}
+
+/// 한 번의 드롭으로 넘긴 파일 프로미스들의 쓰기 결과를 모은다.
+class _PromiseBatch {
+  _PromiseBatch(this.remaining);
+
+  /// 아직 끝나지 않은 쓰기 수. Finder가 요청하지 않은 항목이 있으면 0이
+  /// 되지 않고, 그러면 결과도 알리지 않는다.
+  int remaining;
+  final errors = <Object>[];
+
+  /// 마지막으로 성공한 항목이 풀린 폴더.
+  String? destination;
 }
 
 /// 드래그 중 포인터를 따라다니는 미리보기 — 항목 이름(여러 개면 개수)과
