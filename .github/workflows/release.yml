@@ -11,6 +11,9 @@ name: Release
 #   - The DMG and installer file names drop the display name's space
 #     (DoveZip-v0.1.0.dmg, DoveZipSetup-0.1.0.exe) — GitHub Release would
 #     otherwise turn it into a dot.
+#   - "Package installer" turns off Git Bash's argument path conversion, which
+#     rewrote ISCC's /D... switches into paths ("You may not specify more
+#     than one script filename"; v0.1.0's first run).
 #
 # Needs the macos/, windows/, and linux/ platform folders — if they don't
 # exist yet, run `flutter create --platforms=macos,windows,linux .` in the
@@ -177,6 +180,12 @@ jobs:
       # (a GUID) needs to be edited by hand, see that file's comment.
       - name: Package installer
         shell: bash
+        # Git Bash would treat ISCC's /D... switches as POSIX paths and
+        # rewrite them into Windows paths, so ISCC sees extra script file
+        # names. Pass the arguments through unchanged.
+        env:
+          MSYS_NO_PATHCONV: "1"
+          MSYS2_ARG_CONV_EXCL: "*"
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
@@ -185,11 +194,8 @@ jobs:
           test -n "$APP_NAME"
           BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
 
-          # The display name contains a space, which broke ISCC's command
-          # line as a /D argument under Git Bash — pass it in the
-          # environment instead (app.iss reads it with GetEnv).
-          APP_DISPLAY_NAME="$APP_NAME" \
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppName=$APP_NAME" \
             "/DMyAppVersion=$VERSION" \
             "/DMyAppExeName=$BINARY_NAME.exe" \
             installer/windows/app.iss
