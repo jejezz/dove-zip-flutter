@@ -71,6 +71,14 @@ dependencies:
   # OS → 앱 드래그앤드롭 (압축파일/일반 파일을 창에 드롭)
   desktop_drop: ^0.6.0
 
+  # 앱 → OS 드래그 아웃 (압축 목록의 항목을 Finder/탐색기로 끌어내기).
+  # 자매 앱 daylight-commander와 함께 쓰는 자체 플러그인 — pub.dev에 없어
+  # 릴리스 태그에 고정한 git 의존성으로 받는다.
+  flutter_drag_out:
+    git:
+      url: https://github.com/jejezz/flutter_drag_out.git
+      ref: v0.4.0
+
   # OS 네이티브 파일/폴더 선택 다이얼로그 ("열기", "원하는 곳에 압축 해제",
   # 압축 생성 시 저장 위치 선택 — UI_UX.md 6장). flutter.dev 공식 패키지.
   file_selector: ^1.0.3

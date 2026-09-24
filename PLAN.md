@@ -170,6 +170,19 @@
   `ArchiveBrowserScreen`에 새로 추가한 `autoExtractMode` 파라미터로 화면이
   뜨자마자 기존 `_runExtraction(here)`을 자동 실행한다(진행률/충돌/부분
   실패 처리 전부 동일하게 재사용, ARCHITECTURE.md 5장 참고).
+- `P2` 끌어내서 해제(압축 목록의 항목을 Finder/탐색기로 드래그) — ✅ 1단계
+  완료(2026-09-24). 행을 끌기 시작하면 끌리는 항목(선택된 행이면 선택
+  전체)을 임시 폴더에 풀기 시작하고, 준비가 끝난 상태에서 포인터가 창을
+  벗어나면 자체 플러그인 `flutter_drag_out`(v0.4.0)이 OS 드래그로 넘긴다
+  (`DragOutStaging`, `ArchiveBrowserScreen._onDragOutStarted` 참고). 제약:
+  원본 크기 512MB 이하만, 드래그 도중엔 비밀번호를 물을 수 없어 암호화된
+  항목은 이번 세션에 비밀번호를 이미 입력했을 때만, 창 밖에서 놓았는데
+  아직 푸는 중이었다면 이유를 스낵바로 알려 준다. 드롭된 임시 폴더는
+  대상 앱이 비동기로 복사할 수 있어 바로 지우지 않고 1시간 뒤 다음
+  끌어내기 때 정리한다. **2단계**(드롭된 위치에 곧바로 푸는 "파일
+  프로미스" — 미리 풀 필요도, 크기 제한도 없음)는 플러그인 0.5.0(macOS)/
+  0.6.0(Windows)에 기능이 생긴 뒤 붙인다(플러그인 저장소
+  `doc/design/end-callback-and-file-promises.md`).
 
 ## 2. 1차 범위 밖 (비목표)
 - OS 셸 확장 — **macOS(NSServices)는 위에서 완료**. **Windows는 실제 Windows

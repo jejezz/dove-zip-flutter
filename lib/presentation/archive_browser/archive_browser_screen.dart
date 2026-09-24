@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path/path.dart' as p;
 
 import '../../application/archive_browser_entries.dart';
+import '../../application/drag_out_staging.dart';
 import '../../application/usecases/extract_entries.dart';
 import '../../application/usecases/open_archive.dart';
 import '../../application/usecases/preview_archive_entry.dart';
@@ -44,6 +47,7 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
     this.previewArchiveEntry = const PreviewArchiveEntry(),
     this.openArchive = const OpenArchive(),
     this.autoExtractMode,
+    this.dragOutRootPath,
   });
 
   final ArchiveHandle handle;
@@ -66,6 +70,10 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
   /// 버튼을 직접 눌렀을 때와 완전히 동일한 `_runExtraction`을 그대로
   /// 타므로 로직이 두 곳에 따로 있을 일이 없다(ARCHITECTURE.md 5장).
   final ExtractDestinationMode? autoExtractMode;
+
+  /// 창 밖으로 끌어낼 항목을 미리 풀어 둘 임시 폴더의 상위 경로. 테스트가
+  /// 격리된 폴더를 쓰도록 노출한다 — 앱에서는 기본값(시스템 임시 폴더).
+  final String? dragOutRootPath;
 
   @override
   ConsumerState<ArchiveBrowserScreen> createState() =>
@@ -97,6 +105,18 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 한 번 입력하면 이 화면(같은 압축파일)이 열려 있는 동안은 기억한다
   /// (UI_UX.md 7장 `PasswordPromptDialog` — "이번 세션 동안 기억").
   String? _sessionPassword;
+
+  /// 지금 진행 중인 행 드래그(창 밖으로 끌어내기용 준비 포함). 드래그가
+  /// 끝나면 null.
+  _DragOut? _dragOut;
+
+  /// 드래그 미리보기가 준비 상태(스피너/오류 아이콘)를 그리기 위해 듣는다.
+  final _dragOutStatus = ValueNotifier<_DragOutStatus?>(null);
+
+  late final _dragOutStaging = DragOutStaging(
+    extractEntries: widget.extractEntries,
+    rootPath: widget.dragOutRootPath,
+  );
 
   /// [action]을 비밀번호 없이 먼저 시도하고, [ArchivePasswordRequiredException]이
   /// 나면 다이얼로그로 물어본 뒤 그 비밀번호로 다시 시도한다. 사용자가
@@ -141,6 +161,11 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    // 준비가 늦게 끝나도 폐기된 _dragOutStatus를 건드리지 않고 임시
+    // 폴더를 지우도록 진행 중인 드래그와의 연결을 끊는다.
+    _dragOut?.cancelToken.cancel();
+    _dragOut = null;
+    _dragOutStatus.dispose();
     super.dispose();
   }
 
@@ -293,6 +318,129 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
         AppLocalizations.of(context).previewFailed('$e'),
       );
     }
+  }
+
+  /// [entry] 행을 끌기 시작했을 때: 끌리는 항목(선택된 행이면 선택 전체,
+  /// 아니면 그 행 하나)을 임시 폴더에 풀기 시작한다(PLAN.md 1.2 "끌어내서
+  /// 해제"). 창 밖으로 넘기는 일은 [_onDragOutUpdate]가 맡는다.
+  void _onDragOutStarted(ArchiveBrowserEntry entry) {
+    final path = _fullPathOf(entry);
+    final selected = _selectedPaths.contains(path)
+        ? Set.of(_selectedPaths)
+        : {path};
+    final dragOut = _DragOut(selected);
+    _dragOut = dragOut;
+    _dragOutStatus.value = _DragOutStatus.preparing;
+    unawaited(_prepareDragOut(dragOut));
+  }
+
+  Future<void> _prepareDragOut(_DragOut dragOut) async {
+    _DragOutStatus status;
+    try {
+      final stage = await _dragOutStaging.prepare(
+        handle: widget.handle,
+        selectedPaths: dragOut.selectedPaths,
+        password: _sessionPassword,
+        cancelToken: dragOut.cancelToken,
+      );
+      if (!identical(_dragOut, dragOut)) {
+        // 준비가 끝나기 전에 드래그가 창 안에서 끝났다 — 아무도 읽지 않는다.
+        await stage.discard();
+        return;
+      }
+      dragOut.stage = stage;
+      status = _DragOutStatus.ready;
+    } on OperationCancelledException {
+      return;
+    } on ArchivePasswordRequiredException {
+      status = _DragOutStatus.passwordRequired;
+    } on DragOutTooLargeException {
+      status = _DragOutStatus.tooLarge;
+    } catch (e) {
+      dragOut.error = e;
+      status = _DragOutStatus.failed;
+    }
+    dragOut.status = status;
+    if (identical(_dragOut, dragOut)) _dragOutStatus.value = status;
+  }
+
+  /// 포인터가 창 밖에 있고 준비가 끝났으면 OS 드래그로 넘긴다. 준비가
+  /// 늦게 끝나도, 버튼을 누른 채 창 밖에서 조금 더 움직이면 그때 넘어간다.
+  void _onDragOutUpdate(DragUpdateDetails details, Size viewSize) {
+    final dragOut = _dragOut;
+    if (dragOut == null) return;
+    if (!(Offset.zero & viewSize).contains(details.globalPosition)) {
+      dragOut.leftWindow = true;
+    }
+    FlutterDragOut.maybeStartOnExit(
+      details.globalPosition,
+      viewSize: viewSize,
+      paths: () {
+        final stage = dragOut.stage;
+        if (stage == null) return null;
+        dragOut.handedOver = true;
+        return stage.paths;
+      },
+      onEnded: (end) {
+        // 받아들여진 드롭은 대상 앱이 아직 복사 중일 수 있어 남겨 두고,
+        // 오래된 폴더 정리(DragOutStaging.cleanupStale)에 맡긴다.
+        if (!end.dropped) unawaited(dragOut.stage?.discard());
+      },
+    );
+  }
+
+  /// Flutter 드래그가 끝났을 때 — 창 안에서 놓았거나, OS 드래그로 넘어가
+  /// 플러그인이 Flutter 쪽 드래그를 끝냈을 때 둘 다 여기로 온다.
+  void _onDragOutEnd() {
+    final dragOut = _dragOut;
+    _dragOut = null;
+    _dragOutStatus.value = null;
+    if (dragOut == null || dragOut.handedOver) return;
+
+    dragOut.cancelToken.cancel();
+    unawaited(dragOut.stage?.discard());
+    if (!dragOut.leftWindow || !FlutterDragOut.isSupported || !mounted) return;
+
+    // 창 밖까지 끌었는데 넘기지 못한 이유를 알려 준다.
+    final l10n = AppLocalizations.of(context);
+    switch (dragOut.status) {
+      case _DragOutStatus.passwordRequired:
+        _showInfoSnackBar(l10n.dragOutPasswordRequired);
+      case _DragOutStatus.tooLarge:
+        _showInfoSnackBar(
+          l10n.dragOutTooLarge(formatBytes(DragOutStaging.maxBytes)),
+        );
+      case _DragOutStatus.failed:
+        showErrorSnackBar(context, l10n.dragOutFailed('${dragOut.error}'));
+      case _DragOutStatus.preparing || _DragOutStatus.ready:
+        _showInfoSnackBar(l10n.dragOutStillPreparing);
+    }
+  }
+
+  void _showInfoSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 행을 창 밖으로 끌어낼 수 있게 감싼다. 창 안에는 이 드래그를 받는
+  /// 대상이 없으므로 창 안에서 놓으면 아무 일도 일어나지 않는다.
+  Widget _draggableRow(ArchiveBrowserEntry entry, Widget row) {
+    final path = _fullPathOf(entry);
+    final count = _selectedPaths.contains(path) ? _selectedPaths.length : 1;
+    final viewSize = MediaQuery.sizeOf(context);
+    return Draggable<Set<String>>(
+      data: {path},
+      maxSimultaneousDrags: _isExtracting ? 0 : 1,
+      onDragStarted: () => _onDragOutStarted(entry),
+      onDragUpdate: (details) => _onDragOutUpdate(details, viewSize),
+      onDragEnd: (_) => _onDragOutEnd(),
+      feedback: _DragOutFeedback(
+        entry: entry,
+        count: count,
+        status: _dragOutStatus,
+      ),
+      child: row,
+    );
   }
 
   /// `ExtractModeBar`(UI_UX.md 7장)의 세 버튼이 공통으로 타는 경로.
@@ -494,15 +642,18 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
                         final isLoading =
                             _previewingPath != null &&
                             entry.sourceEntry?.pathInArchive == _previewingPath;
-                        return _EntryRow(
-                          entry: entry,
-                          isLoading: isLoading,
-                          isSelected: _selectedPaths.contains(
-                            _fullPathOf(entry),
+                        return _draggableRow(
+                          entry,
+                          _EntryRow(
+                            entry: entry,
+                            isLoading: isLoading,
+                            isSelected: _selectedPaths.contains(
+                              _fullPathOf(entry),
+                            ),
+                            onTap: _previewingPath != null
+                                ? null
+                                : () => _onRowTap(index, entry, entries),
                           ),
-                          onTap: _previewingPath != null
-                              ? null
-                              : () => _onRowTap(index, entry, entries),
                         );
                       },
                     ),
@@ -565,6 +716,100 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     } else {
       _openFile(entry);
     }
+  }
+}
+
+/// 창 밖으로 끌어내기 준비 상태.
+enum _DragOutStatus { preparing, ready, passwordRequired, tooLarge, failed }
+
+/// 행 드래그 하나의 상태 — 임시 폴더 준비와 OS 드래그로 넘겼는지 여부.
+class _DragOut {
+  _DragOut(this.selectedPaths);
+
+  final Set<String> selectedPaths;
+  final cancelToken = CancelToken();
+  _DragOutStatus status = _DragOutStatus.preparing;
+  DragOutStage? stage;
+  Object? error;
+
+  /// 포인터가 한 번이라도 창 밖으로 나갔는지(못 넘겼을 때 이유를 알릴지).
+  bool leftWindow = false;
+
+  /// OS 드래그로 넘겼는지. 넘긴 뒤에는 임시 폴더를 드래그 종료와 함께
+  /// 지우지 않는다.
+  bool handedOver = false;
+}
+
+/// 드래그 중 포인터를 따라다니는 미리보기 — 항목 이름(여러 개면 개수)과
+/// 준비 상태를 보여준다.
+class _DragOutFeedback extends StatelessWidget {
+  const _DragOutFeedback({
+    required this.entry,
+    required this.count,
+    required this.status,
+  });
+
+  final ArchiveBrowserEntry entry;
+  final int count;
+  final ValueListenable<_DragOutStatus?> status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = count > 1
+        ? AppLocalizations.of(context).dragOutItemCount(count)
+        : entry.name;
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(8),
+      color: theme.colorScheme.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            count > 1
+                ? Icon(
+                    Icons.library_add_check_outlined,
+                    size: 22,
+                    color: theme.colorScheme.primary,
+                  )
+                : _EntryIcon(entry: entry),
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ValueListenableBuilder<_DragOutStatus?>(
+              valueListenable: status,
+              builder: (context, value, _) => switch (value) {
+                _DragOutStatus.preparing => const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                _DragOutStatus.passwordRequired => Icon(
+                  Icons.lock_outline,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                _DragOutStatus.tooLarge || _DragOutStatus.failed => Icon(
+                  Icons.block,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                _DragOutStatus.ready || null => const SizedBox(width: 14),
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

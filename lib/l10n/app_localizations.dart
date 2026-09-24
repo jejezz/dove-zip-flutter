@@ -278,6 +278,36 @@ abstract class AppLocalizations {
   /// **'압축 해제 실패: {error}'**
   String extractFailed(String error);
 
+  /// 여러 항목을 창 밖으로 끌 때 드래그 미리보기에 보이는 문구.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count, plural, other{{count}개 항목}}'**
+  String dragOutItemCount(int count);
+
+  /// No description provided for @dragOutStillPreparing.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 압축을 푸는 중이라 창 밖으로 넘기지 못했습니다. 잠시 뒤 다시 끌어 보세요.'**
+  String get dragOutStillPreparing;
+
+  /// No description provided for @dragOutPasswordRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호가 필요한 항목입니다. 미리보기나 해제로 비밀번호를 한 번 입력한 뒤 끌어내 주세요.'**
+  String get dragOutPasswordRequired;
+
+  /// No description provided for @dragOutTooLarge.
+  ///
+  /// In ko, this message translates to:
+  /// **'창 밖으로 끌어내기는 {limit} 이하만 지원합니다. 아래 해제 버튼을 사용하세요.'**
+  String dragOutTooLarge(String limit);
+
+  /// No description provided for @dragOutFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'끌어내기를 준비하지 못했습니다: {error}'**
+  String dragOutFailed(String error);
+
   /// No description provided for @columnName.
   ///
   /// In ko, this message translates to:
