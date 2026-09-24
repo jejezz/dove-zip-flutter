@@ -88,6 +88,7 @@ dependencies:
 
   # 정보(About) 다이얼로그에 실제 빌드 버전을 표시 — daylight와 동일
   package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -120,13 +121,14 @@ flutter:
     - assets/icons/filetypes/
     - assets/icons/folders/
     - assets/icons/ui/
-    - assets/images/
+    # 정보 창·README가 쓰는 앱 아이콘 (tool/icon/generate_icons.py가 만든다)
+    - assets/icon/app_icon.png
+    # 오픈소스 라이선스 화면에 더하는 비 pub 라이선스 (lib/about/extra_licenses.dart)
+    - assets/licenses/
 
   fonts:
     - family: SeoulNamsan
       fonts:
-        - asset: assets/fonts/seoul_namsan_light.ttf
-          weight: 300
         - asset: assets/fonts/seoul_namsan_regular.ttf
           weight: 400
         - asset: assets/fonts/seoul_namsan_bold.ttf

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_settings_scope.dart';
+
 /// `openFiles()`(file_selector)는 macOS에서 `canChooseDirectories`를 항상
 /// false로 고정해 둬 폴더를 통째로 고를 수 없다 — 그래서 "새 압축 만들기"는
 /// 파일 피커/폴더 피커 중 고를 수 있는 작은 메뉴가 됐다. 실제 네이티브
@@ -17,14 +19,14 @@ void main() {
   });
 
   Future<void> pumpHome(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(
+    await tester.pumpWidget(await withAppSettings(const ProviderScope(
       child: MaterialApp(
         locale: Locale('ko'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: HomeScreen(),
       ),
-    ));
+    )));
     await tester.pumpAndSettle();
   }
 

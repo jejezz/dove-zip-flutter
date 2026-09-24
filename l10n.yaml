@@ -3,3 +3,4 @@ template-arb-file: app_ko.arb
 output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 nullable-getter: false
+untranslated-messages-file: build/untranslated.json

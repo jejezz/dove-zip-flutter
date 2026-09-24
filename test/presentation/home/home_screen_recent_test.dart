@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_settings_scope.dart';
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({
@@ -13,14 +15,14 @@ void main() {
   });
 
   Future<void> pumpHome(WidgetTester tester) async {
-    await tester.pumpWidget(ProviderScope(
+    await tester.pumpWidget(await withAppSettings(ProviderScope(
       child: MaterialApp(
         locale: const Locale('ko'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const HomeScreen(),
       ),
-    ));
+    )));
     await tester.pumpAndSettle();
   }
 

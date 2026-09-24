@@ -104,53 +104,47 @@ abstract class AppLocalizations {
   /// **'Dove Zip'**
   String get appTitle;
 
-  /// No description provided for @themeToggleTooltip.
+  /// No description provided for @themeMenuTooltip.
   ///
   /// In ko, this message translates to:
-  /// **'테마 전환 ({mode})'**
-  String themeToggleTooltip(String mode);
+  /// **'테마'**
+  String get themeMenuTooltip;
 
-  /// No description provided for @themeModeSystem.
+  /// No description provided for @themeSystem.
   ///
   /// In ko, this message translates to:
-  /// **'시스템'**
-  String get themeModeSystem;
+  /// **'시스템 설정 따르기'**
+  String get themeSystem;
 
-  /// No description provided for @themeModeLight.
+  /// No description provided for @themeLight.
   ///
   /// In ko, this message translates to:
   /// **'라이트'**
-  String get themeModeLight;
+  String get themeLight;
 
-  /// No description provided for @themeModeDark.
+  /// No description provided for @themeDark.
   ///
   /// In ko, this message translates to:
   /// **'다크'**
-  String get themeModeDark;
+  String get themeDark;
 
-  /// No description provided for @languageToggleTooltip.
+  /// No description provided for @languageMenuTooltip.
   ///
   /// In ko, this message translates to:
-  /// **'언어 전환 ({mode})'**
-  String languageToggleTooltip(String mode);
+  /// **'언어'**
+  String get languageMenuTooltip;
 
-  /// No description provided for @languageModeSystem.
+  /// No description provided for @languageSystem.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템 설정 따르기 / System'**
+  String get languageSystem;
+
+  /// No description provided for @languageSystemShort.
   ///
   /// In ko, this message translates to:
   /// **'시스템'**
-  String get languageModeSystem;
-
-  /// No description provided for @languageModeKorean.
-  ///
-  /// In ko, this message translates to:
-  /// **'한국어'**
-  String get languageModeKorean;
-
-  /// No description provided for @languageModeEnglish.
-  ///
-  /// In ko, this message translates to:
-  /// **'영어'**
-  String get languageModeEnglish;
+  String get languageSystemShort;
 
   /// No description provided for @homeDropHint.
   ///
@@ -680,17 +674,17 @@ abstract class AppLocalizations {
   /// **'이미지를 열지 못했습니다: {error}'**
   String imageLoadError(String error);
 
-  /// No description provided for @aboutMenuTooltip.
+  /// No description provided for @aboutTooltip.
   ///
   /// In ko, this message translates to:
   /// **'정보'**
-  String get aboutMenuTooltip;
+  String get aboutTooltip;
 
-  /// No description provided for @aboutDialogTitle.
+  /// No description provided for @aboutMenuItem.
   ///
   /// In ko, this message translates to:
-  /// **'Dove Zip 정보'**
-  String get aboutDialogTitle;
+  /// **'{appName} 정보'**
+  String aboutMenuItem(String appName);
 
   /// No description provided for @aboutTagline.
   ///
@@ -698,23 +692,17 @@ abstract class AppLocalizations {
   /// **'광고 없는 올인원 압축/해제 유틸리티'**
   String get aboutTagline;
 
-  /// No description provided for @aboutVersionLabel.
+  /// No description provided for @aboutVersion.
   ///
   /// In ko, this message translates to:
-  /// **'버전 {version}'**
-  String aboutVersionLabel(String version);
+  /// **'버전 {version} (빌드 {build})'**
+  String aboutVersion(String version, String build);
 
   /// No description provided for @aboutDescription.
   ///
   /// In ko, this message translates to:
   /// **'Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.'**
   String get aboutDescription;
-
-  /// No description provided for @aboutFeaturesTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'주요 기능'**
-  String get aboutFeaturesTitle;
 
   /// No description provided for @aboutFeatureBrowse.
   ///
@@ -752,29 +740,23 @@ abstract class AppLocalizations {
   /// **'한국어·영어 다국어 지원, 라이트·다크 테마'**
   String get aboutFeatureLocaleTheme;
 
-  /// No description provided for @aboutTechStackLabel.
+  /// No description provided for @aboutOpenSourceLicenses.
   ///
   /// In ko, this message translates to:
-  /// **'Flutter(Dart)로 제작'**
-  String get aboutTechStackLabel;
+  /// **'오픈소스 라이선스'**
+  String get aboutOpenSourceLicenses;
 
-  /// No description provided for @aboutLicenseLabel.
+  /// No description provided for @aboutRepository.
   ///
   /// In ko, this message translates to:
-  /// **'라이선스: MIT'**
-  String get aboutLicenseLabel;
+  /// **'GitHub'**
+  String get aboutRepository;
 
-  /// No description provided for @aboutGithubButton.
-  ///
-  /// In ko, this message translates to:
-  /// **'GitHub 저장소 열기'**
-  String get aboutGithubButton;
-
-  /// No description provided for @close.
+  /// No description provided for @commonClose.
   ///
   /// In ko, this message translates to:
   /// **'닫기'**
-  String get close;
+  String get commonClose;
 }
 
 class _AppLocalizationsDelegate

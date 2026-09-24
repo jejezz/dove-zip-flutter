@@ -13,32 +13,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Dove Zip';
 
   @override
-  String themeToggleTooltip(String mode) {
-    return 'Switch theme ($mode)';
-  }
+  String get themeMenuTooltip => 'Theme';
 
   @override
-  String get themeModeSystem => 'System';
+  String get themeSystem => 'Follow System';
 
   @override
-  String get themeModeLight => 'Light';
+  String get themeLight => 'Light';
 
   @override
-  String get themeModeDark => 'Dark';
+  String get themeDark => 'Dark';
 
   @override
-  String languageToggleTooltip(String mode) {
-    return 'Switch language ($mode)';
-  }
+  String get languageMenuTooltip => 'Language';
 
   @override
-  String get languageModeSystem => 'System';
+  String get languageSystem => 'System / 시스템 설정 따르기';
 
   @override
-  String get languageModeKorean => 'Korean';
-
-  @override
-  String get languageModeEnglish => 'English';
+  String get languageSystemShort => 'System';
 
   @override
   String get homeDropHint => 'Drag an archive here\nor click to open';
@@ -399,25 +392,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aboutMenuTooltip => 'About';
+  String get aboutTooltip => 'About';
 
   @override
-  String get aboutDialogTitle => 'About Dove Zip';
+  String aboutMenuItem(String appName) {
+    return 'About $appName';
+  }
 
   @override
   String get aboutTagline => 'An ad-free, all-in-one archive utility';
 
   @override
-  String aboutVersionLabel(String version) {
-    return 'Version $version';
+  String aboutVersion(String version, String build) {
+    return 'Version $version (build $build)';
   }
 
   @override
   String get aboutDescription =>
       'Built for Windows, macOS, and Linux, it aims to be a lightweight archive utility with no ads, pop-ups, or in-app purchase nags — browse archives without extracting them, then extract or create them exactly the way you want.';
-
-  @override
-  String get aboutFeaturesTitle => 'Key Features';
 
   @override
   String get aboutFeatureBrowse =>
@@ -444,14 +436,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Korean and English localization, light and dark themes';
 
   @override
-  String get aboutTechStackLabel => 'Built with Flutter (Dart)';
+  String get aboutOpenSourceLicenses => 'Open Source Licenses';
 
   @override
-  String get aboutLicenseLabel => 'License: MIT';
+  String get aboutRepository => 'GitHub';
 
   @override
-  String get aboutGithubButton => 'Open GitHub Repository';
-
-  @override
-  String get close => 'Close';
+  String get commonClose => 'Close';
 }

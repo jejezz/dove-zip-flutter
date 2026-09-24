@@ -13,32 +13,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appTitle => 'Dove Zip';
 
   @override
-  String themeToggleTooltip(String mode) {
-    return '테마 전환 ($mode)';
-  }
+  String get themeMenuTooltip => '테마';
 
   @override
-  String get themeModeSystem => '시스템';
+  String get themeSystem => '시스템 설정 따르기';
 
   @override
-  String get themeModeLight => '라이트';
+  String get themeLight => '라이트';
 
   @override
-  String get themeModeDark => '다크';
+  String get themeDark => '다크';
 
   @override
-  String languageToggleTooltip(String mode) {
-    return '언어 전환 ($mode)';
-  }
+  String get languageMenuTooltip => '언어';
 
   @override
-  String get languageModeSystem => '시스템';
+  String get languageSystem => '시스템 설정 따르기 / System';
 
   @override
-  String get languageModeKorean => '한국어';
-
-  @override
-  String get languageModeEnglish => '영어';
+  String get languageSystemShort => '시스템';
 
   @override
   String get homeDropHint => '압축파일을 여기로 드래그하거나\n클릭해서 열기';
@@ -388,25 +381,24 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get aboutMenuTooltip => '정보';
+  String get aboutTooltip => '정보';
 
   @override
-  String get aboutDialogTitle => 'Dove Zip 정보';
+  String aboutMenuItem(String appName) {
+    return '$appName 정보';
+  }
 
   @override
   String get aboutTagline => '광고 없는 올인원 압축/해제 유틸리티';
 
   @override
-  String aboutVersionLabel(String version) {
-    return '버전 $version';
+  String aboutVersion(String version, String build) {
+    return '버전 $version (빌드 $build)';
   }
 
   @override
   String get aboutDescription =>
       'Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.';
-
-  @override
-  String get aboutFeaturesTitle => '주요 기능';
 
   @override
   String get aboutFeatureBrowse => '압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운';
@@ -429,14 +421,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aboutFeatureLocaleTheme => '한국어·영어 다국어 지원, 라이트·다크 테마';
 
   @override
-  String get aboutTechStackLabel => 'Flutter(Dart)로 제작';
+  String get aboutOpenSourceLicenses => '오픈소스 라이선스';
 
   @override
-  String get aboutLicenseLabel => '라이선스: MIT';
+  String get aboutRepository => 'GitHub';
 
   @override
-  String get aboutGithubButton => 'GitHub 저장소 열기';
-
-  @override
-  String get close => '닫기';
+  String get commonClose => '닫기';
 }
