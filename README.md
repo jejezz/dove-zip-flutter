@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="720" alt="Dove Zip demo: drop an archive, browse inside it, extract the selected items">
+  <img src="docs/screenshots/demo.gif" width="720" alt="Dove Zip demo: open a recent archive, step into a nested archive, go back, extract">
 </p>
 
 ## Features

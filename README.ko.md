@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="720" alt="Dove Zip 데모: 압축파일을 끌어다 놓고, 안을 둘러보고, 고른 항목만 풀기">
+  <img src="docs/screenshots/demo.gif" width="720" alt="Dove Zip 데모: 최근 압축파일 열기, 중첩 압축파일 안으로 들어가기, 뒤로, 풀기">
 </p>
 
 ## 기능
