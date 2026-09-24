@@ -1,113 +1,112 @@
-# Dove Zip
+<!-- From jejezz/application-release-templates common/tool/readme @ conventions-v1.
+     Structure and rules: conventions/readme-guide.md. Keep README.ko.md in sync.
+     Check: python3 tool/readme/check_readme.py -->
 
-광고·팝업·인앱결제 유도 없는, **직접 만들어 쓰는 압축/해제 유틸리티**입니다.
-Flutter로 만든 Windows/macOS/Linux 데스크톱 전용 앱이며, 같은 제작자의
-[daylight-commander-flutter](../daylight-commander-flutter)와 동일한 비주얼
-테마를 공유하는 자매 프로젝트입니다.
+<p align="center">
+  <img src="assets/icon/app_icon.png" width="128" alt="Dove Zip icon">
+</p>
 
-## 핵심 기능
+<h1 align="center">Dove Zip</h1>
 
-- **압축파일 탐색/미리보기** — 풀지 않고 내부 목록만 읽어서 탐색하고, 텍스트/
-  이미지 파일은 더블클릭으로 바로 미리보기
-- **중첩 압축 드릴다운** — 압축파일 안에 또 압축파일이 있으면 그 안으로 곧장
-  들어가서 탐색(몇 단계든 재귀적으로)
-- **3가지 해제 모드** — 여기에 압축 풀기 / 알아서(압축파일 이름으로 새 폴더
-  자동 생성, 이중 중첩 방지) / 원하는 곳에 — 마지막으로 고른 모드를 기억
-- **선택 항목만 해제** — Ctrl(⌘)/Shift-클릭으로 원하는 파일·폴더만 골라서 해제
-- **손상된 압축파일 부분 해제** — 항목 하나가 손상돼 못 읽어도 전체를 멈추지
-  않고 나머지는 계속 해제, 건너뛴 항목 목록을 알려줌(복사 가능)
-- **압축 생성** — 압축 레벨(저장/빠름/보통/최대), 압축 전 예상 크기·완료 후
-  압축률 표시
-- **압축 시 파일 필터** — 특정 확장자 제외, 심볼릭 링크 따라가기/건너뛰기 선택
-- **비밀번호 보호(AES-256)** — ZIP, 7Z
-- **분할 압축** — 완성된 압축파일을 지정한 크기로 잘라 `이름.zip.001`,
-  `이름.zip.002`, ... 로 저장(이 앱 자체 방식 — 다른 프로그램과의 호환은
-  보장하지 않음, 상세는 `PLAN.md` 참고)
-- **다국어(한국어/영어)** 및 라이트/다크 테마
-- **최근 연 압축파일 목록**, 드래그앤드롭으로 열기/압축하기
-- **끌어내서 해제** — 압축 목록의 항목을 Finder/탐색기로 끌어다 놓으면 그
-  자리에 풀림. macOS는 드롭된 뒤 그 위치에 바로 풀어 크기 제한이 없고,
-  Windows/Linux는 끌기 시작할 때 미리 풀어 두는 방식이라 원본 512MB
-  이하만. 암호화된 항목은 비밀번호를 한 번 입력한 뒤
-- **macOS Finder 통합**(macOS 전용) — 우클릭 서비스 메뉴로 "여기에 압축"/
-  "여기에 풀기", zip/tar/7z 등 확장자를 더블클릭하면 바로 열기(시스템 기본
-  프로그램을 가로채지는 않음)
+<p align="center">
+  A free, <b>ad-free archive utility for macOS, Windows and Linux</b> — browse ZIP, 7Z, RAR and TAR archives
+  without extracting them, then extract or create them exactly the way you want.
+</p>
 
-## 지원 포맷
+<p align="center">
+  <a href="https://github.com/jejezz/dove-zip-flutter/releases/latest"><img src="https://img.shields.io/github/v/release/jejezz/dove-zip-flutter?style=flat-square&color=4c9dff" alt="Latest release"></a>
+  <a href="https://github.com/jejezz/dove-zip-flutter/releases"><img src="https://img.shields.io/github/downloads/jejezz/dove-zip-flutter/total?style=flat-square&color=7c5cff" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-34d399?style=flat-square" alt="macOS · Windows · Linux">
+  <img src="https://img.shields.io/badge/built%20with-Flutter-02569b?style=flat-square" alt="Flutter">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/jejezz/dove-zip-flutter?style=flat-square" alt="MIT license"></a>
+</p>
 
-| 포맷 | 해제 | 생성 |
+<p align="center">
+  <b>English</b> · <a href="README.ko.md">한국어</a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/demo.gif" width="720" alt="Dove Zip demo: drop an archive, browse inside it, extract the selected items">
+</p>
+
+## Features
+
+- **Browse without extracting** — read the entry list, preview text and images with a double-click, and
+  drill into archives nested inside archives, any number of levels deep
+- **Three extract modes** — *here*, *smart* (a new folder named after the archive, never a folder inside
+  a folder of the same name) and *choose location*; it remembers the last one. Extract only the items you
+  select (⌘/Ctrl- and Shift-click)
+- **Damaged archives, partially** — an unreadable entry doesn't stop the rest; skipped entries are listed
+  and can be copied
+- **Create archives** — compression level (store / fast / normal / max) with the estimated size before and
+  the ratio after, extension filters, symlink handling, **AES-256 passwords** for ZIP and 7Z, and split
+  volumes (`name.zip.001`, `.002`, … — Dove Zip's own scheme)
+- **Drag in, drag out** — drop files to open or compress them; drag entries out to Finder or Explorer to
+  extract them right there. On macOS, Finder's Services menu adds *Compress here* / *Extract here*
+- **Light & dark, English & 한국어** — follows the system, or pick one in the toolbar
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="360" alt="Home: drop zone and recently opened archives">
+  <img src="docs/screenshots/browser.png" width="360" alt="Browsing inside an archive with the extract mode bar">
+</p>
+
+### Supported formats
+
+| Format | Extract | Create |
 |---|---|---|
-| ZIP | ✅ | ✅ (비밀번호 포함) |
+| ZIP | ✅ | ✅ (with password) |
 | TAR, TAR.GZ/TGZ, TAR.BZ2/TBZ2, TAR.XZ | ✅ | ✅ |
-| GZIP, BZIP2, XZ (단일 파일) | ✅ | ✅ |
-| 7Z | ✅ | ✅ (비밀번호 포함) |
-| RAR (RAR5 전체, RAR4는 대부분) | ✅ | ❌ (라이선스상 불가능 — 업계 공통 제약) |
-| ZSTD, TAR.ZST | ❌ 보류 | ❌ 보류 |
+| GZIP, BZIP2, XZ (single file) | ✅ | ✅ |
+| 7Z | ✅ | ✅ (with password) |
+| RAR (all of RAR5, most of RAR4) | ✅ | ❌ (not licensable — an industry-wide limit) |
+| ZSTD, TAR.ZST | ❌ later | ❌ later |
 
-포맷별 정책과 구현 현황의 자세한 근거는 [`PLAN.md`](PLAN.md) 3장을 참고하세요.
+Why each format is where it is: [`PLAN.md`](PLAN.md) §3.
 
-## 시작하기
+## Install
+
+Download from [**Releases**](https://github.com/jejezz/dove-zip-flutter/releases/latest):
+
+| OS | File |
+|---|---|
+| macOS 12.0+ | `DoveZip-<version>-macos-universal.dmg` — open it and drag Dove Zip to Applications |
+| Windows 10/11 (x64) | `DoveZip-<version>-windows-x64-setup.exe` |
+| Linux (x64) | `DoveZip-<version>-linux-x64.tar.gz` — extract and run `./install.sh` (`--remove` to uninstall) |
+
+**Windows:** the installer isn't code-signed yet, so SmartScreen says "Windows protected your PC" — choose **More info → Run anyway**.
+
+## How it works
+
+Every format is handled in pure Dart — [`archive`](https://pub.dev/packages/archive) for ZIP and the TAR
+family, [`koni_sevenz` / `koni_rar`](https://github.com/zenbaku/koni_archive) (MIT) for 7Z and RAR — so
+there is no native archiver to bundle or keep in sync across three operating systems. Formats that need a
+native backend (ZSTD, LZ4, ISO, CAB) are deliberately left for a later version ([`PLAN.md`](PLAN.md) §4).
+Dragging entries out uses [`flutter_drag_out`](https://github.com/jejezz/flutter_drag_out): on macOS the
+file is extracted only once you drop it, so there is no size limit; Windows and Linux extract up front,
+for entries up to 512 MB.
+
+## Development
 
 ```bash
 flutter pub get
-flutter run -d macos   # 또는 windows, linux
-```
-
-테스트:
-
-```bash
+flutter run -d macos     # or windows, linux
 flutter test
 ```
 
-## 릴리스
+Design and background: [`ARCHITECTURE.md`](ARCHITECTURE.md) (layers, domain model, backends, what changed
+during implementation), [`UI_UX.md`](UI_UX.md) (screens, components, theme), [`PLAN.md`](PLAN.md)
+(features, format matrix, priorities — the source of truth for what's done and what's deferred).
+Built with Flutter and Riverpod; strings are ARB files under `lib/l10n/` (`gen-l10n`).
 
-[application-release-templates](https://github.com/jejezz/application-release-templates)의
-`desktop/` 템플릿을 그대로 가져와 이 앱에 맞게 조금 고친 구성입니다
-(`.github/workflows/release.yml`, `installer/windows/app.iss`).
+Releasing: `scripts/bump-version.sh patch`, merge, then tag `vX.Y.Z` — CI builds, signs and publishes every
+platform. Details: [`docs/RELEASE.md`](docs/RELEASE.md). Rules: [application-release-templates/conventions](https://github.com/jejezz/application-release-templates/tree/main/conventions).
 
-1. `pubspec.yaml`의 `version`을 올리고 `main`에 머지합니다.
-2. 같은 버전의 태그를 푸시합니다 — 태그와 `pubspec.yaml` 버전이 다르면
-   `check-version` 잡이 멈추고 릴리스를 만들지 않습니다.
-   ```bash
-   git tag v0.1.0 && git push origin v0.1.0
-   ```
-3. macOS/Windows/Linux 빌드가 모두 성공하면 GitHub Release 하나에 다음이
-   함께 올라갑니다. 하나라도 실패하면 릴리스 자체가 만들어지지 않습니다.
+## Credits
 
-| 플랫폼 | 산출물 | 비고 |
-|---|---|---|
-| macOS | `DoveZip-v0.1.0.dmg` | Developer ID 서명 + 공증 |
-| Windows | `DoveZipSetup-0.1.0.exe` | Inno Setup 설치 프로그램, 서명 없음(SmartScreen 경고) |
-| Linux | `dove_zip-v0.1.0-linux-x64.tar.gz` | 번들 tarball |
+- Font: [SeoulNamsan](https://www.seoul.go.kr/seoul/font.do) (Seoul Metropolitan Government, KOGL Type 1)
+- Icons: [Icons8](https://icons8.com)
+- 7Z/RAR decoding: [koni_archive](https://github.com/zenbaku/koni_archive) (MIT)
 
-macOS 서명/공증용 시크릿(`MACOS_CERTIFICATE_*`, `MACOS_KEYCHAIN_PASSWORD`,
-`APPLE_ID`, `APPLE_ID_PASSWORD`, `APPLE_TEAM_ID`)은 저장소에 등록돼 있습니다.
-Windows 설치 프로그램의 `AppId`(GUID)는 업그레이드/제거가 같은 앱으로
-인식되는 기준이라 **한 번 릴리스한 뒤에는 절대 바꾸지 않습니다.**
+## License
 
-## 프로젝트 구조 및 설계 문서
-
-- [`PLAN.md`](PLAN.md) — 기능 목록, 포맷 지원 매트릭스, 우선순위
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — 레이어 구조, 도메인 모델, 백엔드
-  설계, 구현하면서 계획과 달라진 부분("구현 후 수정")
-- [`UI_UX.md`](UI_UX.md) — 화면/컴포넌트/테마 스펙
-
-## 기술 스택
-
-- **Flutter** (Riverpod 상태관리) — macOS/Windows/Linux 데스크톱
-- 압축/해제 백엔드: `archive`(ZIP/TAR 계열, 순수 Dart),
-  [`koni_sevenz`/`koni_rar`](https://github.com/zenbaku/koni_archive)
-  (7Z/RAR, 순수 Dart, MIT) — 자세한 설계 배경은 `ARCHITECTURE.md` 4장 참고
-- `flutter_localizations` + ARB 기반 다국어(`gen-l10n`)
-- [`flutter_drag_out`](https://github.com/jejezz/flutter_drag_out) — 앱 밖으로
-  끌어내기(자체 플러그인, daylight-commander와 공유)
-
-## 상태
-
-개인 프로젝트로, 필요한 기능부터 순서대로 만들어 가는 중입니다. 완료/보류
-항목은 `PLAN.md`에 그때그때 반영합니다.
-
-이번 버전은 순수 Dart 백엔드(`archive` + `koni_sevenz`/`koni_rar`)만으로
-핵심 기능을 마무리했고, ZSTD/LZ4/Brotli나 ISO9660/CAB 등 레거시 해제 전용
-포맷처럼 네이티브(libarchive/Rust) 백엔드가 필요한 항목은 다음 버전으로
-미뤘습니다 — 자세한 배경은 [`PLAN.md`](PLAN.md) 4장 상단 결정 참고.
+[MIT](LICENSE) © 2026 Jongyun Ahn
