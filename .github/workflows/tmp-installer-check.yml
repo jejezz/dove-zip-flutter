@@ -23,16 +23,36 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
 
-      # Same as release.yml's "Package installer", with the tag's version
-      # taken from pubspec.yaml instead of github.ref_name.
-      - name: Package installer
+      # Diagnosis: does disabling Git Bash's argument path conversion fix
+      # ISCC's "more than one script filename"? A = template form (name as
+      # /D argument), B = name via environment. Both with conversion off.
+      - name: Package installer (A — template form, no path conversion)
         shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
+          MSYS2_ARG_CONV_EXCL: "*"
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | head -1 | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/' | tr -d '\r')
           APP_NAME=$(grep '^PRODUCT_NAME' macos/Runner/Configs/AppInfo.xcconfig | head -1 | sed -E 's/^PRODUCT_NAME[[:space:]]*=[[:space:]]*//' | tr -d '\r')
-          test -n "$APP_NAME"
           BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppName=$APP_NAME" \
+            "/DMyAppVersion=$VERSION" \
+            "/DMyAppExeName=$BINARY_NAME.exe" \
+            installer/windows/app.iss
+          ls -la dist
+          rm -rf dist
 
+      - name: Package installer (B — name via environment, no path conversion)
+        if: always()
+        shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | head -1 | sed -E 's/^version:[[:space:]]*([^+[:space:]]+).*/\1/' | tr -d '\r')
+          APP_NAME=$(grep '^PRODUCT_NAME' macos/Runner/Configs/AppInfo.xcconfig | head -1 | sed -E 's/^PRODUCT_NAME[[:space:]]*=[[:space:]]*//' | tr -d '\r')
+          BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
           APP_DISPLAY_NAME="$APP_NAME" \
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
             "/DMyAppVersion=$VERSION" \
