@@ -397,4 +397,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String imageLoadError(String error) {
     return 'Couldn\'t load the image: $error';
   }
+
+  @override
+  String get aboutMenuTooltip => 'About';
+
+  @override
+  String get aboutDialogTitle => 'About Dove Zip';
+
+  @override
+  String get aboutTagline => 'An ad-free, all-in-one archive utility';
+
+  @override
+  String aboutVersionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'Built for Windows, macOS, and Linux, it aims to be a lightweight archive utility with no ads, pop-ups, or in-app purchase nags — browse archives without extracting them, then extract or create them exactly the way you want.';
+
+  @override
+  String get aboutFeaturesTitle => 'Key Features';
+
+  @override
+  String get aboutFeatureBrowse =>
+      'Browse and preview archives without extracting, drill into nested archives';
+
+  @override
+  String get aboutFeatureExtract =>
+      'Three extract modes (here, smart, choose location), extract selected items only, partial extraction of damaged archives';
+
+  @override
+  String get aboutFeatureCompress =>
+      'Compression levels and file filters, AES-256 passwords (ZIP, 7Z), split archives';
+
+  @override
+  String get aboutFeatureFormats =>
+      'Create and extract ZIP, TAR, GZIP, BZIP2, XZ, and 7Z; extract RAR';
+
+  @override
+  String get aboutFeatureDragDrop =>
+      'Drag and drop to open or compress, drag items out to Finder/Explorer to extract';
+
+  @override
+  String get aboutFeatureLocaleTheme =>
+      'Korean and English localization, light and dark themes';
+
+  @override
+  String get aboutTechStackLabel => 'Built with Flutter (Dart)';
+
+  @override
+  String get aboutLicenseLabel => 'License: MIT';
+
+  @override
+  String get aboutGithubButton => 'Open GitHub Repository';
+
+  @override
+  String get close => 'Close';
 }

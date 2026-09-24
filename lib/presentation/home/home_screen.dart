@@ -17,6 +17,7 @@ import '../archive_browser/archive_browser_screen.dart';
 import '../compress/compress_dialog.dart';
 import '../theme/locale_provider.dart';
 import '../theme/theme_mode_provider.dart';
+import '../widgets/about_dialog.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 
@@ -214,6 +215,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ThemeMode.dark => Icons.dark_mode_outlined,
               ThemeMode.system => Icons.brightness_auto_outlined,
             }),
+          ),
+          IconButton(
+            tooltip: l10n.aboutMenuTooltip,
+            onPressed: () => showAboutInfoDialog(context),
+            icon: const Icon(Icons.info_outline),
           ),
           const SizedBox(width: 8),
         ],

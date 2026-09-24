@@ -386,4 +386,57 @@ class AppLocalizationsKo extends AppLocalizations {
   String imageLoadError(String error) {
     return '이미지를 열지 못했습니다: $error';
   }
+
+  @override
+  String get aboutMenuTooltip => '정보';
+
+  @override
+  String get aboutDialogTitle => 'Dove Zip 정보';
+
+  @override
+  String get aboutTagline => '광고 없는 올인원 압축/해제 유틸리티';
+
+  @override
+  String aboutVersionLabel(String version) {
+    return '버전 $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.';
+
+  @override
+  String get aboutFeaturesTitle => '주요 기능';
+
+  @override
+  String get aboutFeatureBrowse => '압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운';
+
+  @override
+  String get aboutFeatureExtract =>
+      '3가지 해제 모드(여기에·알아서·원하는 곳에), 선택 항목만 해제, 손상된 압축파일 부분 해제';
+
+  @override
+  String get aboutFeatureCompress =>
+      '압축 레벨·파일 필터 선택, AES-256 비밀번호(ZIP·7Z), 분할 압축';
+
+  @override
+  String get aboutFeatureFormats => 'ZIP·TAR·GZIP·BZIP2·XZ·7Z 압축/해제, RAR 해제';
+
+  @override
+  String get aboutFeatureDragDrop => '드래그앤드롭으로 열기·압축하기, Finder/탐색기로 끌어내서 해제';
+
+  @override
+  String get aboutFeatureLocaleTheme => '한국어·영어 다국어 지원, 라이트·다크 테마';
+
+  @override
+  String get aboutTechStackLabel => 'Flutter(Dart)로 제작';
+
+  @override
+  String get aboutLicenseLabel => '라이선스: MIT';
+
+  @override
+  String get aboutGithubButton => 'GitHub 저장소 열기';
+
+  @override
+  String get close => '닫기';
 }

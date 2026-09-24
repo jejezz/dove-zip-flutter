@@ -679,6 +679,102 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이미지를 열지 못했습니다: {error}'**
   String imageLoadError(String error);
+
+  /// No description provided for @aboutMenuTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get aboutMenuTooltip;
+
+  /// No description provided for @aboutDialogTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'Dove Zip 정보'**
+  String get aboutDialogTitle;
+
+  /// No description provided for @aboutTagline.
+  ///
+  /// In ko, this message translates to:
+  /// **'광고 없는 올인원 압축/해제 유틸리티'**
+  String get aboutTagline;
+
+  /// No description provided for @aboutVersionLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'버전 {version}'**
+  String aboutVersionLabel(String version);
+
+  /// No description provided for @aboutDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.'**
+  String get aboutDescription;
+
+  /// No description provided for @aboutFeaturesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'주요 기능'**
+  String get aboutFeaturesTitle;
+
+  /// No description provided for @aboutFeatureBrowse.
+  ///
+  /// In ko, this message translates to:
+  /// **'압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운'**
+  String get aboutFeatureBrowse;
+
+  /// No description provided for @aboutFeatureExtract.
+  ///
+  /// In ko, this message translates to:
+  /// **'3가지 해제 모드(여기에·알아서·원하는 곳에), 선택 항목만 해제, 손상된 압축파일 부분 해제'**
+  String get aboutFeatureExtract;
+
+  /// No description provided for @aboutFeatureCompress.
+  ///
+  /// In ko, this message translates to:
+  /// **'압축 레벨·파일 필터 선택, AES-256 비밀번호(ZIP·7Z), 분할 압축'**
+  String get aboutFeatureCompress;
+
+  /// No description provided for @aboutFeatureFormats.
+  ///
+  /// In ko, this message translates to:
+  /// **'ZIP·TAR·GZIP·BZIP2·XZ·7Z 압축/해제, RAR 해제'**
+  String get aboutFeatureFormats;
+
+  /// No description provided for @aboutFeatureDragDrop.
+  ///
+  /// In ko, this message translates to:
+  /// **'드래그앤드롭으로 열기·압축하기, Finder/탐색기로 끌어내서 해제'**
+  String get aboutFeatureDragDrop;
+
+  /// No description provided for @aboutFeatureLocaleTheme.
+  ///
+  /// In ko, this message translates to:
+  /// **'한국어·영어 다국어 지원, 라이트·다크 테마'**
+  String get aboutFeatureLocaleTheme;
+
+  /// No description provided for @aboutTechStackLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'Flutter(Dart)로 제작'**
+  String get aboutTechStackLabel;
+
+  /// No description provided for @aboutLicenseLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이선스: MIT'**
+  String get aboutLicenseLabel;
+
+  /// No description provided for @aboutGithubButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'GitHub 저장소 열기'**
+  String get aboutGithubButton;
+
+  /// No description provided for @close.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate
