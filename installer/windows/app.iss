@@ -21,7 +21,7 @@
   #define MyAppName "Dove Zip"
 #endif
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.0"
+  #define MyAppVersion "0.1.0"
 #endif
 #ifndef MyAppExeName
   #define MyAppExeName "dove_zip.exe"

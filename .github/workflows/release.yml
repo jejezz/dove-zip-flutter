@@ -9,7 +9,7 @@ name: Release
 #     AppInfo.xcconfig (PRODUCT_NAME), not pubspec.yaml's `name` (the Dart
 #     package id `dove_zip`).
 #   - The DMG and installer file names drop the display name's space
-#     (DoveZip-v1.0.0.dmg, DoveZipSetup-1.0.0.exe) — GitHub Release would
+#     (DoveZip-v0.1.0.dmg, DoveZipSetup-0.1.0.exe) — GitHub Release would
 #     otherwise turn it into a dot.
 #
 # Needs the macos/, windows/, and linux/ platform folders — if they don't

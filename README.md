@@ -69,16 +69,16 @@ flutter test
 2. 같은 버전의 태그를 푸시합니다 — 태그와 `pubspec.yaml` 버전이 다르면
    `check-version` 잡이 멈추고 릴리스를 만들지 않습니다.
    ```bash
-   git tag v1.0.0 && git push origin v1.0.0
+   git tag v0.1.0 && git push origin v0.1.0
    ```
 3. macOS/Windows/Linux 빌드가 모두 성공하면 GitHub Release 하나에 다음이
    함께 올라갑니다. 하나라도 실패하면 릴리스 자체가 만들어지지 않습니다.
 
 | 플랫폼 | 산출물 | 비고 |
 |---|---|---|
-| macOS | `DoveZip-v1.0.0.dmg` | Developer ID 서명 + 공증 |
-| Windows | `DoveZipSetup-1.0.0.exe` | Inno Setup 설치 프로그램, 서명 없음(SmartScreen 경고) |
-| Linux | `dove_zip-v1.0.0-linux-x64.tar.gz` | 번들 tarball |
+| macOS | `DoveZip-v0.1.0.dmg` | Developer ID 서명 + 공증 |
+| Windows | `DoveZipSetup-0.1.0.exe` | Inno Setup 설치 프로그램, 서명 없음(SmartScreen 경고) |
+| Linux | `dove_zip-v0.1.0-linux-x64.tar.gz` | 번들 tarball |
 
 macOS 서명/공증용 시크릿(`MACOS_CERTIFICATE_*`, `MACOS_KEYCHAIN_PASSWORD`,
 `APPLE_ID`, `APPLE_ID_PASSWORD`, `APPLE_TEAM_ID`)은 저장소에 등록돼 있습니다.
