@@ -194,11 +194,8 @@ jobs:
           test -n "$APP_NAME"
           BINARY_NAME=$(grep -oE 'set\(BINARY_NAME "[^"]+"\)' windows/CMakeLists.txt | sed -E 's/.*"(.*)".*/\1/')
 
-          # The display name contains a space, which broke ISCC's command
-          # line as a /D argument under Git Bash — pass it in the
-          # environment instead (app.iss reads it with GetEnv).
-          APP_DISPLAY_NAME="$APP_NAME" \
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "/DMyAppName=$APP_NAME" \
             "/DMyAppVersion=$VERSION" \
             "/DMyAppExeName=$BINARY_NAME.exe" \
             installer/windows/app.iss

@@ -10,10 +10,6 @@
 ; from macos/Runner/Configs/AppInfo.xcconfig, since pubspec.yaml's `name` is
 ; the Dart package id `dove_zip`), and the installer file name drops its
 ; space (DoveZipSetup-x.y.z.exe) so GitHub Release doesn't rename it.
-; Unlike the other two, the workflow hands MyAppName over in the
-; APP_DISPLAY_NAME environment variable, not as `/DMyAppName=...`: through
-; Git Bash that argument's space made ISCC see a second script file name
-; ("You may not specify more than one script filename", v0.1.0's first run).
 ;
 ; The one thing you MUST edit yourself: AppId below. Generate a fresh GUID
 ; for your app (PowerShell: `[guid]::NewGuid()`) and paste it in — never
@@ -22,11 +18,7 @@
 ; (breaking upgrade/uninstall for existing users).
 
 #ifndef MyAppName
-  #define MyAppName GetEnv("APP_DISPLAY_NAME")
-  #if MyAppName == ""
-    #undef MyAppName
-    #define MyAppName "Dove Zip"
-  #endif
+  #define MyAppName "Dove Zip"
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
