@@ -34,8 +34,12 @@ if [ ! -f "$PUBSPEC" ]; then
   fi
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-  echo "working tree is not clean — commit or stash first" >&2
+# Only tracked files matter: the bump commit adds just the version files, so
+# untracked local files (IDE settings like devtools_options.yaml, scratch
+# notes) can't leak into it and shouldn't block a release.
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "tracked files have uncommitted changes — commit or stash first" >&2
+  git status --short --untracked-files=no >&2
   exit 1
 fi
 
