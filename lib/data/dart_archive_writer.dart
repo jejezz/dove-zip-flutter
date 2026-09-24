@@ -66,11 +66,11 @@ class DartArchiveWriter implements ArchiveWriter {
     CancelToken? cancelToken,
   }) async {
     if (options.splitVolumeBytes != null && options.splitVolumeBytes! <= 0) {
-      throw ArgumentError('분할 볼륨 크기는 0보다 커야 합니다: ${options.splitVolumeBytes}');
+      throw ArgumentError('splitVolumeBytes must be > 0: ${options.splitVolumeBytes}');
     }
     if (options.password != null && !_passwordCapableFormats.contains(options.format)) {
       throw UnsupportedError(
-        'DartArchiveWriter는 zip/7z 외의 형식에서는 비밀번호 보호를 지원하지 않습니다.',
+        'DartArchiveWriter supports passwords only for zip and 7z',
       );
     }
 
@@ -228,7 +228,7 @@ class DartArchiveWriter implements ArchiveWriter {
       ArchiveFormat.tarBz2 => BZip2Encoder().encodeBytes(TarEncoder().encode(archive)),
       ArchiveFormat.tarXz => XZEncoder().encodeBytes(TarEncoder().encode(archive)),
       _ => throw UnsupportedError(
-          'DartArchiveWriter가 지원하지 않는 압축 형식입니다: ${options.format}',
+          'DartArchiveWriter does not support: ${options.format}',
         ),
     };
   }
@@ -243,16 +243,13 @@ class DartArchiveWriter implements ArchiveWriter {
     CancelToken? cancelToken,
   }) async {
     if (sources.length != 1) {
-      throw ArgumentError(
-        '${options.format.name} 형식은 파일 하나만 압축할 수 있습니다 — '
-        '폴더나 여러 항목은 tar.gz 등으로 먼저 묶어야 합니다.',
-      );
+      throw SingleFileFormatException(options.format.name, isDirectory: false);
     }
 
     final sourcePath = sources.single.toFilePath();
     final type = await FileSystemEntity.type(sourcePath);
     if (type != FileSystemEntityType.file) {
-      throw ArgumentError('${options.format.name} 형식은 폴더를 압축할 수 없습니다.');
+      throw SingleFileFormatException(options.format.name, isDirectory: true);
     }
 
     cancelToken?.throwIfCancelled();
@@ -263,7 +260,7 @@ class DartArchiveWriter implements ArchiveWriter {
       ArchiveFormat.bzip2 => BZip2Encoder().encodeBytes(bytes),
       ArchiveFormat.xz => XZEncoder().encodeBytes(bytes),
       _ => throw UnsupportedError(
-          'DartArchiveWriter가 지원하지 않는 압축 형식입니다: ${options.format}',
+          'DartArchiveWriter does not support: ${options.format}',
         ),
     };
 

@@ -18,7 +18,7 @@ class FormatCapability {
     required this.extensions,
   }) : assert(
           (canWrite && writeBackend != null) || (!canWrite && writeBackend == null),
-          'canWrite와 writeBackend는 항상 같이 있거나 같이 없어야 한다',
+          'canWrite and writeBackend must be set together',
         );
 
   final ArchiveFormat format;

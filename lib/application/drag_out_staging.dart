@@ -21,7 +21,13 @@ class DragOutTooLargeException implements Exception {
   final int totalBytes;
 
   @override
-  String toString() => '끌어내기에는 너무 큽니다: $totalBytes 바이트';
+  String toString() => 'Too large to drag out: $totalBytes bytes';
+}
+
+/// 끌어다 놓은 자리에 같은 이름의 파일·폴더가 이미 있을 때. 덮어쓰지 않는다.
+/// 기존 `on FileSystemException` 처리가 그대로 잡도록 그 하위 타입으로 둔다.
+class DragOutTargetExistsException extends FileSystemException {
+  const DragOutTargetExistsException(String path) : super('Target already exists', path);
 }
 
 /// 임시 폴더로 푸는 중 손상된 항목이 있었을 때. 일부만 넘기면 사용자가
@@ -144,7 +150,7 @@ class DragOutStaging {
             FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound,
       );
       if (missing.isNotEmpty) {
-        throw StateError('풀린 항목을 찾지 못했습니다: ${missing.first}');
+        throw StateError('Extracted entry not found: ${missing.first}');
       }
       return DragOutStage(directory, paths);
     } catch (_) {
@@ -177,7 +183,7 @@ class DragOutStaging {
     );
     if (FileSystemEntity.typeSync(targetPath, followLinks: false) !=
         FileSystemEntityType.notFound) {
-      throw FileSystemException('이미 같은 이름의 항목이 있습니다', targetPath);
+      throw DragOutTargetExistsException(targetPath);
     }
 
     final temp = await Directory(p.dirname(targetPath))
@@ -202,7 +208,7 @@ class DragOutStaging {
         case FileSystemEntityType.directory:
           await Directory(extracted).rename(targetPath);
         case FileSystemEntityType.notFound:
-          throw StateError('풀린 항목을 찾지 못했습니다: $selectedPath');
+          throw StateError('Extracted entry not found: $selectedPath');
         default:
           await File(extracted).rename(targetPath);
       }

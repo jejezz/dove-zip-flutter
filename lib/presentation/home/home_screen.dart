@@ -19,6 +19,7 @@ import '../../about/dove_zip_about.dart';
 import '../../settings/settings_menus.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
+import '../widgets/error_message.dart';
 
 /// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
 /// 이 채널로 전달) — Windows/Linux는 이번 범위 밖이라 채널 자체가 macOS
@@ -106,7 +107,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      showErrorSnackBar(context, AppLocalizations.of(context).openArchiveFailed('$e'));
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, l10n.openArchiveFailed(describeError(l10n, e)));
     }
   }
 
@@ -183,7 +185,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      showErrorSnackBar(context, AppLocalizations.of(context).openArchiveFailed('$e'));
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, l10n.openArchiveFailed(describeError(l10n, e)));
     } finally {
       if (mounted) setState(() => _isOpening = false);
     }

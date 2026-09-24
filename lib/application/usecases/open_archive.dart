@@ -36,5 +36,5 @@ class UnsupportedArchiveFormatException implements Exception {
   final String fileName;
 
   @override
-  String toString() => '$fileName의 압축 형식을 알 수 없거나 아직 지원하지 않습니다.';
+  String toString() => 'Unknown or unsupported archive format: $fileName';
 }

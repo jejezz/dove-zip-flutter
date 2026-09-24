@@ -757,6 +757,54 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'닫기'**
   String get commonClose;
+
+  /// No description provided for @errorCancelled.
+  ///
+  /// In ko, this message translates to:
+  /// **'작업이 취소되었습니다.'**
+  String get errorCancelled;
+
+  /// No description provided for @errorUnsupportedFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'{fileName}의 압축 형식을 알 수 없거나 아직 지원하지 않습니다.'**
+  String errorUnsupportedFormat(String fileName);
+
+  /// No description provided for @errorPasswordRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{entryPath}\" 항목에 비밀번호가 필요하거나 비밀번호가 틀렸습니다.'**
+  String errorPasswordRequired(String entryPath);
+
+  /// No description provided for @errorSplitVolumeMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'분할 압축 조각이 빠졌습니다 (조각 {index}번을 찾을 수 없음): {fileName}'**
+  String errorSplitVolumeMissing(int index, String fileName);
+
+  /// No description provided for @errorSplitVolumesNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'분할 압축 조각을 찾을 수 없습니다: {fileName}'**
+  String errorSplitVolumesNotFound(String fileName);
+
+  /// No description provided for @errorSingleFileFormatMultiple.
+  ///
+  /// In ko, this message translates to:
+  /// **'{format} 형식은 파일 하나만 압축할 수 있습니다 — 폴더나 여러 항목은 tar.gz 등으로 먼저 묶어야 합니다.'**
+  String errorSingleFileFormatMultiple(String format);
+
+  /// No description provided for @errorSingleFileFormatFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'{format} 형식은 폴더를 압축할 수 없습니다 — tar.gz 등을 사용하세요.'**
+  String errorSingleFileFormatFolder(String format);
+
+  /// No description provided for @errorTargetExists.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 같은 이름의 항목이 있습니다: {name}'**
+  String errorTargetExists(String name);
 }
 
 class _AppLocalizationsDelegate
