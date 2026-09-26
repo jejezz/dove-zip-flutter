@@ -703,7 +703,10 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
                 : l10n.searchTooltip,
             onPressed: _toggleSearch,
           ),
-          if (!_isSearching && hasDockWindow) const DockMenuButton(),
+          if (!_isSearching && hasDockWindow) ...[
+            const AlwaysOnTopButton(),
+            const DockMenuButton(),
+          ],
           if (!_isSearching)
             IconButton(
               icon: const Icon(Icons.close),
