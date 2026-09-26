@@ -11,6 +11,7 @@ import 'app_identity.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/home/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
+import 'presentation/window/dock_window.dart';
 import 'settings/app_settings.dart';
 
 final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
@@ -19,18 +20,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerExtraLicenses();
 
-  if (_isDesktop) {
-    await windowManager.ensureInitialized();
-    const windowOptions = WindowOptions(
-      size: Size(960, 640),
-      minimumSize: Size(720, 480), // UI_UX.md 9장
-      title: AppIdentity.displayName,
-    );
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
-  }
+  // 화면 옆에 세우는 세로 창 (UI_UX.md 9장).
+  if (_isDesktop) await showDockWindow();
 
   // v0.1.x는 언어를 'locale' 키에 저장했다 — 한 번 옮겨서 사용자 설정을
   // 유지한다 (conventions/localization.md §5). 테마 키 'theme_mode'는 같다.

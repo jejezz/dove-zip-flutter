@@ -43,6 +43,9 @@
   volumes (`name.zip.001`, `.002`, … — Dove Zip's own scheme)
 - **Drag in, drag out** — drop files to open or compress them; drag entries out to Finder or Explorer to
   extract them right there. On macOS, Finder's Services menu adds *Compress here* / *Extract here*
+- **Docks beside your other apps** — a tall, narrow window (440×960 by default) that snaps to the left
+  or right edge of the screen and can stay on top, so dragging files between it and Finder or your editor
+  is one short move. It remembers where you put it
 - **Light & dark, English & 한국어** — follows the system, or pick one in the toolbar
 
 <p align="center">

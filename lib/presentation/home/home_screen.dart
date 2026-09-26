@@ -20,6 +20,7 @@ import '../../settings/settings_menus.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 import '../widgets/error_message.dart';
+import '../window/dock_window.dart';
 
 /// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
 /// 이 채널로 전달) — Windows/Linux는 이번 범위 밖이라 채널 자체가 macOS
@@ -203,6 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Text(l10n.appTitle),
         // conventions: 오른쪽 끝 순서는 테마 | 언어 | 정보, 전환은 체크 메뉴.
         actions: [
+          if (hasDockWindow) const DockMenuButton(),
           const ThemeMenuButton(),
           const LanguageMenuButton(),
           IconButton(
@@ -229,81 +231,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ? theme.colorScheme.primary.withValues(alpha: 0.06)
               : Colors.transparent,
           child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.folder_zip_outlined,
-                    size: 48,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.homeDropHint,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 24),
-                  if (_isOpening)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      ),
-                    )
-                  else
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: _pickAndOpenArchive,
-                          icon: const Icon(Icons.folder_open_outlined, size: 18),
-                          label: Text(l10n.openButton),
-                        ),
-                        const SizedBox(width: 12),
-                        MenuAnchor(
-                          menuChildren: [
-                            MenuItemButton(
-                              onPressed: _pickFilesAndCompress,
-                              child: Text(l10n.pickFilesMenuItem),
-                            ),
-                            MenuItemButton(
-                              onPressed: _pickFolderAndCompress,
-                              child: Text(l10n.pickFolderMenuItem),
-                            ),
-                          ],
-                          builder: (context, controller, child) {
-                            return FilledButton.icon(
-                              onPressed: () => controller.isOpen
-                                  ? controller.close()
-                                  : controller.open(),
-                              icon: const Icon(Icons.add_box_outlined, size: 18),
-                              label: Text(l10n.createArchiveButton),
-                            );
-                          },
-                        ),
-                      ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.folder_zip_outlined,
+                      size: 48,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
-                  if (recentArchives.isNotEmpty && !_isOpening) ...[
-                    const SizedBox(height: 32),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(l10n.recentArchivesTitle, style: theme.textTheme.labelLarge),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.homeDropHint,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge,
                     ),
-                    const SizedBox(height: 4),
-                    for (final path in recentArchives)
-                      _RecentArchiveTile(
-                        path: path,
-                        onTap: () => _openArchivePath(path),
-                        onRemove: () =>
-                            ref.read(recentArchivesProvider.notifier).remove(path),
+                    const SizedBox(height: 24),
+                    if (_isOpening)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                      )
+                    else
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _pickAndOpenArchive,
+                            icon: const Icon(Icons.folder_open_outlined, size: 18),
+                            label: Text(l10n.openButton),
+                          ),
+                          MenuAnchor(
+                            menuChildren: [
+                              MenuItemButton(
+                                onPressed: _pickFilesAndCompress,
+                                child: Text(l10n.pickFilesMenuItem),
+                              ),
+                              MenuItemButton(
+                                onPressed: _pickFolderAndCompress,
+                                child: Text(l10n.pickFolderMenuItem),
+                              ),
+                            ],
+                            builder: (context, controller, child) {
+                              return FilledButton.icon(
+                                onPressed: () => controller.isOpen
+                                    ? controller.close()
+                                    : controller.open(),
+                                icon: const Icon(Icons.add_box_outlined, size: 18),
+                                label: Text(l10n.createArchiveButton),
+                              );
+                            },
+                          ),
+                        ],
                       ),
+                    if (recentArchives.isNotEmpty && !_isOpening) ...[
+                      const SizedBox(height: 32),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(l10n.recentArchivesTitle, style: theme.textTheme.labelLarge),
+                      ),
+                      const SizedBox(height: 4),
+                      for (final path in recentArchives)
+                        _RecentArchiveTile(
+                          path: path,
+                          onTap: () => _openArchivePath(path),
+                          onRemove: () =>
+                              ref.read(recentArchivesProvider.notifier).remove(path),
+                        ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
