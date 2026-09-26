@@ -34,6 +34,7 @@ import '../widgets/password_prompt_dialog.dart';
 import 'extract_mode_bar.dart';
 import 'last_extract_mode_provider.dart';
 import '../widgets/error_message.dart';
+import '../window/dock_window.dart';
 
 /// 압축파일 탐색 화면 (UI_UX.md 6.2).
 ///
@@ -702,6 +703,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
                 : l10n.searchTooltip,
             onPressed: _toggleSearch,
           ),
+          if (!_isSearching && hasDockWindow) const DockMenuButton(),
           if (!_isSearching)
             IconButton(
               icon: const Icon(Icons.close),
@@ -955,6 +957,20 @@ class _BreadcrumbBar extends StatelessWidget {
   }
 }
 
+/// 창 폭에 따라 보여 줄 열 (UI_UX.md 9장) — 기본 폭 440의 세로 창에서는
+/// 이름과 크기만, 넓히면 수정일, 더 넓히면 압축 크기까지.
+class _Columns {
+  const _Columns({required this.modified, required this.compressedSize});
+
+  factory _Columns.of(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return _Columns(modified: width >= 520, compressedSize: width >= 640);
+  }
+
+  final bool modified;
+  final bool compressedSize;
+}
+
 class _ColumnHeader extends StatelessWidget {
   const _ColumnHeader();
 
@@ -962,17 +978,23 @@ class _ColumnHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelLarge;
     final l10n = AppLocalizations.of(context);
+    final columns = _Columns.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
         children: [
           Expanded(child: Text(l10n.columnName, style: style)),
           SizedBox(width: 72, child: Text(l10n.columnSize, style: style)),
-          SizedBox(
-            width: 72,
-            child: Text(l10n.columnCompressedSize, style: style),
-          ),
-          SizedBox(width: 96, child: Text(l10n.columnModified, style: style)),
+          if (columns.compressedSize)
+            SizedBox(
+              width: 72,
+              child: Text(l10n.columnCompressedSize, style: style),
+            ),
+          if (columns.modified)
+            SizedBox(
+              width: 96,
+              child: Text(l10n.columnModified, style: style),
+            ),
         ],
       ),
     );
@@ -1000,6 +1022,7 @@ class _EntryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final source = entry.sourceEntry;
+    final columns = _Columns.of(context);
     return ColoredBox(
       color: isSelected
           ? theme.colorScheme.primary.withValues(alpha: 0.12)
@@ -1034,20 +1057,24 @@ class _EntryRow extends StatelessWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
               ),
-              SizedBox(
-                width: 72,
-                child: Text(
-                  entry.isDirectory ? '' : formatBytes(source?.compressedSize),
-                  style: theme.textTheme.bodyMedium,
+              if (columns.compressedSize)
+                SizedBox(
+                  width: 72,
+                  child: Text(
+                    entry.isDirectory
+                        ? ''
+                        : formatBytes(source?.compressedSize),
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: 96,
-                child: Text(
-                  formatModified(source?.modifiedAt),
-                  style: theme.textTheme.bodyMedium,
+              if (columns.modified)
+                SizedBox(
+                  width: 96,
+                  child: Text(
+                    formatModified(source?.modifiedAt),
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ),
-              ),
             ],
           ),
         ),

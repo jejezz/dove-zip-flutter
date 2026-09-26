@@ -49,6 +49,9 @@ class ExtractModeBar extends StatelessWidget {
   final ExtractDestinationMode highlightedMode;
   final bool hasSelection;
 
+  /// 이 폭보다 좁으면 버튼을 세로로 쌓는다.
+  static const stackBelowWidth = 560.0;
+
   Widget _button(BuildContext context, ExtractDestinationMode mode) {
     final onPressed = enabled ? () => onSelectMode(mode) : null;
     final label = Text(
@@ -60,11 +63,9 @@ class ExtractModeBar extends StatelessWidget {
     // 버튼에 flex: 2를 줘서 더 넓게 그렸는데, 마지막 선택 모드가 바뀔
     // 때마다(`highlightedMode`, PLAN.md 1.2 P1) 버튼 폭이 눈에 띄게
     // 들썩여서 없앴다.
-    return Expanded(
-      child: mode == highlightedMode
-          ? FilledButton(onPressed: onPressed, child: label)
-          : OutlinedButton(onPressed: onPressed, child: label),
-    );
+    return mode == highlightedMode
+        ? FilledButton(onPressed: onPressed, child: label)
+        : OutlinedButton(onPressed: onPressed, child: label);
   }
 
   @override
@@ -75,14 +76,27 @@ class ExtractModeBar extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            _button(context, ExtractDestinationMode.here),
-            const SizedBox(width: 8),
-            _button(context, ExtractDestinationMode.smart),
-            const SizedBox(width: 8),
-            _button(context, ExtractDestinationMode.chooseFolder),
-          ],
+        // 세로 창(UI_UX.md 9장)에서는 한 줄에 셋을 두면 라벨이 잘려서, 폭이
+        // 좁으면 한 줄에 하나씩 쌓는다 — 그래도 셋 다 같은 폭이다.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final buttons = [
+              for (final mode in ExtractDestinationMode.values)
+                _button(context, mode),
+            ];
+            if (constraints.maxWidth < stackBelowWidth) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 8,
+                children: buttons,
+              );
+            }
+            return Row(
+              spacing: 8,
+              children: [for (final b in buttons) Expanded(child: b)],
+            );
+          },
         ),
       ),
     );

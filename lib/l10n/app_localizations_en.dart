@@ -392,6 +392,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get windowMenuTooltip => 'Window placement';
+
+  @override
+  String get menuSnapRight => 'Snap to right edge';
+
+  @override
+  String get menuSnapLeft => 'Snap to left edge';
+
+  @override
+  String get menuAlwaysOnTop => 'Always on top';
+
+  @override
   String get aboutTooltip => 'About';
 
   @override

@@ -67,6 +67,8 @@ dependencies:
 
   # 데스크톱 창 제어 (커스텀 타이틀바 등)
   window_manager: ^0.4.3
+  # 창이 있는 화면의 작업 영역 — 화면 가장자리에 붙이기 (UI_UX.md 9장)
+  screen_retriever: ^0.2.2
 
   # OS → 앱 드래그앤드롭 (압축파일/일반 파일을 창에 드롭)
   desktop_drop: ^0.6.0

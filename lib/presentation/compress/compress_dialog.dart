@@ -292,6 +292,8 @@ class _CompressDialogState extends State<CompressDialog> {
     final writableFormats = FormatRegistry.writableFormats;
 
     return AlertDialog(
+      // 세로 창(UI_UX.md 9장)에서 기본 여백 40이면 내용 폭이 250을 밑돈다.
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       title: Text(l10n.newArchiveTitle),
       content: SizedBox(
         width: 420,
@@ -362,7 +364,7 @@ class _CompressDialogState extends State<CompressDialog> {
                               () => _passwordProtected = checked ?? false,
                             ),
                     ),
-                    Text(l10n.passwordProtectSupportedFormats),
+                    Flexible(child: Text(l10n.passwordProtectSupportedFormats)),
                   ],
                 ),
               ),
@@ -391,7 +393,7 @@ class _CompressDialogState extends State<CompressDialog> {
                               () => _splitEnabled = checked ?? false,
                             ),
                     ),
-                    Text(l10n.splitArchiveLabel),
+                    Flexible(child: Text(l10n.splitArchiveLabel)),
                   ],
                 ),
               ),
@@ -442,7 +444,7 @@ class _CompressDialogState extends State<CompressDialog> {
                               () => _followSymlinks = checked ?? false,
                             ),
                     ),
-                    Text(l10n.followSymlinksLabel),
+                    Flexible(child: Text(l10n.followSymlinksLabel)),
                   ],
                 ),
               ),

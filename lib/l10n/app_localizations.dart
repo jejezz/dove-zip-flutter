@@ -674,6 +674,30 @@ abstract class AppLocalizations {
   /// **'이미지를 열지 못했습니다: {error}'**
   String imageLoadError(String error);
 
+  /// 앱 바의 창 메뉴 — 화면 가장자리에 붙이기, 항상 위에 표시 (UI_UX.md 9장)
+  ///
+  /// In ko, this message translates to:
+  /// **'창 배치'**
+  String get windowMenuTooltip;
+
+  /// No description provided for @menuSnapRight.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 오른쪽에 붙이기'**
+  String get menuSnapRight;
+
+  /// No description provided for @menuSnapLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 왼쪽에 붙이기'**
+  String get menuSnapLeft;
+
+  /// No description provided for @menuAlwaysOnTop.
+  ///
+  /// In ko, this message translates to:
+  /// **'항상 위에 표시'**
+  String get menuAlwaysOnTop;
+
   /// No description provided for @aboutTooltip.
   ///
   /// In ko, this message translates to:

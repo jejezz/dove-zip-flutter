@@ -381,6 +381,18 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get windowMenuTooltip => '창 배치';
+
+  @override
+  String get menuSnapRight => '화면 오른쪽에 붙이기';
+
+  @override
+  String get menuSnapLeft => '화면 왼쪽에 붙이기';
+
+  @override
+  String get menuAlwaysOnTop => '항상 위에 표시';
+
+  @override
   String get aboutTooltip => '정보';
 
   @override

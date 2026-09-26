@@ -191,6 +191,11 @@
   "@imageLoadError": {
     "placeholders": {"error": {"type": "String"}}
   },
+  "windowMenuTooltip": "창 배치",
+  "@windowMenuTooltip": {"description": "앱 바의 창 메뉴 — 화면 가장자리에 붙이기, 항상 위에 표시 (UI_UX.md 9장)"},
+  "menuSnapRight": "화면 오른쪽에 붙이기",
+  "menuSnapLeft": "화면 왼쪽에 붙이기",
+  "menuAlwaysOnTop": "항상 위에 표시",
   "aboutTooltip": "정보",
   "aboutMenuItem": "{appName} 정보",
   "@aboutMenuItem": {
