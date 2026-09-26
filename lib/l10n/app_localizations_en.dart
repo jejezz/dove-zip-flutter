@@ -401,7 +401,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSnapLeft => 'Snap to left edge';
 
   @override
-  String get menuAlwaysOnTop => 'Always on top';
+  String get alwaysOnTopOnTooltip => 'Keep on top';
+
+  @override
+  String get alwaysOnTopOffTooltip => 'Stop keeping on top';
 
   @override
   String get aboutTooltip => 'About';

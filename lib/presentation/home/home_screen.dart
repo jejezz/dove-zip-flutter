@@ -204,7 +204,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Text(l10n.appTitle),
         // conventions: 오른쪽 끝 순서는 테마 | 언어 | 정보, 전환은 체크 메뉴.
         actions: [
-          if (hasDockWindow) const DockMenuButton(),
+          if (hasDockWindow) ...[
+            const AlwaysOnTopButton(),
+            const DockMenuButton(),
+          ],
           const ThemeMenuButton(),
           const LanguageMenuButton(),
           IconButton(

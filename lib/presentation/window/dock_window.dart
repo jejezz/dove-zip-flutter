@@ -97,41 +97,20 @@ class _BoundsSaver with WindowListener {
   void onWindowMoved() => _schedule();
 }
 
-enum _DockAction { snapRight, snapLeft, alwaysOnTop }
+enum _DockAction { snapRight, snapLeft }
 
-/// 앱 바의 창 메뉴: 오른쪽·왼쪽에 붙이기, 항상 위에 표시.
-class DockMenuButton extends StatefulWidget {
+/// 앱 바의 창 메뉴: 오른쪽·왼쪽에 붙이기.
+class DockMenuButton extends StatelessWidget {
   const DockMenuButton({super.key});
-
-  @override
-  State<DockMenuButton> createState() => _DockMenuButtonState();
-}
-
-class _DockMenuButtonState extends State<DockMenuButton> {
-  /// 창 하나를 여러 화면이 공유하므로 상태도 하나만 둔다.
-  static bool _alwaysOnTop = false;
-
-  Future<void> _onSelected(_DockAction action) async {
-    switch (action) {
-      case _DockAction.snapRight:
-        await snapDockWindow(right: true);
-      case _DockAction.snapLeft:
-        await snapDockWindow(right: false);
-      case _DockAction.alwaysOnTop:
-        final pinned = !_alwaysOnTop;
-        await windowManager.setAlwaysOnTop(pinned);
-        if (mounted) setState(() => _alwaysOnTop = pinned);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return PopupMenuButton<_DockAction>(
       tooltip: l10n.windowMenuTooltip,
-      icon: Icon(_alwaysOnTop ? Icons.push_pin : Icons.view_sidebar_outlined),
+      icon: const Icon(Icons.view_sidebar_outlined),
       position: PopupMenuPosition.under,
-      onSelected: _onSelected,
+      onSelected: (action) => snapDockWindow(right: action == _DockAction.snapRight),
       itemBuilder: (context) => [
         PopupMenuItem(
           value: _DockAction.snapRight,
@@ -141,13 +120,36 @@ class _DockMenuButtonState extends State<DockMenuButton> {
           value: _DockAction.snapLeft,
           child: Text(l10n.menuSnapLeft),
         ),
-        const PopupMenuDivider(),
-        CheckedPopupMenuItem(
-          value: _DockAction.alwaysOnTop,
-          checked: _alwaysOnTop,
-          child: Text(l10n.menuAlwaysOnTop),
-        ),
       ],
+    );
+  }
+}
+
+/// 창 하나를 여러 화면(홈, 압축 목록)이 공유하므로 항상 위 상태도 하나만 둔다.
+final _alwaysOnTop = ValueNotifier(false);
+
+/// 앱 바의 항상 위에 표시 토글 — 켜면 핀이 채워진다 (Branch Dock과 같은 모양).
+class AlwaysOnTopButton extends StatelessWidget {
+  const AlwaysOnTopButton({super.key});
+
+  Future<void> _toggle() async {
+    final pinned = !_alwaysOnTop.value;
+    await windowManager.setAlwaysOnTop(pinned);
+    _alwaysOnTop.value = pinned;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ValueListenableBuilder(
+      valueListenable: _alwaysOnTop,
+      builder: (context, pinned, _) => IconButton(
+        tooltip: pinned ? l10n.alwaysOnTopOffTooltip : l10n.alwaysOnTopOnTooltip,
+        isSelected: pinned,
+        icon: const Icon(Icons.push_pin_outlined),
+        selectedIcon: const Icon(Icons.push_pin),
+        onPressed: _toggle,
+      ),
     );
   }
 }

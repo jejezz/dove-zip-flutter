@@ -7,6 +7,7 @@ import 'package:dove_zip/presentation/compress/compress_dialog.dart';
 import 'package:dove_zip/presentation/window/dock_window.dart';
 import 'package:dove_zip/settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,6 +64,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DockMenuButton), findsOneWidget);
+      expect(find.byType(AlwaysOnTopButton), findsOneWidget);
     });
 
     testWidgets('[$locale] 최소 크기에서 압축 목록이 넘치지 않고 해제 버튼을 쌓는다', (tester) async {
@@ -138,5 +140,34 @@ void main() {
         tester.getTopLeft(find.byWidget(b)).dy,
     };
     expect(ys, hasLength(1), reason: '세 버튼이 한 줄에');
+  });
+
+  testWidgets('핀 버튼을 누르면 창을 항상 위에 두고, 다시 누르면 끈다', (tester) async {
+    final calls = <Object?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('window_manager'),
+      (call) async {
+        if (call.method == 'setAlwaysOnTop') calls.add(call.arguments);
+        return null;
+      },
+    );
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('window_manager'), null));
+
+    await setWindow(tester, dockDefaultSize);
+    await pumpBrowser(tester, 'ko');
+
+    await tester.tap(find.byTooltip('항상 위에 표시'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.push_pin), findsOneWidget);
+    expect(find.byTooltip('항상 위에 표시 끄기'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('항상 위에 표시 끄기'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);
+    expect(calls, [
+      {'isAlwaysOnTop': true},
+      {'isAlwaysOnTop': false},
+    ]);
   });
 }

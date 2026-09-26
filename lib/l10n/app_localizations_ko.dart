@@ -390,7 +390,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuSnapLeft => '화면 왼쪽에 붙이기';
 
   @override
-  String get menuAlwaysOnTop => '항상 위에 표시';
+  String get alwaysOnTopOnTooltip => '항상 위에 표시';
+
+  @override
+  String get alwaysOnTopOffTooltip => '항상 위에 표시 끄기';
 
   @override
   String get aboutTooltip => '정보';
