@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -16,7 +17,15 @@ final bool hasDockWindow = Platform.isWindows || Platform.isMacOS || Platform.is
 const dockDefaultSize = Size(440, 960);
 const dockMinimumSize = Size(380, 560);
 const _dockWidth = 440.0;
+/// 창 크기·위치 — macOS·Linux는 window_manager의 논리 좌표로 저장한다.
 const _boundsKey = 'window_bounds';
+
+/// Windows는 물리 픽셀로 저장한다. window_manager는 창이 *지금* 있는 화면의
+/// 배율로 좌표를 바꾸므로, 배율이 다른 두 번째 화면에서 닫으면 다음 실행 때
+/// 주 화면 배율로 되살아나 창이 엉뚱한 곳(화면 밖)에 놓인다.
+/// 물리 픽셀은 runner(windows/runner/flutter_window.cpp)가 읽고 쓴다.
+const _physicalBoundsKey = 'window_bounds_px';
+const _frameChannel = MethodChannel('dove_zip/window_frame');
 
 /// 창을 띄운다: 저장해 둔 크기·위치가 있으면 되살리고, 없거나 어느 화면에도
 /// 걸치지 않으면 화면 가운데에 기본 크기로 연다. 화면이 기본 높이보다 낮으면
@@ -24,23 +33,48 @@ const _boundsKey = 'window_bounds';
 Future<void> showDockWindow() async {
   await windowManager.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  final saved = _readBounds(prefs);
   const options = WindowOptions(
     size: dockDefaultSize,
     minimumSize: dockMinimumSize,
     title: AppIdentity.displayName,
   );
   await windowManager.waitUntilReadyToShow(options, () async {
-    var restored = false;
-    if (saved != null && saved.width >= dockMinimumSize.width && saved.height >= dockMinimumSize.height) {
-      await windowManager.setBounds(saved);
-      restored = await _areaUnderWindow() != null;
-    }
-    if (!restored) await _centerDockWindow();
+    if (!await _restoreBounds(prefs)) await _centerDockWindow();
     await windowManager.show();
     await windowManager.focus();
   });
   windowManager.addListener(_BoundsSaver(prefs));
+}
+
+/// 저장해 둔 크기·위치로 창을 옮긴다. 저장한 적이 없거나 어느 화면에도
+/// 걸치지 않으면(그 화면을 뗀 경우 등) false.
+Future<bool> _restoreBounds(SharedPreferences prefs) async {
+  if (Platform.isWindows) {
+    final saved = _readBounds(prefs, _physicalBoundsKey);
+    if (saved == null) return false;
+    final frame = [saved.left, saved.top, saved.width, saved.height].map((d) => d.round()).toList();
+    return await _frameChannel.invokeMethod<bool>('setFrame', frame) ?? false;
+  }
+  final saved = _readBounds(prefs, _boundsKey);
+  if (saved == null || saved.width < dockMinimumSize.width || saved.height < dockMinimumSize.height) {
+    return false;
+  }
+  await windowManager.setBounds(saved);
+  return await _areaUnderWindow() != null;
+}
+
+Future<void> _saveBounds(SharedPreferences prefs) async {
+  final String key;
+  final List<num> frame;
+  if (Platform.isWindows) {
+    final f = await _frameChannel.invokeListMethod<int>('getFrame');
+    if (f == null) return;
+    (key, frame) = (_physicalBoundsKey, f);
+  } else {
+    final r = await windowManager.getBounds();
+    (key, frame) = (_boundsKey, [r.left, r.top, r.width, r.height]);
+  }
+  await prefs.setStringList(key, frame.map((d) => d.toStringAsFixed(0)).toList());
 }
 
 /// 창이 있는 화면의 작업 영역 가운데에 기본 크기로 둔다.
@@ -63,6 +97,8 @@ Future<void> snapDockWindow({required bool right}) async {
   await windowManager.setBounds(
     Rect.fromLTWH(right ? area.right - _dockWidth : area.left, area.top, _dockWidth, area.height),
   );
+  // window_manager는 사용자가 끌어서 옮길 때만 이동 이벤트를 보낸다.
+  await _saveBounds(await SharedPreferences.getInstance());
 }
 
 /// 창 가운데가 걸친 화면의 작업 영역(메뉴 막대·Dock·작업 표시줄 제외).
@@ -81,8 +117,8 @@ Future<Rect?> _areaUnderWindow() async {
 
 Rect _areaOf(Display d) => (d.visiblePosition ?? Offset.zero) & (d.visibleSize ?? d.size);
 
-Rect? _readBounds(SharedPreferences prefs) {
-  final v = prefs.getStringList(_boundsKey);
+Rect? _readBounds(SharedPreferences prefs, String key) {
+  final v = prefs.getStringList(key);
   if (v == null || v.length != 4) return null;
   final n = v.map(double.tryParse).toList();
   if (n.contains(null)) return null;
@@ -98,13 +134,7 @@ class _BoundsSaver with WindowListener {
 
   void _schedule() {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 500), () async {
-      final r = await windowManager.getBounds();
-      await prefs.setStringList(
-        _boundsKey,
-        [r.left, r.top, r.width, r.height].map((d) => d.toStringAsFixed(0)).toList(),
-      );
-    });
+    _timer = Timer(const Duration(milliseconds: 500), () => _saveBounds(prefs));
   }
 
   @override
