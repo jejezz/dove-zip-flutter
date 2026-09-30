@@ -7,6 +7,7 @@ import 'package:dove_zip/domain/entities/extract_conflict.dart';
 import 'package:dove_zip/domain/entities/extract_destination_mode.dart';
 import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
+import 'package:dove_zip/core/encoding/filename_encoding.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 실제 파일을 건드리지 않고 `ExtractEntries`가 넘기는 인자만 기록하는
@@ -24,7 +25,7 @@ class _RecordingReader implements ArchiveReader {
   bool supports(ArchiveFormat format) => format == supportedFormat;
 
   @override
-  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
+  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) async => [];
 
   @override
   Future<List<ExtractFailure>> extractAll(
@@ -32,6 +33,7 @@ class _RecordingReader implements ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -42,7 +44,7 @@ class _RecordingReader implements ArchiveReader {
   }
 
   @override
-  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password}) =>
+  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) =>
       throw UnimplementedError('이 테스트에서는 쓰지 않음');
 }
 

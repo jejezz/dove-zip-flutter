@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dove_zip/core/encoding/filename_encoding.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,7 @@ class _WritingReader implements ArchiveReader {
   Future<List<ArchiveEntry>> listEntries(
     Uri archiveLocation, {
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
   }) async => [];
 
   @override
@@ -38,6 +40,7 @@ class _WritingReader implements ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -63,6 +66,7 @@ class _WritingReader implements ArchiveReader {
     Uri archiveLocation,
     String entryPath, {
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
   }) => throw UnimplementedError('이 테스트에서는 쓰지 않음');
 }
 

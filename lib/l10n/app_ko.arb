@@ -29,6 +29,10 @@
 
   "parentFolderTooltip": "상위 폴더",
   "closeTooltip": "닫기",
+  "filenameEncodingTooltip": "파일명 인코딩",
+  "filenameEncodingAuto": "자동 감지",
+  "filenameEncodingUtf8": "UTF-8",
+  "filenameEncodingCp949": "한글 (CP949)",
   "searchTooltip": "검색",
   "closeSearchTooltip": "검색 닫기",
   "searchHint": "이 폴더에서 검색",

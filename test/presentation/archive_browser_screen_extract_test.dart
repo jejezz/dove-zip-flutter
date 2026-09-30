@@ -13,6 +13,7 @@ import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/presentation/archive_browser/archive_browser_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dove_zip/core/encoding/filename_encoding.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 실제 디스크에 아무것도 쓰지 않고, `ExtractModeBar` → `ExtractEntries` →
@@ -45,7 +46,7 @@ class _FakeReader implements ArchiveReader {
   bool supports(ArchiveFormat format) => true;
 
   @override
-  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
+  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) async => [];
 
   @override
   Future<List<ExtractFailure>> extractAll(
@@ -53,6 +54,7 @@ class _FakeReader implements ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -75,7 +77,7 @@ class _FakeReader implements ArchiveReader {
   }
 
   @override
-  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password}) =>
+  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) =>
       throw UnimplementedError('이 테스트에서는 쓰지 않음');
 }
 

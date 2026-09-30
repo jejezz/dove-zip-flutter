@@ -1,5 +1,6 @@
 import 'package:path/path.dart' as p;
 
+import '../../core/encoding/filename_encoding.dart';
 import '../../data/dart_archive_reader.dart';
 import '../../data/format_registry.dart';
 import '../../domain/entities/archive_handle.dart';
@@ -15,15 +16,28 @@ class OpenArchive {
 
   final ArchiveReader _reader;
 
-  Future<ArchiveHandle> call(Uri archiveLocation, {String? password}) async {
+  Future<ArchiveHandle> call(
+    Uri archiveLocation, {
+    String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
+  }) async {
     final fileName = p.basename(archiveLocation.toFilePath());
     final format = FormatRegistry.detectFromFileName(fileName);
     if (format == null || !_reader.supports(format)) {
       throw UnsupportedArchiveFormatException(fileName);
     }
 
-    final entries = await _reader.listEntries(archiveLocation, password: password);
-    return ArchiveHandle(location: archiveLocation, format: format, entries: entries);
+    final entries = await _reader.listEntries(
+      archiveLocation,
+      password: password,
+      filenameEncoding: filenameEncoding,
+    );
+    return ArchiveHandle(
+      location: archiveLocation,
+      format: format,
+      entries: entries,
+      filenameEncoding: filenameEncoding,
+    );
   }
 }
 
