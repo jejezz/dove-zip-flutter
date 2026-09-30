@@ -25,6 +25,10 @@
 
   "parentFolderTooltip": "Parent folder",
   "closeTooltip": "Close",
+  "filenameEncodingTooltip": "Filename encoding",
+  "filenameEncodingAuto": "Auto-detect",
+  "filenameEncodingUtf8": "UTF-8",
+  "filenameEncodingCp949": "Korean (CP949)",
   "searchTooltip": "Search",
   "closeSearchTooltip": "Close search",
   "searchHint": "Search in this folder",

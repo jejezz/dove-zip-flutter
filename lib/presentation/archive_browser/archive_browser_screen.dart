@@ -17,7 +17,9 @@ import '../../application/usecases/preview_archive_entry.dart';
 import '../../core/bytes_format.dart';
 import '../../core/cancel_token.dart';
 import '../../core/date_format.dart';
+import '../../core/encoding/filename_encoding.dart';
 import '../../data/format_registry.dart';
+import '../../domain/entities/archive_entry.dart' show ArchiveFormat;
 import '../../domain/entities/archive_handle.dart';
 import '../../domain/entities/extract_destination_mode.dart';
 import '../../domain/entities/extract_progress.dart';
@@ -89,6 +91,8 @@ class ArchiveBrowserScreen extends ConsumerStatefulWidget {
 }
 
 class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
+  late ArchiveHandle _handle;
+
   String _currentPath = '';
   bool _isExtracting = false;
 
@@ -166,6 +170,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   @override
   void initState() {
     super.initState();
+    _handle = widget.handle;
     final autoMode = widget.autoExtractMode;
     if (autoMode != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -188,10 +193,37 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 현재 폴더 안에서만 필터링한다(daylight의 퀵서치와 동일 범위 — 하위
   /// 폴더까지 재귀 검색하지는 않는다, PLAN.md 1.1).
   List<ArchiveBrowserEntry> get _visibleEntries {
-    final children = childrenOf(widget.handle.entries, _currentPath);
+    final children = childrenOf(_handle.entries, _currentPath);
     if (_searchQuery.isEmpty) return children;
     final query = _searchQuery.toLowerCase();
     return children.where((e) => e.name.toLowerCase().contains(query)).toList();
+  }
+
+  /// 목록을 [encoding]으로 다시 읽는다. 이름이 바뀌므로 폴더 위치·선택은
+  /// 초기화한다.
+  Future<void> _reopenWithEncoding(FilenameEncoding encoding) async {
+    if (encoding == _handle.filenameEncoding) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      final reopened = await _withPasswordRetry(
+        (password) => widget.openArchive(
+          _handle.location,
+          password: password,
+          filenameEncoding: encoding,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _handle = reopened;
+        _currentPath = '';
+        _selectedPaths.clear();
+      });
+    } on OperationCancelledException {
+      // 사용자가 비밀번호 입력을 취소했다 — 그대로 둔다.
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, describeError(l10n, e));
+    }
   }
 
   void _toggleSearch() {
@@ -272,7 +304,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     try {
       final tempUri = await _withPasswordRetry(
         (password) => widget.previewArchiveEntry(
-          widget.handle,
+          _handle,
           entryPath,
           password: password,
         ),
@@ -349,7 +381,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     _dragOut = dragOut;
     if (dragOut.usePromises) {
       final status =
-          DragOutStaging.needsPassword(widget.handle, selected, _sessionPassword)
+          DragOutStaging.needsPassword(_handle, selected, _sessionPassword)
           ? _DragOutStatus.passwordRequired
           : _DragOutStatus.ready;
       dragOut.status = status;
@@ -364,7 +396,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     _DragOutStatus status;
     try {
       final stage = await _dragOutStaging.prepare(
-        handle: widget.handle,
+        handle: _handle,
         selectedPaths: dragOut.selectedPaths,
         password: _sessionPassword,
         cancelToken: dragOut.cancelToken,
@@ -424,7 +456,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   /// 끌리는 최상위 항목마다 파일 프로미스 하나. Finder가 드롭된 위치
   /// (겹치지 않는 이름으로 골라 줌)를 알려 주면 그 자리에 푼다.
   List<DragOutItem> _promiseItemsFor(_DragOut dragOut) {
-    final handle = widget.handle;
+    final handle = _handle;
     final password = _sessionPassword;
     final topLevel = DragOutStaging.topLevelOf(dragOut.selectedPaths);
     final batch = _PromiseBatch(topLevel.length);
@@ -572,7 +604,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     final entryPaths = _selectedPaths.isEmpty
         ? null
         : expandSelectionToEntryPaths(
-            widget.handle.entries,
+            _handle.entries,
             _selectedPaths,
           ).toList();
 
@@ -595,7 +627,7 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     try {
       final result = await _withPasswordRetry(
         (password) => widget.extractEntries(
-          handle: widget.handle,
+          handle: _handle,
           mode: mode,
           entryPaths: entryPaths,
           userChosenFolder: userChosenFolder,
@@ -655,9 +687,9 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
     // 분할 압축의 특정 조각(.001 등)을 열었어도 제목엔 논리 압축파일
     // 이름만 보여준다 — PLAN.md 1.3 "분할 압축".
     final fileName = FormatRegistry.stripSplitVolumeSuffix(
-      p.basename(widget.handle.location.toFilePath()),
+      p.basename(_handle.location.toFilePath()),
     );
-    final capability = FormatRegistry.of(widget.handle.format);
+    final capability = FormatRegistry.of(_handle.format);
     final entries = _visibleEntries;
 
     return Scaffold(
@@ -703,6 +735,25 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
                 : l10n.searchTooltip,
             onPressed: _toggleSearch,
           ),
+          if (!_isSearching && _handle.format == ArchiveFormat.zip)
+            PopupMenuButton<FilenameEncoding>(
+              icon: const Icon(Icons.translate),
+              tooltip: l10n.filenameEncodingTooltip,
+              initialValue: _handle.filenameEncoding,
+              onSelected: _reopenWithEncoding,
+              itemBuilder: (_) => [
+                for (final (value, label) in [
+                  (FilenameEncoding.auto, l10n.filenameEncodingAuto),
+                  (FilenameEncoding.utf8, l10n.filenameEncodingUtf8),
+                  (FilenameEncoding.cp949, l10n.filenameEncodingCp949),
+                ])
+                  CheckedPopupMenuItem(
+                    value: value,
+                    checked: value == _handle.filenameEncoding,
+                    child: Text(label),
+                  ),
+              ],
+            ),
           if (!_isSearching && hasDockWindow) ...[
             const AlwaysOnTopButton(),
             const DockMenuButton(),
@@ -792,11 +843,11 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
   int _selectedSizeBytes(List<ArchiveBrowserEntry> visible) {
     if (_selectedPaths.isEmpty) return 0;
     final expanded = expandSelectionToEntryPaths(
-      widget.handle.entries,
+      _handle.entries,
       _selectedPaths,
     );
     var total = 0;
-    for (final entry in widget.handle.entries) {
+    for (final entry in _handle.entries) {
       if (expanded.contains(entry.pathInArchive)) {
         total += entry.uncompressedSize ?? 0;
       }

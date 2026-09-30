@@ -57,6 +57,7 @@ class ExtractEntries {
       destination: destination,
       entryPaths: entryPaths,
       password: password,
+      filenameEncoding: handle.filenameEncoding,
       onConflict: onConflict,
       onProgress: onProgress,
       cancelToken: cancelToken,

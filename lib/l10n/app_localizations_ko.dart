@@ -72,6 +72,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get closeTooltip => '닫기';
 
   @override
+  String get filenameEncodingTooltip => '파일명 인코딩';
+
+  @override
+  String get filenameEncodingAuto => '자동 감지';
+
+  @override
+  String get filenameEncodingUtf8 => 'UTF-8';
+
+  @override
+  String get filenameEncodingCp949 => '한글 (CP949)';
+
+  @override
   String get searchTooltip => '검색';
 
   @override

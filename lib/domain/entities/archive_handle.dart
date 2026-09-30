@@ -1,3 +1,4 @@
+import '../../core/encoding/filename_encoding.dart';
 import 'archive_entry.dart';
 
 /// 열려 있는 압축파일 하나 (ARCHITECTURE.md 3장).
@@ -11,12 +12,16 @@ class ArchiveHandle {
     required this.location,
     required this.format,
     required this.entries,
+    this.filenameEncoding = FilenameEncoding.auto,
   });
 
   /// 압축파일 자체의 경로, 예: `file:///Users/me/photos.zip`.
   final Uri location;
   final ArchiveFormat format;
   final List<ArchiveEntry> entries;
+
+  /// [entries] 이름을 읽을 때 쓴 인코딩 — 해제·미리보기도 같은 값을 써야 이름이 맞는다.
+  final FilenameEncoding filenameEncoding;
 
   @override
   String toString() =>

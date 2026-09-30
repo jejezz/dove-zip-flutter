@@ -73,6 +73,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeTooltip => 'Close';
 
   @override
+  String get filenameEncodingTooltip => 'Filename encoding';
+
+  @override
+  String get filenameEncodingAuto => 'Auto-detect';
+
+  @override
+  String get filenameEncodingUtf8 => 'UTF-8';
+
+  @override
+  String get filenameEncodingCp949 => 'Korean (CP949)';
+
+  @override
   String get searchTooltip => 'Search';
 
   @override

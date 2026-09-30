@@ -1,4 +1,5 @@
 import '../../core/cancel_token.dart';
+import '../../core/encoding/filename_encoding.dart';
 import '../entities/archive_entry.dart';
 import '../entities/extract_conflict.dart';
 import '../entities/extract_failure.dart';
@@ -55,7 +56,11 @@ abstract class ArchiveReader {
   bool supports(ArchiveFormat format);
 
   /// 압축파일 전체를 풀지 않고 엔트리 목록만 읽는다.
-  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password});
+  Future<List<ArchiveEntry>> listEntries(
+    Uri archiveLocation, {
+    String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
+  });
 
   /// [destination] 아래에 압축을 해제한다. [entryPaths]가 null이면 전체
   /// 해제, 아니면 그 경로들(과 디렉터리라면 그 하위 전부)만 해제한다.
@@ -75,6 +80,7 @@ abstract class ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -84,5 +90,10 @@ abstract class ArchiveReader {
   /// 전용. 압축파일 전체를 풀지 않고, 대상 폴더 충돌도 없다(매번 새
   /// 임시 폴더를 쓰므로) — `extractAll`과 달리 [ConflictResolver]가
   /// 필요 없는 이유다 (ARCHITECTURE.md 9장).
-  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password});
+  Future<Uri> extractEntryToTemp(
+    Uri archiveLocation,
+    String entryPath, {
+    String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
+  });
 }

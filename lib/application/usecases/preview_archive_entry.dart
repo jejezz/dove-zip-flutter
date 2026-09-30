@@ -17,6 +17,11 @@ class PreviewArchiveEntry {
     if (!_reader.supports(handle.format)) {
       throw UnsupportedArchiveFormatException(p.basename(handle.location.toFilePath()));
     }
-    return _reader.extractEntryToTemp(handle.location, entryPath, password: password);
+    return _reader.extractEntryToTemp(
+      handle.location,
+      entryPath,
+      password: password,
+      filenameEncoding: handle.filenameEncoding,
+    );
   }
 }

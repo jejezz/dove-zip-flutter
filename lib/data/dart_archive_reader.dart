@@ -7,6 +7,8 @@ import 'package:koni_rar/koni_rar.dart' as koni_rar;
 import 'package:koni_sevenz/koni_sevenz.dart' as koni_sevenz;
 import 'package:path/path.dart' as p;
 
+import '../core/encoding/filename_encoding.dart';
+
 import '../core/cancel_token.dart';
 import '../domain/entities/archive_entry.dart';
 import '../domain/entities/extract_conflict.dart';
@@ -56,6 +58,7 @@ class DartArchiveReader implements ArchiveReader {
   Future<List<ArchiveEntry>> listEntries(
     Uri archiveLocation, {
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
   }) async {
     final fileName = p.basename(archiveLocation.toFilePath());
     final format = FormatRegistry.detectFromFileName(fileName);
@@ -72,7 +75,11 @@ class DartArchiveReader implements ArchiveReader {
     // zip 목록은 항목을 복호화하지 않아도 읽을 수 있어 password 없이도
     // 항상 동작한다 — 그래도 넘겨받으면 그대로 전달해 나중에 이 archive
     // 객체를 재사용할 여지를 남긴다.
-    final (archive, decodedFormat) = await _decodeArchive(archiveLocation, password: password);
+    final (archive, decodedFormat) = await _decodeArchive(
+      archiveLocation,
+      password: password,
+      filenameEncoding: filenameEncoding,
+    );
 
     return [
       for (final file in archive)
@@ -100,6 +107,7 @@ class DartArchiveReader implements ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -128,7 +136,11 @@ class DartArchiveReader implements ArchiveReader {
       }
     }
 
-    final (archive, _) = await _decodeArchive(archiveLocation, password: password);
+    final (archive, _) = await _decodeArchive(
+      archiveLocation,
+      password: password,
+      filenameEncoding: filenameEncoding,
+    );
     // NOTE: entryPaths는 지금은 정확히 일치하는 이름만 고른다. 폴더 하나를
     // 선택해서 그 안의 파일들까지 전부 해제하는 것은 아직 이 앱에 다중
     // 선택 UI가 없어 호출하는 곳이 없다 — 그 기능이 생기면 호출부에서
@@ -236,6 +248,7 @@ class DartArchiveReader implements ArchiveReader {
     Uri archiveLocation,
     String entryPath, {
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
   }) async {
     final fileName = p.basename(archiveLocation.toFilePath());
     final format = FormatRegistry.detectFromFileName(fileName);
@@ -254,7 +267,11 @@ class DartArchiveReader implements ArchiveReader {
       }
     }
 
-    final (archive, _) = await _decodeArchive(archiveLocation, password: password);
+    final (archive, _) = await _decodeArchive(
+      archiveLocation,
+      password: password,
+      filenameEncoding: filenameEncoding,
+    );
     final entry = archive.findFile(entryPath);
     if (entry == null) {
       throw ArgumentError('No entry "$entryPath" in the archive');
@@ -350,6 +367,7 @@ class DartArchiveReader implements ArchiveReader {
   Future<(Archive, ArchiveFormat)> _decodeArchive(
     Uri archiveLocation, {
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
   }) async {
     final fileName = p.basename(archiveLocation.toFilePath());
     final format = FormatRegistry.detectFromFileName(fileName);
@@ -359,7 +377,7 @@ class DartArchiveReader implements ArchiveReader {
 
     final bytes = await _readArchiveBytes(archiveLocation);
 
-    final archive = switch (format) {
+    var archive = switch (format) {
       ArchiveFormat.zip => ZipDecoder().decodeBytes(bytes, password: password),
       ArchiveFormat.tar => TarDecoder().decodeBytes(bytes),
       ArchiveFormat.tarGz => TarDecoder().decodeBytes(GZipDecoder().decodeBytes(bytes)),
@@ -370,6 +388,18 @@ class DartArchiveReader implements ArchiveReader {
       ArchiveFormat.xz => _singleFileArchive(fileName, XZDecoder().decodeBytes(bytes)),
       _ => throw ArgumentError('DartArchiveReader does not support: $format'),
     };
+
+    if (format == ArchiveFormat.zip) {
+      // zip만 UTF-8 플래그가 없는 이름이 흔하다(한국어 Windows는 CP949).
+      // Archive는 이름→항목 맵을 캐시하므로 이름을 제자리에서 바꾸지 않고
+      // 새로 담는다.
+      final fixed = Archive();
+      for (final file in archive) {
+        file.name = fixFilenameEncoding(file.name, filenameEncoding);
+        fixed.add(file);
+      }
+      archive = fixed;
+    }
 
     return (archive, format);
   }

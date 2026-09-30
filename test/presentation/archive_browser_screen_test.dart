@@ -10,6 +10,7 @@ import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/presentation/archive_browser/archive_browser_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dove_zip/core/encoding/filename_encoding.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -28,7 +29,7 @@ class _FakeReader implements ArchiveReader {
   bool supports(ArchiveFormat format) => true;
 
   @override
-  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password}) async => [];
+  Future<List<ArchiveEntry>> listEntries(Uri archiveLocation, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) async => [];
 
   @override
   Future<List<ExtractFailure>> extractAll(
@@ -36,6 +37,7 @@ class _FakeReader implements ArchiveReader {
     required Uri destination,
     List<String>? entryPaths,
     String? password,
+    FilenameEncoding filenameEncoding = FilenameEncoding.auto,
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
@@ -43,7 +45,7 @@ class _FakeReader implements ArchiveReader {
       throw UnimplementedError('이 테스트에서는 쓰지 않음');
 
   @override
-  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password}) async {
+  Future<Uri> extractEntryToTemp(Uri archiveLocation, String entryPath, {String? password, FilenameEncoding filenameEncoding = FilenameEncoding.auto}) async {
     final file = File(p.join(tempDir.path, p.basename(entryPath)));
     await file.writeAsString('fake preview content');
     return file.uri;

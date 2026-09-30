@@ -218,6 +218,30 @@ abstract class AppLocalizations {
   /// **'닫기'**
   String get closeTooltip;
 
+  /// No description provided for @filenameEncodingTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일명 인코딩'**
+  String get filenameEncodingTooltip;
+
+  /// No description provided for @filenameEncodingAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 감지'**
+  String get filenameEncodingAuto;
+
+  /// No description provided for @filenameEncodingUtf8.
+  ///
+  /// In ko, this message translates to:
+  /// **'UTF-8'**
+  String get filenameEncodingUtf8;
+
+  /// No description provided for @filenameEncodingCp949.
+  ///
+  /// In ko, this message translates to:
+  /// **'한글 (CP949)'**
+  String get filenameEncodingCp949;
+
   /// No description provided for @searchTooltip.
   ///
   /// In ko, this message translates to:
