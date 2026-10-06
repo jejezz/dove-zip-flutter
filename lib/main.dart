@@ -16,7 +16,7 @@ import 'settings/app_settings.dart';
 
 final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   registerExtraLicenses();
 
@@ -26,13 +26,16 @@ Future<void> main() async {
   // v0.1.x는 언어를 'locale' 키에 저장했다 — 한 번 옮겨서 사용자 설정을
   // 유지한다 (conventions/localization.md §5). 테마 키 'theme_mode'는 같다.
   final settings = await AppSettings.load(legacyKeys: {'locale': AppSettings.localeKey});
-  runApp(ProviderScope(child: DoveZipApp(settings: settings)));
+  runApp(ProviderScope(child: DoveZipApp(settings: settings, launchPaths: args)));
 }
 
 class DoveZipApp extends StatefulWidget {
-  const DoveZipApp({super.key, required this.settings});
+  const DoveZipApp({super.key, required this.settings, this.launchPaths = const []});
 
   final AppSettings settings;
+
+  /// "연결 프로그램"/더블클릭으로 실행될 때 명령줄로 넘어온 파일 경로.
+  final List<String> launchPaths;
 
   @override
   State<DoveZipApp> createState() => _DoveZipAppState();
@@ -96,7 +99,7 @@ class _DoveZipAppState extends State<DoveZipApp> with WidgetsBindingObserver {
           localeResolutionCallback: AppSettings.resolveLocale,
           // macOS 앱 메뉴의 "About Dove Zip"이 앱 바의 정보 버튼과 같은 창을 연다.
           builder: (context, child) => AppMenuBar(onAbout: _showAbout, child: child!),
-          home: const HomeScreen(),
+          home: HomeScreen(launchPaths: widget.launchPaths),
         ),
       ),
     );
