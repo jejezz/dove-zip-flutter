@@ -38,7 +38,10 @@ const _servicesChannel = MethodChannel('dove_zip/services');
 /// [ArchiveBrowserScreen](UI_UX.md 6.2)으로 넘어간다. "새 압축 만들기"나
 /// 압축파일이 아닌 것을 드롭하면 [CompressDialog](UI_UX.md 6.3)로 라우팅한다.
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.launchPaths = const []});
+
+  /// 명령줄 인자로 받은 경로(Windows/Linux의 파일 연결). 압축파일만 연다.
+  final List<String> launchPaths;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -53,6 +56,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     if (Platform.isMacOS) {
       _servicesChannel.setMethodCallHandler(_handleServiceCall);
+    }
+    if (widget.launchPaths.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openLaunchPaths());
+    }
+  }
+
+  Future<void> _openLaunchPaths() async {
+    for (final path in widget.launchPaths) {
+      if (!mounted) return;
+      if (FormatRegistry.detectFromFileName(p.basename(path)) == null) continue;
+      await _openArchivePath(path);
     }
   }
 
