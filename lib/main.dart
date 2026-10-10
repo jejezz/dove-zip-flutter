@@ -13,6 +13,8 @@ import 'presentation/home/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/window/dock_window.dart';
 import 'settings/app_settings.dart';
+import 'update/update_scope.dart';
+import 'update/update_service.dart';
 
 final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
@@ -26,16 +28,29 @@ Future<void> main(List<String> args) async {
   // v0.1.x는 언어를 'locale' 키에 저장했다 — 한 번 옮겨서 사용자 설정을
   // 유지한다 (conventions/localization.md §5). 테마 키 'theme_mode'는 같다.
   final settings = await AppSettings.load(legacyKeys: {'locale': AppSettings.localeKey});
-  runApp(ProviderScope(child: DoveZipApp(settings: settings, launchPaths: args)));
+  // 데스크톱이 아니거나 UPDATE_SERVER 가 비어 있으면 null — 업데이트 확인 없음.
+  final updates = await UpdateService.create();
+  // UpdateScope 는 MaterialApp 위 — 정보 창이 이것을 읽어 "업데이트 확인" 단추를 붙인다.
+  runApp(
+    UpdateScope(
+      service: updates,
+      child: ProviderScope(
+        child: DoveZipApp(settings: settings, launchPaths: args, updates: updates),
+      ),
+    ),
+  );
 }
 
 class DoveZipApp extends StatefulWidget {
-  const DoveZipApp({super.key, required this.settings, this.launchPaths = const []});
+  const DoveZipApp({super.key, required this.settings, this.launchPaths = const [], this.updates});
 
   final AppSettings settings;
 
   /// "연결 프로그램"/더블클릭으로 실행될 때 명령줄로 넘어온 파일 경로.
   final List<String> launchPaths;
+
+  /// 시작할 때 새 버전을 확인한다. null 이면 업데이트 확인을 쓰지 않는다.
+  final UpdateService? updates;
 
   @override
   State<DoveZipApp> createState() => _DoveZipAppState();
@@ -50,6 +65,7 @@ class _DoveZipAppState extends State<DoveZipApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     widget.settings.addListener(_syncWindowBrightness);
     _syncWindowBrightness();
+    widget.updates?.startAutomaticCheck(_navigatorKey);
   }
 
   @override
@@ -80,6 +96,11 @@ class _DoveZipAppState extends State<DoveZipApp> with WidgetsBindingObserver {
     if (context != null) showDoveZipAbout(context);
   }
 
+  void _checkForUpdates() {
+    final context = _navigatorKey.currentContext;
+    if (context != null) widget.updates?.checkManually(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppSettingsScope(
@@ -98,7 +119,11 @@ class _DoveZipAppState extends State<DoveZipApp> with WidgetsBindingObserver {
           supportedLocales: AppLocalizations.supportedLocales,
           localeResolutionCallback: AppSettings.resolveLocale,
           // macOS 앱 메뉴의 "About Dove Zip"이 앱 바의 정보 버튼과 같은 창을 연다.
-          builder: (context, child) => AppMenuBar(onAbout: _showAbout, child: child!),
+          builder: (context, child) => AppMenuBar(
+            onAbout: _showAbout,
+            onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
+            child: child!,
+          ),
           home: HomeScreen(launchPaths: widget.launchPaths),
         ),
       ),

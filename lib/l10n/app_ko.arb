@@ -1,18 +1,16 @@
 {
   "@@locale": "ko",
-
   "appTitle": "Dove Zip",
-  "@appTitle": {"description": "앱 이름 — 번역하지 않는다."},
-
+  "@appTitle": {
+    "description": "앱 이름 — 번역하지 않는다."
+  },
   "themeMenuTooltip": "테마",
   "themeSystem": "시스템 설정 따르기",
   "themeLight": "라이트",
   "themeDark": "다크",
-
   "languageMenuTooltip": "언어",
   "languageSystem": "시스템 설정 따르기 / System",
   "languageSystemShort": "시스템",
-
   "homeDropHint": "압축파일을 여기로 드래그하거나\n클릭해서 열기",
   "openButton": "열기",
   "createArchiveButton": "새 압축 만들기",
@@ -20,13 +18,16 @@
   "pickFolderMenuItem": "폴더 선택...",
   "openArchiveFailed": "압축파일을 열지 못했습니다: {error}",
   "@openArchiveFailed": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "recentArchivesTitle": "최근 연 압축파일",
   "removeFromRecentTooltip": "목록에서 지우기",
   "archiveFileTypeGroupLabel": "압축파일",
   "anyFileTypeGroupLabel": "모든 파일 (분할 압축 조각 선택용)",
-
   "parentFolderTooltip": "상위 폴더",
   "closeTooltip": "닫기",
   "filenameEncodingTooltip": "파일명 인코딩",
@@ -39,38 +40,66 @@
   "emptyFolder": "빈 폴더입니다",
   "previewFailed": "미리보기를 열지 못했습니다: {error}",
   "@previewFailed": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "extractCompleted": "압축 해제 완료: {path}",
   "@extractCompleted": {
-    "placeholders": {"path": {"type": "String"}}
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "extractCompletedWithFailures": "압축 해제 완료: {path}\n({count, plural, other{{count}개 항목은 손상되어 건너뜀}})",
   "@extractCompletedWithFailures": {
     "placeholders": {
-      "path": {"type": "String"},
-      "count": {"type": "int"}
+      "path": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "extractCancelled": "압축 해제를 취소했습니다.",
   "extractFailed": "압축 해제 실패: {error}",
   "@extractFailed": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "dragOutItemCount": "{count, plural, other{{count}개 항목}}",
   "@dragOutItemCount": {
     "description": "여러 항목을 창 밖으로 끌 때 드래그 미리보기에 보이는 문구.",
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "dragOutStillPreparing": "아직 압축을 푸는 중이라 창 밖으로 넘기지 못했습니다. 잠시 뒤 다시 끌어 보세요.",
   "dragOutPasswordRequired": "비밀번호가 필요한 항목입니다. 미리보기나 해제로 비밀번호를 한 번 입력한 뒤 끌어내 주세요.",
   "dragOutTooLarge": "창 밖으로 끌어내기는 {limit} 이하만 지원합니다. 아래 해제 버튼을 사용하세요.",
   "@dragOutTooLarge": {
-    "placeholders": {"limit": {"type": "String"}}
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
   },
   "dragOutFailed": "끌어내기를 준비하지 못했습니다: {error}",
   "@dragOutFailed": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "columnName": "이름",
   "columnSize": "크기",
@@ -80,9 +109,12 @@
   "formatReadOnlyTooltip": "이 형식은 해제만 가능합니다(생성 불가)",
   "statusBarItemCount": "{count, plural, other{{count}개 항목}}",
   "@statusBarItemCount": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "extractHereButton": "여기에 압축 해제",
   "extractSmartButton": "알아서 압축 해제",
   "extractChooseFolderButton": "원하는 곳에...",
@@ -92,20 +124,31 @@
   "statusBarSelectedCount": "{count, plural, other{{count}개 선택됨 ({size})}}",
   "@statusBarSelectedCount": {
     "placeholders": {
-      "count": {"type": "int"},
-      "size": {"type": "String"}
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
     }
   },
   "clearSelectionTooltip": "선택 해제",
-
   "conflictTitle": "이미 같은 이름의 파일이 있습니다",
   "conflictSourceLabel": "압축파일 안: {size}",
   "@conflictSourceLabel": {
-    "placeholders": {"size": {"type": "String"}}
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
   },
   "conflictDestinationLabel": "기존 파일: {size}",
   "@conflictDestinationLabel": {
-    "placeholders": {"size": {"type": "String"}}
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
   },
   "cancel": "취소",
   "copyButton": "복사",
@@ -115,39 +158,56 @@
   "renameAndExtract": "이름 바꿔서 풀기",
   "overwriteAll": "모두 덮어쓰기",
   "overwrite": "덮어쓰기",
-
   "extractingTitle": "압축 해제 중...",
   "compressingTitle": "압축 생성 중...",
   "preparing": "준비 중...",
   "progressCount": "{done} / {total}",
   "@progressCount": {
     "placeholders": {
-      "done": {"type": "int"},
-      "total": {"type": "int"}
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "passwordRequiredTitle": "비밀번호가 필요합니다",
   "passwordWrongHint": "비밀번호가 틀렸습니다. 다시 시도해 주세요.",
   "passwordHint": "비밀번호",
   "confirm": "확인",
-
   "newArchiveTitle": "새 압축 만들기",
   "compressTargetLabel": "대상: {summary}",
   "@compressTargetLabel": {
-    "placeholders": {"summary": {"type": "String"}}
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
   },
   "sourcesSummaryMore": "외 {count}개",
   "@sourcesSummaryMore": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "sourcesSummaryTotal": "{count, plural, other{({count}개)}}",
   "@sourcesSummaryTotal": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "originalSizeLabel": "원본 크기: {size}",
   "@originalSizeLabel": {
-    "placeholders": {"size": {"type": "String"}}
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
   },
   "formatLabel": "포맷",
   "compressionLevelLabel": "압축 레벨",
@@ -161,56 +221,96 @@
   "splitVolumeSizeInvalid": "분할 볼륨 크기를 올바르게 입력해 주세요 (1 이상의 정수, MB 단위).",
   "splitVolumesCreated": "{count, plural, other{ ({count}개 조각으로 분할됨)}}",
   "@splitVolumesCreated": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "excludedExtensionsLabel": "제외할 확장자",
   "excludedExtensionsHint": "쉼표로 구분 (예: tmp, log)",
   "followSymlinksLabel": "심볼릭 링크 따라가기",
   "saveLocationLabel": "저장 위치: {path}",
   "@saveLocationLabel": {
-    "placeholders": {"path": {"type": "String"}}
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "changeButton": "변경",
   "startCompressButton": "압축 시작",
   "compressCompleted": "압축 생성 완료: {path}",
   "@compressCompleted": {
-    "placeholders": {"path": {"type": "String"}}
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "compressionRatioLabel": " ({original} → {compressed}, {percent}% 감소)",
   "@compressionRatioLabel": {
     "placeholders": {
-      "original": {"type": "String"},
-      "compressed": {"type": "String"},
-      "percent": {"type": "int"}
+      "original": {
+        "type": "String"
+      },
+      "compressed": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "compressFailed": "압축 생성 실패: {error}",
   "@compressFailed": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
-
   "unsupportedFormat": "이 형식은 아직 미리보기를 지원하지 않습니다",
   "openWithDefaultAppButton": "OS 기본 앱으로 열기",
   "imageLoadError": "이미지를 열지 못했습니다: {error}",
   "@imageLoadError": {
-    "placeholders": {"error": {"type": "String"}}
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "windowMenuTooltip": "창 배치",
-  "@windowMenuTooltip": {"description": "앱 바의 창 메뉴 — 화면 가장자리에 붙이기 (UI_UX.md 9장)"},
+  "@windowMenuTooltip": {
+    "description": "앱 바의 창 메뉴 — 화면 가장자리에 붙이기 (UI_UX.md 9장)"
+  },
   "menuSnapRight": "화면 오른쪽에 붙이기",
   "menuSnapLeft": "화면 왼쪽에 붙이기",
   "alwaysOnTopOnTooltip": "항상 위에 표시",
-  "@alwaysOnTopOnTooltip": {"description": "앱 바 핀 버튼 — 꺼져 있을 때 (UI_UX.md 9장)"},
+  "@alwaysOnTopOnTooltip": {
+    "description": "앱 바 핀 버튼 — 꺼져 있을 때 (UI_UX.md 9장)"
+  },
   "alwaysOnTopOffTooltip": "항상 위에 표시 끄기",
   "aboutTooltip": "정보",
   "aboutMenuItem": "{appName} 정보",
   "@aboutMenuItem": {
-    "placeholders": {"appName": {"type": "String"}}
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
   },
   "aboutTagline": "광고 없는 올인원 압축/해제 유틸리티",
   "aboutVersion": "버전 {version} (빌드 {build})",
   "@aboutVersion": {
-    "placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
   },
   "aboutDescription": "Windows·macOS·Linux를 모두 지원하며, 광고·팝업·인앱결제 유도 없이 압축파일을 풀지 않고 바로 탐색하고 원하는 방식으로 풀고 만들 수 있는 가벼운 압축 유틸리티를 목표로 만들었습니다.",
   "aboutFeatureBrowse": "압축파일을 풀지 않고 탐색·미리보기, 중첩 압축 드릴다운",
@@ -222,34 +322,160 @@
   "aboutOpenSourceLicenses": "오픈소스 라이선스",
   "aboutRepository": "GitHub",
   "commonClose": "닫기",
-
   "errorCancelled": "작업이 취소되었습니다.",
   "errorUnsupportedFormat": "{fileName}의 압축 형식을 알 수 없거나 아직 지원하지 않습니다.",
   "@errorUnsupportedFormat": {
-    "placeholders": {"fileName": {"type": "String"}}
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
   },
   "errorPasswordRequired": "\"{entryPath}\" 항목에 비밀번호가 필요하거나 비밀번호가 틀렸습니다.",
   "@errorPasswordRequired": {
-    "placeholders": {"entryPath": {"type": "String"}}
+    "placeholders": {
+      "entryPath": {
+        "type": "String"
+      }
+    }
   },
   "errorSplitVolumeMissing": "분할 압축 조각이 빠졌습니다 (조각 {index}번을 찾을 수 없음): {fileName}",
   "@errorSplitVolumeMissing": {
-    "placeholders": {"index": {"type": "int"}, "fileName": {"type": "String"}}
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "fileName": {
+        "type": "String"
+      }
+    }
   },
   "errorSplitVolumesNotFound": "분할 압축 조각을 찾을 수 없습니다: {fileName}",
   "@errorSplitVolumesNotFound": {
-    "placeholders": {"fileName": {"type": "String"}}
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
   },
   "errorSingleFileFormatMultiple": "{format} 형식은 파일 하나만 압축할 수 있습니다 — 폴더나 여러 항목은 tar.gz 등으로 먼저 묶어야 합니다.",
   "@errorSingleFileFormatMultiple": {
-    "placeholders": {"format": {"type": "String"}}
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
   },
   "errorSingleFileFormatFolder": "{format} 형식은 폴더를 압축할 수 없습니다 — tar.gz 등을 사용하세요.",
   "@errorSingleFileFormatFolder": {
-    "placeholders": {"format": {"type": "String"}}
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
   },
   "errorTargetExists": "이미 같은 이름의 항목이 있습니다: {name}",
   "@errorTargetExists": {
-    "placeholders": {"name": {"type": "String"}}
-  }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCheckMenuItem": "업데이트 확인",
+  "updateChecking": "업데이트를 확인하는 중…",
+  "updateAvailableTitle": "새 버전이 있습니다",
+  "updateAvailableBody": "{appName} {latest} 버전이 나왔습니다. (현재 {current})",
+  "@updateAvailableBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      },
+      "latest": {
+        "type": "String"
+      }
+    }
+  },
+  "updateReleaseNotes": "변경 내용",
+  "updateNow": "지금 업데이트",
+  "updateLater": "나중에",
+  "updateSkipVersion": "이 버전 건너뛰기",
+  "updateDownloading": "내려받는 중…",
+  "updateVerifying": "파일을 확인하는 중…",
+  "updateDownloadProgress": "{received} / {total}",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCancel": "취소",
+  "updateFailedTitle": "업데이트하지 못했습니다",
+  "updateCheckFailedTitle": "업데이트를 확인하지 못했습니다",
+  "updateErrorNetwork": "업데이트 서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+  "updateErrorChecksum": "내려받은 파일이 올바르지 않아 설치하지 않았습니다. 잠시 뒤에 다시 시도해 주세요.",
+  "updateErrorInstall": "설치를 시작하지 못했습니다.",
+  "updateErrorGeneric": "업데이트 서버에서 예상하지 못한 응답을 받았습니다. 잠시 뒤에 다시 시도해 주세요.",
+  "updateUpToDateTitle": "최신 버전입니다",
+  "updateUpToDateBody": "{version} 버전을 사용 중입니다.",
+  "@updateUpToDateBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateUnavailableTitle": "직접 설치해 주세요",
+  "updateUnavailableBody": "{latest} 버전이 있지만 앱에서 자동으로 설치할 수 없습니다. 릴리스 페이지에서 받아 주세요.",
+  "@updateUnavailableBody": {
+    "placeholders": {
+      "latest": {
+        "type": "String"
+      }
+    }
+  },
+  "updateOpenReleasePage": "릴리스 페이지 열기",
+  "updateMacosOpenedTitle": "설치 창이 열렸습니다",
+  "updateMacosOpenedBody": "열린 창에서 {appName} 을(를) Applications 폴더로 끌어다 놓아 주세요. 실행 중이면 종료한 뒤 덮어쓰세요.",
+  "@updateMacosOpenedBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "updateWindowsInstallTitle": "설치 프로그램을 열었습니다",
+  "updateWindowsInstallBody": "설치하려면 {appName} 을(를) 종료해야 합니다. 설치 프로그램의 안내를 따라 주세요.",
+  "@updateWindowsInstallBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "updateQuitApp": "{appName} 종료",
+  "@updateQuitApp": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "updateLinuxInstallTitle": "설치를 준비했습니다",
+  "updateLinuxInstallBody": "{appName} 을(를) 종료하고 설치합니다. 설치가 끝나면 자동으로 다시 시작됩니다.",
+  "@updateLinuxInstallBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "updateQuitAndInstall": "종료하고 설치"
 }
