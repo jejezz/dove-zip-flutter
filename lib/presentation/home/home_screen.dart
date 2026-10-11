@@ -21,6 +21,7 @@ import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 import '../widgets/error_message.dart';
 import '../window/dock_window.dart';
+import '../../window/focus_tint.dart';
 
 /// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
 /// 이 채널로 전달) — Windows/Linux는 이번 범위 밖이라 채널 자체가 macOS
@@ -215,6 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FocusTint(),
         title: Text(l10n.appTitle),
         // conventions: 오른쪽 끝 순서는 테마 | 언어 | 정보, 전환은 체크 메뉴.
         actions: [
