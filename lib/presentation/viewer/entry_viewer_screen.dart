@@ -23,7 +23,7 @@ class EntryViewerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewer = ViewerRegistry.forFile(name);
     return Scaffold(
-      appBar: AppBar(title: Text(name), toolbarHeight: 44),
+      appBar: AppBar(title: Text(name)),
       body: viewer != null
           ? viewer.build(context, File(tempFilePath))
           : _UnsupportedView(path: tempFilePath),
