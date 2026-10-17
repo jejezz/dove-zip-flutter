@@ -15,6 +15,7 @@ import '../domain/entities/extract_conflict.dart';
 import '../domain/entities/extract_failure.dart';
 import '../domain/entities/extract_progress.dart';
 import '../domain/repositories/archive_reader.dart';
+import 'external_sevenzip.dart';
 import 'format_registry.dart';
 import 'split_volume_locator.dart';
 
@@ -130,6 +131,14 @@ class DartArchiveReader implements ArchiveReader {
           onConflict: onConflict,
           onProgress: onProgress,
           cancelToken: cancelToken,
+          oversizedFallback: format == ArchiveFormat.sevenZip
+              ? (entry, destPath) => _extractViaExternalSevenZip(
+                    archiveLocation,
+                    entry.pathInArchive,
+                    destPath,
+                    password,
+                  )
+              : null,
         );
       } finally {
         await reader.close();
@@ -180,6 +189,7 @@ class DartArchiveReader implements ArchiveReader {
     required ConflictResolver onConflict,
     ExtractProgressCallback? onProgress,
     CancelToken? cancelToken,
+    Future<void> Function(ArchiveEntry entry, String destPath)? oversizedFallback,
   }) async {
     final total = targets.where((t) => !t.$1.isDirectory).length;
     var done = 0;
@@ -227,7 +237,14 @@ class DartArchiveReader implements ArchiveReader {
       }
 
       try {
-        await File(finalDestPath).writeAsBytes(await readContent());
+        try {
+          await File(finalDestPath).writeAsBytes(await readContent());
+        } catch (e) {
+          if (oversizedFallback == null || !_isOversizedFolder(e)) {
+            rethrow;
+          }
+          await oversizedFallback(entry, finalDestPath);
+        }
       } on ArchivePasswordRequiredException {
         rethrow;
       } catch (e) {
@@ -260,6 +277,18 @@ class DartArchiveReader implements ArchiveReader {
         if (koniEntry == null) {
           throw ArgumentError('No entry "$entryPath" in the archive');
         }
+        if (format == ArchiveFormat.sevenZip) {
+          try {
+            return await _writeToTempFile(
+                entryPath, await _readKoniEntryContent(reader, koniEntry));
+          } catch (e) {
+            if (!_isOversizedFolder(e)) rethrow;
+            final tempDir = await Directory.systemTemp.createTemp('dove_zip_preview_');
+            final tempFile = File(p.join(tempDir.path, p.basename(entryPath)));
+            await _extractViaExternalSevenZip(archiveLocation, entryPath, tempFile.path, password);
+            return tempFile.uri;
+          }
+        }
         final content = await _readKoniEntryContent(reader, koniEntry);
         return await _writeToTempFile(entryPath, content);
       } finally {
@@ -286,6 +315,30 @@ class DartArchiveReader implements ArchiveReader {
     final tempFile = File(p.join(tempDir.path, p.basename(entryPath)));
     await tempFile.writeAsBytes(content);
     return tempFile.uri;
+  }
+
+  /// koni_sevenz가 solid 블록 하나를 메모리에 풀 수 있는 한계(1GiB)를 넘어
+  /// 던지는 오류인지. 파일 손상이 아니라 라이브러리의 크기 상한이다.
+  static bool _isOversizedFolder(Object e) =>
+      e is koni.CorruptArchiveException && e.message.contains('implausible unpacked size');
+
+  /// 내장 해제기가 못 푸는 큰 7z 블록의 항목을 시스템 7-Zip으로 [destPath]에
+  /// 스트리밍한다. 7-Zip이 없으면 [SevenZipBlockTooLargeException].
+  Future<void> _extractViaExternalSevenZip(
+    Uri archiveLocation,
+    String entryPath,
+    String destPath,
+    String? password,
+  ) async {
+    final tool = await ExternalSevenZip.locate();
+    if (tool == null) throw SevenZipBlockTooLargeException(entryPath);
+
+    var archivePath = archiveLocation.toFilePath();
+    if (FormatRegistry.isSplitVolumePart(p.basename(archivePath))) {
+      final parts = await findSplitVolumeParts(archiveLocation);
+      if (parts.isNotEmpty) archivePath = parts.first.path;
+    }
+    await tool.extractEntryTo(archivePath, entryPath, destPath, password: password);
   }
 
   /// [format]([ArchiveFormat.sevenZip]/[ArchiveFormat.rar])으로 koni 리더를
