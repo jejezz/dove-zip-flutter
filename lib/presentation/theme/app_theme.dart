@@ -1,5 +1,33 @@
 import 'package:flutter/material.dart';
 
+/// 고를 수 있는 색 구성 (settings-screen.md §4). 기본 [saturn]은 이 파일의 고정 팔레트
+/// 그대로이고, [highContrast] 전을 뺀 나머지는 주색(primary)만 바꾼다(다크·라이트 한 쌍).
+enum AccentPalette {
+  saturn(Color(0xFF4C9DFF), Color(0xFF2C6BE0)),
+  teal(Color(0xFF2DD4BF), Color(0xFF0F766E)),
+  amber(Color(0xFFFBBF24), Color(0xFFB45309)),
+  rose(Color(0xFFFB7185), Color(0xFFBE123C)),
+  slate(Color(0xFF94A3B8), Color(0xFF475569)),
+  highContrast(Color(0xFFFFD60A), Color(0xFF0000CC));
+
+  const AccentPalette(this.darkPrimary, this.lightPrimary);
+
+  final Color darkPrimary;
+  final Color lightPrimary;
+
+  Color primaryFor(Brightness b) => b == Brightness.dark ? darkPrimary : lightPrimary;
+
+  ColorScheme apply(ColorScheme scheme) {
+    if (this == saturn || this == highContrast) return scheme;
+    final dark = scheme.brightness == Brightness.dark;
+    return scheme.copyWith(
+      primary: dark ? darkPrimary : lightPrimary,
+      onPrimary: dark ? AppColors.bg : Colors.white,
+      inversePrimary: dark ? lightPrimary : darkPrimary,
+    );
+  }
+}
+
 /// Dove Zip의 팔레트 + 테마.
 ///
 /// daylight-commander-flutter의 `AppColors`/`AppRadius`/`AppTheme`를 색상 값
@@ -74,8 +102,8 @@ class AppTheme {
   /// 글꼴로 넘긴다 — 없으면 두부(□)로 보인다 (conventions/fonts.md §2).
   static const _fontFallback = ['Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', 'Noto Sans KR'];
 
-  static ThemeData dark() {
-    const scheme = ColorScheme.dark(
+  static ThemeData dark({AccentPalette palette = AccentPalette.saturn}) {
+    final scheme = palette.apply(const ColorScheme.dark(
       primary: AppColors.primary,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
@@ -84,12 +112,12 @@ class AppTheme {
       onSurface: AppColors.textHi,
       error: AppColors.danger,
       onError: Colors.white,
-    );
+    ));
     return _base(scheme, AppColors.bg, AppColors.textHi, AppColors.textMid);
   }
 
-  static ThemeData light() {
-    const scheme = ColorScheme.light(
+  static ThemeData light({AccentPalette palette = AccentPalette.saturn}) {
+    final scheme = palette.apply(const ColorScheme.light(
       primary: AppColors.primaryDeep,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
@@ -98,7 +126,7 @@ class AppTheme {
       onSurface: AppColors.textHiLight,
       error: AppColors.danger,
       onError: Colors.white,
-    );
+    ));
     return _base(
         scheme, AppColors.bgLight, AppColors.textHiLight, AppColors.textMidLight);
   }

@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 앱 바 오른쪽 끝은 테마 | 언어 | 정보 순서이고 (conventions/theming.md §3),
+/// 앱 바 오른쪽 끝은 설정 | 정보 순서이고 (settings-screen.md §2),
 /// 정보 버튼은 공통 정보 창을 [PackageInfo]의 버전과 함께 연다.
 void main() {
   late AppSettings settings;
@@ -39,22 +39,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('앱 바 오른쪽 끝이 테마 | 언어 | 정보 순서다', (tester) async {
+  testWidgets('앱 바 오른쪽 끝이 설정 | 정보 순서다', (tester) async {
     await pumpHome(tester);
 
     final tooltips = [
       for (final w in tester.widgetList(find.descendant(of: find.byType(AppBar), matching: find.byType(Tooltip))))
         (w as Tooltip).message,
     ];
-    expect(tooltips.sublist(tooltips.length - 3), ['테마', '언어', '정보']);
+    expect(tooltips.sublist(tooltips.length - 2), ['설정', '정보']);
   });
 
-  testWidgets('테마 메뉴는 체크 표시 메뉴이고 고르면 저장된다', (tester) async {
+  testWidgets('설정 대화상자의 모드를 고르면 저장된다', (tester) async {
     await pumpHome(tester);
 
-    await tester.tap(find.byTooltip('테마'));
+    await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
-    expect(find.byType(CheckedPopupMenuItem<ThemeMode>), findsNWidgets(3));
 
     await tester.tap(find.text('다크'));
     await tester.pumpAndSettle();

@@ -16,7 +16,7 @@ import '../../l10n/app_localizations.dart';
 import '../archive_browser/archive_browser_screen.dart';
 import '../compress/compress_dialog.dart';
 import '../../about/dove_zip_about.dart';
-import '../../settings/settings_menus.dart';
+import '../../settings/settings_dialog.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 import '../widgets/error_message.dart';
@@ -224,8 +224,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const AlwaysOnTopButton(),
             const DockMenuButton(),
           ],
-          const ThemeMenuButton(),
-          const LanguageMenuButton(),
+          IconButton(
+            tooltip: l10n.settingsTooltip,
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => showSettingsDialog(context),
+          ),
           IconButton(
             tooltip: l10n.aboutTooltip,
             onPressed: () => showDoveZipAbout(context),
