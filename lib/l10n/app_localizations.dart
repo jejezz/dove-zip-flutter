@@ -908,6 +908,12 @@ abstract class AppLocalizations {
   /// **'분할 압축 조각이 빠졌습니다 (조각 {index}번을 찾을 수 없음): {fileName}'**
   String errorSplitVolumeMissing(int index, String fileName);
 
+  /// No description provided for @errorSevenZipBlockTooLarge.
+  ///
+  /// In ko, this message translates to:
+  /// **'7z 블록이 너무 커서 내장 해제기로 풀 수 없습니다(손상 아님). 7-Zip을 설치하면 풀 수 있습니다.'**
+  String get errorSevenZipBlockTooLarge;
+
   /// No description provided for @errorSplitVolumesNotFound.
   ///
   /// In ko, this message translates to:

@@ -135,6 +135,7 @@
   "errorUnsupportedFormat": "Unknown or not yet supported archive format: {fileName}",
   "errorPasswordRequired": "\"{entryPath}\" needs a password, or the password is wrong.",
   "errorSplitVolumeMissing": "A split volume is missing (part {index} not found): {fileName}",
+  "errorSevenZipBlockTooLarge": "This 7z block is too large for the built-in extractor (the file is not damaged). Install 7-Zip to extract it.",
   "errorSplitVolumesNotFound": "Couldn't find the split volumes: {fileName}",
   "errorSingleFileFormatMultiple": "{format} can compress only a single file — bundle folders or multiple items into tar.gz or similar first.",
   "errorSingleFileFormatFolder": "{format} can't compress a folder — use tar.gz or similar.",

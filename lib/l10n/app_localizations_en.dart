@@ -526,6 +526,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get errorSevenZipBlockTooLarge =>
+      'This 7z block is too large for the built-in extractor (the file is not damaged). Install 7-Zip to extract it.';
+
+  @override
   String errorSplitVolumesNotFound(String fileName) {
     return 'Couldn\'t find the split volumes: $fileName';
   }

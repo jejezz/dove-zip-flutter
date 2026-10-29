@@ -31,6 +31,12 @@ void main() {
         "Couldn't find the split volumes: a.zip.001");
   });
 
+  test('내장 해제기가 못 푸는 큰 7z 블록은 손상이 아니라고 알린다', () {
+    const error = SevenZipBlockTooLargeException('disk.img');
+    expect(describeError(ko, error), contains('손상 아님'));
+    expect(describeError(en, error), contains('not damaged'));
+  });
+
   test('단일 파일 형식은 폴더와 여러 항목을 구분한다', () {
     expect(describeError(ko, const SingleFileFormatException('gzip', isDirectory: true)),
         startsWith('gzip 형식은 폴더를'));

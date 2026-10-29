@@ -19,6 +19,7 @@ String describeError(AppLocalizations l10n, Object error) => switch (error) {
       OperationCancelledException() => l10n.errorCancelled,
       UnsupportedArchiveFormatException(:final fileName) => l10n.errorUnsupportedFormat(fileName),
       ArchivePasswordRequiredException(:final entryPath) => l10n.errorPasswordRequired(entryPath),
+      SevenZipBlockTooLargeException() => l10n.errorSevenZipBlockTooLarge,
       MissingSplitVolumeException(:final fileName, missingIndex: final index?) =>
         l10n.errorSplitVolumeMissing(index, fileName),
       MissingSplitVolumeException(:final fileName) => l10n.errorSplitVolumesNotFound(fileName),

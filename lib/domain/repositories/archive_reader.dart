@@ -41,6 +41,18 @@ class MissingSplitVolumeException implements Exception {
       : 'Split volume #$missingIndex is missing: $fileName';
 }
 
+/// 7z의 solid 블록이 내장 해제기가 다룰 수 있는 크기(1GiB)를 넘는데, 대신 풀어
+/// 줄 외부 7-Zip도 시스템에 없을 때. 파일이 손상된 것이 아니다.
+class SevenZipBlockTooLargeException implements Exception {
+  const SevenZipBlockTooLargeException(this.entryPath);
+
+  final String entryPath;
+
+  @override
+  String toString() => 'The 7z block holding "$entryPath" is too large for the built-in '
+      'decoder and no 7-Zip command line was found';
+}
+
 /// 압축파일을 읽어 엔트리 목록을 얻고, 필요하면 디스크에 해제하는 백엔드의
 /// 공통 인터페이스 (ARCHITECTURE.md 4장).
 ///
