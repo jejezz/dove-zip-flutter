@@ -93,6 +93,50 @@ class AppRadius {
   static const sheet = 32.0;
 }
 
+/// [AccentPalette.highContrast] 전용 ColorScheme: 주색만이 아니라 배경·글자·테두리를 순흑/순백 최대
+/// 대비로 바꾼다 (settings.md). 반투명 테두리는 꽉 찬 outline 색으로 대신한다.
+abstract final class _HighContrast {
+  static const dimDark = Color(0xFFBFBFBF);
+  static const surfaceHiDark = Color(0xFF262626);
+  static const errorDark = Color(0xFFFF6B6B);
+  static const dimLight = Color(0xFF404040);
+  static const surfaceHiLight = Color(0xFFE0E0E0);
+  static const errorLight = Color(0xFFCC0000);
+
+  static ColorScheme scheme(Brightness b) {
+    final dark = b == Brightness.dark;
+    final fg = dark ? Colors.white : Colors.black;
+    final bg = dark ? Colors.black : Colors.white;
+    final dim = dark ? dimDark : dimLight;
+    final hi = dark ? surfaceHiDark : surfaceHiLight;
+    final primary = AccentPalette.highContrast.primaryFor(b);
+    return ColorScheme(
+      brightness: b,
+      primary: primary,
+      onPrimary: bg,
+      secondary: primary,
+      onSecondary: bg,
+      error: dark ? errorDark : errorLight,
+      onError: bg,
+      surface: bg,
+      onSurface: fg,
+      onSurfaceVariant: dim,
+      surfaceContainerHighest: hi,
+      surfaceContainerHigh: hi,
+      surfaceContainer: bg,
+      surfaceContainerLow: bg,
+      surfaceContainerLowest: bg,
+      outline: fg,
+      outlineVariant: dim,
+      inverseSurface: fg,
+      onInverseSurface: bg,
+      inversePrimary: AccentPalette.highContrast.primaryFor(dark ? Brightness.light : Brightness.dark),
+      shadow: Colors.black,
+      scrim: Colors.black,
+    );
+  }
+}
+
 class AppTheme {
   const AppTheme._();
 
@@ -103,7 +147,10 @@ class AppTheme {
   static const _fontFallback = ['Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', 'Noto Sans KR'];
 
   static ThemeData dark({AccentPalette palette = AccentPalette.saturn}) {
-    final scheme = palette.apply(const ColorScheme.dark(
+    final hc = palette == AccentPalette.highContrast;
+    final scheme = hc
+        ? _HighContrast.scheme(Brightness.dark)
+        : palette.apply(const ColorScheme.dark(
       primary: AppColors.primary,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
@@ -113,11 +160,19 @@ class AppTheme {
       error: AppColors.danger,
       onError: Colors.white,
     ));
-    return _base(scheme, AppColors.bg, AppColors.textHi, AppColors.textMid);
+    return _base(
+      scheme,
+      hc ? Colors.black : AppColors.bg,
+      hc ? Colors.white : AppColors.textHi,
+      hc ? _HighContrast.dimDark : AppColors.textMid,
+    );
   }
 
   static ThemeData light({AccentPalette palette = AccentPalette.saturn}) {
-    final scheme = palette.apply(const ColorScheme.light(
+    final hc = palette == AccentPalette.highContrast;
+    final scheme = hc
+        ? _HighContrast.scheme(Brightness.light)
+        : palette.apply(const ColorScheme.light(
       primary: AppColors.primaryDeep,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
@@ -128,7 +183,11 @@ class AppTheme {
       onError: Colors.white,
     ));
     return _base(
-        scheme, AppColors.bgLight, AppColors.textHiLight, AppColors.textMidLight);
+      scheme,
+      hc ? Colors.white : AppColors.bgLight,
+      hc ? Colors.black : AppColors.textHiLight,
+      hc ? _HighContrast.dimLight : AppColors.textMidLight,
+    );
   }
 
   static ThemeData _base(
