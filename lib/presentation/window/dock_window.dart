@@ -27,10 +27,11 @@ const _boundsKey = 'window_bounds';
 const _physicalBoundsKey = 'window_bounds_px';
 const _frameChannel = MethodChannel('dove_zip/window_frame');
 
-/// 창을 띄운다: 저장해 둔 크기·위치가 있으면 되살리고, 없거나 어느 화면에도
+/// 창을 준비한다: 저장해 둔 크기·위치가 있으면 되살리고, 없거나 어느 화면에도
 /// 걸치지 않으면 화면 가운데에 기본 크기로 연다. 화면이 기본 높이보다 낮으면
-/// 작업 영역 높이에 맞춘다.
-Future<void> showDockWindow() async {
+/// 작업 영역 높이에 맞춘다. 돌려주는 함수를 불러야 실제로 창이 보인다 —
+/// 첫 프레임이 그려진 뒤에 불러야 깜빡이지 않는다 (window-placement.md §5).
+Future<Future<void> Function()> prepareDockWindow() async {
   await windowManager.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   const options = WindowOptions(
@@ -38,12 +39,26 @@ Future<void> showDockWindow() async {
     minimumSize: dockMinimumSize,
     title: AppIdentity.displayName,
   );
+  final placed = Completer<void>();
   await windowManager.waitUntilReadyToShow(options, () async {
     if (!await _restoreBounds(prefs)) await _centerDockWindow();
+    placed.complete();
+  });
+  return () async {
+    await placed.future;
+    await _nextFrame();
     await windowManager.show();
     await windowManager.focus();
-  });
-  windowManager.addListener(_BoundsSaver(prefs));
+    windowManager.addListener(_BoundsSaver(prefs));
+  };
+}
+
+/// 다음 프레임이 그려질 때까지 기다린다.
+Future<void> _nextFrame() {
+  final completer = Completer<void>();
+  WidgetsBinding.instance.addPostFrameCallback((_) => completer.complete());
+  WidgetsBinding.instance.scheduleFrame();
+  return completer.future;
 }
 
 /// 저장해 둔 크기·위치로 창을 옮긴다. 저장한 적이 없거나 어느 화면에도

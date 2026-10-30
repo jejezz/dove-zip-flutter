@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,7 +24,8 @@ Future<void> main(List<String> args) async {
   registerExtraLicenses();
 
   // 화면 옆에 세우는 세로 창 (UI_UX.md 9장).
-  if (_isDesktop) await showDockWindow();
+  Future<void> Function()? showWindow;
+  if (_isDesktop) showWindow = await prepareDockWindow();
 
   // v0.1.x는 언어를 'locale' 키에 저장했다 — 한 번 옮겨서 사용자 설정을
   // 유지한다 (conventions/localization.md §5). 테마 키 'theme_mode'는 같다.
@@ -39,6 +41,11 @@ Future<void> main(List<String> args) async {
       ),
     ),
   );
+
+  if (showWindow != null) {
+    final show = showWindow;
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(show()));
+  }
 }
 
 class DoveZipApp extends StatefulWidget {
