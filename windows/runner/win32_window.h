@@ -36,6 +36,12 @@ class Win32Window {
   // |Show| is called. Returns true if the window was created successfully.
   bool Create(const std::wstring& title, const Point& origin, const Size& size);
 
+  // Creates the window directly at |frame|, given in physical (screen)
+  // pixels. Used to open on the monitor the window was last on, so it does
+  // not have to move there after the Flutter view exists (moving onto a
+  // monitor with another DPI costs hundreds of milliseconds at startup).
+  bool Create(const std::wstring& title, const RECT& frame);
+
   // Show the current window. Returns true if the window was successfully shown.
   bool Show();
 
