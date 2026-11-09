@@ -53,11 +53,14 @@ void FlutterWindow::RegisterFrameChannel() {
         return;
       }
       // Moving onto a monitor with another DPI sends WM_DPICHANGED, which
-      // rescales the window; the second call restores the saved size there.
-      for (int i = 0; i < 2; i++) {
-        SetWindowPos(hwnd, nullptr, v[0], v[1], v[2], v[3],
-                     SWP_NOZORDER | SWP_NOACTIVATE);
-      }
+      // rescales the window. Move first without resizing, so that rescale
+      // starts from the current size, then set the saved size on that
+      // monitor. (Resizing and moving in one call made the first call about
+      // 120 ms slower on a monitor with another DPI.)
+      SetWindowPos(hwnd, nullptr, v[0], v[1], 0, 0,
+                   SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+      SetWindowPos(hwnd, nullptr, v[0], v[1], v[2], v[3],
+                   SWP_NOZORDER | SWP_NOACTIVATE);
       result->Success(flutter::EncodableValue(true));
     } else {
       result->NotImplemented();
