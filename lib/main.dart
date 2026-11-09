@@ -12,7 +12,7 @@ import 'app_identity.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/home/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
-import 'presentation/window/dock_window.dart';
+import 'presentation/window/window_placement.dart';
 import 'settings/app_settings.dart';
 import 'update/update_scope.dart';
 import 'update/update_service.dart';
@@ -23,9 +23,9 @@ Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   registerExtraLicenses();
 
-  // 화면 옆에 세우는 세로 창 (UI_UX.md 9장).
+  // 저장해 둔 크기·위치로 창을 연다 (UI_UX.md 9장).
   Future<void> Function()? showWindow;
-  if (_isDesktop) showWindow = await prepareDockWindow();
+  if (_isDesktop) showWindow = await prepareWindow();
 
   // v0.1.x는 언어를 'locale' 키에 저장했다 — 한 번 옮겨서 사용자 설정을
   // 유지한다 (conventions/localization.md §5). 테마 키 'theme_mode'는 같다.
@@ -126,10 +126,14 @@ class _DoveZipAppState extends State<DoveZipApp> with WidgetsBindingObserver {
           supportedLocales: AppLocalizations.supportedLocales,
           localeResolutionCallback: AppSettings.resolveLocale,
           // macOS 앱 메뉴의 "About Dove Zip"이 앱 바의 정보 버튼과 같은 창을 연다.
-          builder: (context, child) => AppMenuBar(
-            onAbout: _showAbout,
-            onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
-            child: child!,
+          // 설정의 화면 글자 크기가 앱 전체 글자에 곱해진다.
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(widget.settings.textScale)),
+            child: AppMenuBar(
+              onAbout: _showAbout,
+              onCheckForUpdates: widget.updates == null ? null : _checkForUpdates,
+              child: child!,
+            ),
           ),
           home: HomeScreen(launchPaths: widget.launchPaths),
         ),

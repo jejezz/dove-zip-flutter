@@ -23,7 +23,9 @@
   "settingsPaletteRose": "장미",
   "settingsPaletteSlate": "슬레이트",
   "settingsPaletteHighContrast": "고대비",
+  "settingsTextSize": "화면 글자 크기",
   "homeDropHint": "압축파일을 여기로 드래그하거나\n클릭해서 열기",
+  "homeDropRelease": "놓으면 열거나 압축합니다",
   "openButton": "열기",
   "createArchiveButton": "새 압축 만들기",
   "pickFilesMenuItem": "파일 선택...",
@@ -292,17 +294,6 @@
       }
     }
   },
-  "windowMenuTooltip": "창 배치",
-  "@windowMenuTooltip": {
-    "description": "앱 바의 창 메뉴 — 화면 가장자리에 붙이기 (UI_UX.md 9장)"
-  },
-  "menuSnapRight": "화면 오른쪽에 붙이기",
-  "menuSnapLeft": "화면 왼쪽에 붙이기",
-  "alwaysOnTopOnTooltip": "항상 위에 표시",
-  "@alwaysOnTopOnTooltip": {
-    "description": "앱 바 핀 버튼 — 꺼져 있을 때 (UI_UX.md 9장)"
-  },
-  "alwaysOnTopOffTooltip": "항상 위에 표시 끄기",
   "aboutTooltip": "정보",
   "aboutMenuItem": "{appName} 정보",
   "@aboutMenuItem": {

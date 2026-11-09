@@ -11,17 +11,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../presentation/theme/app_theme.dart';
 
 class AppSettings extends ChangeNotifier {
-  AppSettings._(this._prefs, this._themeMode, this._locale, this._accentPalette);
+  AppSettings._(this._prefs, this._themeMode, this._locale, this._accentPalette, this._textScale);
 
   /// 저장 키 — 모든 앱 공통 (localization.md §5, settings-screen.md §4). 바꾸지 않는다.
   static const themeModeKey = 'theme_mode';
   static const localeKey = 'app_locale';
   static const accentPaletteKey = 'accent_palette';
+  static const textScaleKey = 'text_scale';
+
+  /// 화면 글자 크기 배율 범위 — 80%부터 180%까지 10% 단위.
+  static const minTextScale = 0.8;
+  static const maxTextScale = 1.8;
+  static const textScaleSteps = 10;
 
   final SharedPreferences _prefs;
   ThemeMode _themeMode;
   Locale? _locale;
   AccentPalette _accentPalette;
+  double _textScale;
 
   /// 저장된 값을 읽는다. [legacyKeys]는 예전 앱이 쓰던 키를 새 키로 한 번
   /// 옮긴다 — 키를 그냥 바꾸면 사용자 설정이 사라진다.
@@ -36,7 +43,8 @@ class AppSettings extends ChangeNotifier {
     final mode = ThemeMode.values.asNameMap()[prefs.getString(themeModeKey)] ?? ThemeMode.system;
     final code = prefs.getString(localeKey);
     final palette = AccentPalette.values.asNameMap()[prefs.getString(accentPaletteKey)] ?? AccentPalette.saturn;
-    return AppSettings._(prefs, mode, code == null ? null : Locale(code), palette);
+    final scale = (prefs.getDouble(textScaleKey) ?? 1.0).clamp(minTextScale, maxTextScale).toDouble();
+    return AppSettings._(prefs, mode, code == null ? null : Locale(code), palette, scale);
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -45,6 +53,9 @@ class AppSettings extends ChangeNotifier {
   Locale? get locale => _locale;
 
   AccentPalette get accentPalette => _accentPalette;
+
+  /// 앱 글자 배율 (1.0 = 100%).
+  double get textScale => _textScale;
 
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
@@ -69,6 +80,14 @@ class AppSettings extends ChangeNotifier {
     _accentPalette = palette;
     notifyListeners();
     await _prefs.setString(accentPaletteKey, palette.name);
+  }
+
+  Future<void> setTextScale(double scale) async {
+    scale = scale.clamp(minTextScale, maxTextScale).toDouble();
+    if (scale == _textScale) return;
+    _textScale = scale;
+    notifyListeners();
+    await _prefs.setDouble(textScaleKey, scale);
   }
 
   /// MaterialApp.localeResolutionCallback — OS 언어가 한국어면 한국어,
