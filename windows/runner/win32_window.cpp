@@ -149,26 +149,6 @@ bool Win32Window::Create(const std::wstring& title,
   return OnCreate();
 }
 
-bool Win32Window::Create(const std::wstring& title, const RECT& frame) {
-  Destroy();
-
-  const wchar_t* window_class =
-      WindowClassRegistrar::GetInstance()->GetWindowClass();
-
-  HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW, frame.left, frame.top,
-      frame.right - frame.left, frame.bottom - frame.top, nullptr, nullptr,
-      GetModuleHandle(nullptr), this);
-
-  if (!window) {
-    return false;
-  }
-
-  UpdateTheme(window);
-
-  return OnCreate();
-}
-
 bool Win32Window::Show() {
   return ShowWindow(window_handle_, SW_SHOWNORMAL);
 }
