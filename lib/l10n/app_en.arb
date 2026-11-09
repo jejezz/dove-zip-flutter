@@ -22,6 +22,7 @@
   "settingsPaletteHighContrast": "High contrast",
   "settingsTextSize": "Text size",
   "homeDropHint": "Drag an archive here\nor click to open",
+  "homeDropRelease": "Drop to open or compress",
   "openButton": "Open",
   "createArchiveButton": "New Archive",
   "pickFilesMenuItem": "Pick Files...",

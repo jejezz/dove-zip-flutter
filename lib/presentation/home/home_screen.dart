@@ -242,11 +242,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (FlutterDragOut.inProgress) return;
           unawaited(_onFilesDropped(details.files));
         },
+        // 끌어 온 파일이 창 위에 있으면 드롭 영역이 강조된다 (테두리 + 배경색).
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          color: _dragHovering
-              ? theme.colorScheme.primary.withValues(alpha: 0.06)
-              : Colors.transparent,
+          margin: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: _dragHovering
+                ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            border: Border.all(
+              width: 2,
+              color: _dragHovering ? theme.colorScheme.primary : Colors.transparent,
+            ),
+          ),
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -258,13 +267,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Icon(
                       Icons.folder_zip_outlined,
                       size: 48,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: _dragHovering
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      l10n.homeDropHint,
+                      _dragHovering ? l10n.homeDropRelease : l10n.homeDropHint,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: _dragHovering ? theme.colorScheme.primary : null,
+                        fontWeight: _dragHovering ? FontWeight.w600 : null,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     if (_isOpening)
@@ -351,7 +365,8 @@ class _RecentArchiveTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            const Icon(Icons.folder_zip_outlined, size: 18),
+            // 색 구성(주색)을 따라 바뀐다.
+            Icon(Icons.folder_zip_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

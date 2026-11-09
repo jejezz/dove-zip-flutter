@@ -76,6 +76,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeDropHint => '압축파일을 여기로 드래그하거나\n클릭해서 열기';
 
   @override
+  String get homeDropRelease => '놓으면 열거나 압축합니다';
+
+  @override
   String get openButton => '열기';
 
   @override

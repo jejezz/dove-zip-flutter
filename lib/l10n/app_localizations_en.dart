@@ -76,6 +76,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDropHint => 'Drag an archive here\nor click to open';
 
   @override
+  String get homeDropRelease => 'Drop to open or compress';
+
+  @override
   String get openButton => 'Open';
 
   @override

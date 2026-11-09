@@ -230,6 +230,12 @@ abstract class AppLocalizations {
   /// **'압축파일을 여기로 드래그하거나\n클릭해서 열기'**
   String get homeDropHint;
 
+  /// No description provided for @homeDropRelease.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓으면 열거나 압축합니다'**
+  String get homeDropRelease;
+
   /// No description provided for @openButton.
   ///
   /// In ko, this message translates to:
