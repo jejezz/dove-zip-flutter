@@ -4,15 +4,14 @@ import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/main.dart';
 import 'package:dove_zip/presentation/archive_browser/archive_browser_screen.dart';
 import 'package:dove_zip/presentation/compress/compress_dialog.dart';
-import 'package:dove_zip/presentation/window/dock_window.dart';
+import 'package:dove_zip/presentation/window/window_placement.dart';
 import 'package:dove_zip/settings/app_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 세로 창(UI_UX.md 9장): 최소 크기 380×560과 기본 폭 440에서 화면이 넘치지
+/// 창 크기(UI_UX.md 9장): 최소 크기 380×560과 폭 440에서 화면이 넘치지
 /// 않고, 폭에 따라 열과 해제 버튼 배치가 바뀐다. 넘치면 flutter test가
 /// RenderFlex overflow 예외로 실패한다.
 void main() {
@@ -53,7 +52,7 @@ void main() {
 
   for (final locale in ['ko', 'en']) {
     testWidgets('[$locale] 최소 크기에서 빈 상태 화면이 넘치지 않는다', (tester) async {
-      await setWindow(tester, dockMinimumSize);
+      await setWindow(tester, windowMinimumSize);
       SharedPreferences.setMockInitialValues({
         AppSettings.localeKey: locale,
         'recent_archives': ['/tmp/some-archive-with-a-long-name.zip'],
@@ -62,13 +61,10 @@ void main() {
 
       await tester.pumpWidget(ProviderScope(child: DoveZipApp(settings: settings)));
       await tester.pumpAndSettle();
-
-      expect(find.byType(DockMenuButton), findsOneWidget);
-      expect(find.byType(AlwaysOnTopButton), findsOneWidget);
     });
 
     testWidgets('[$locale] 최소 크기에서 압축 목록이 넘치지 않고 해제 버튼을 쌓는다', (tester) async {
-      await setWindow(tester, dockMinimumSize);
+      await setWindow(tester, windowMinimumSize);
       await pumpBrowser(tester, locale);
 
       final buttons = [
@@ -83,7 +79,7 @@ void main() {
     });
 
     testWidgets('[$locale] 최소 크기에서 새 압축 다이얼로그가 넘치지 않는다', (tester) async {
-      await setWindow(tester, dockMinimumSize);
+      await setWindow(tester, windowMinimumSize);
       await tester.pumpWidget(
         MaterialApp(
           locale: Locale(locale),
@@ -114,8 +110,8 @@ void main() {
     });
   }
 
-  testWidgets('기본 폭 440에서는 이름·크기 열만 보인다', (tester) async {
-    await setWindow(tester, dockDefaultSize);
+  testWidgets('폭 440에서는 이름·크기 열만 보인다', (tester) async {
+    await setWindow(tester, const Size(440, 960));
     await pumpBrowser(tester, 'ko');
 
     expect(find.text('크기'), findsOneWidget);
@@ -140,34 +136,5 @@ void main() {
         tester.getTopLeft(find.byWidget(b)).dy,
     };
     expect(ys, hasLength(1), reason: '세 버튼이 한 줄에');
-  });
-
-  testWidgets('핀 버튼을 누르면 창을 항상 위에 두고, 다시 누르면 끈다', (tester) async {
-    final calls = <Object?>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('window_manager'),
-      (call) async {
-        if (call.method == 'setAlwaysOnTop') calls.add(call.arguments);
-        return null;
-      },
-    );
-    addTearDown(() => tester.binding.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('window_manager'), null));
-
-    await setWindow(tester, dockDefaultSize);
-    await pumpBrowser(tester, 'ko');
-
-    await tester.tap(find.byTooltip('항상 위에 표시'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.push_pin), findsOneWidget);
-    expect(find.byTooltip('항상 위에 표시 끄기'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('항상 위에 표시 끄기'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);
-    expect(calls, [
-      {'isAlwaysOnTop': true},
-      {'isAlwaysOnTop': false},
-    ]);
   });
 }

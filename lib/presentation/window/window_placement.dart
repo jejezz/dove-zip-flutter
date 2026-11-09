@@ -7,16 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../app_identity.dart';
-import '../../l10n/app_localizations.dart';
 
-/// 화면 왼쪽·오른쪽에 세워 두는 세로 창 (UI_UX.md 9장) — Branch Dock과 같은
-/// 창 규칙이라 Finder·탐색기·편집기 옆에 나란히 두고 파일을 주고받는다.
-/// flutter test와 모바일에는 창이 없다 — 창 메뉴는 데스크톱에서만 보인다.
-final bool hasDockWindow = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-
-const dockDefaultSize = Size(440, 960);
-const dockMinimumSize = Size(380, 560);
-const _dockWidth = 440.0;
+const windowDefaultSize = Size(1200, 720);
+const windowMinimumSize = Size(380, 560);
 /// 창 크기·위치 — macOS·Linux는 window_manager의 논리 좌표로 저장한다.
 const _boundsKey = 'window_bounds';
 
@@ -31,17 +24,17 @@ const _frameChannel = MethodChannel('dove_zip/window_frame');
 /// 걸치지 않으면 화면 가운데에 기본 크기로 연다. 화면이 기본 높이보다 낮으면
 /// 작업 영역 높이에 맞춘다. 돌려주는 함수를 불러야 실제로 창이 보인다 —
 /// 첫 프레임이 그려진 뒤에 불러야 깜빡이지 않는다 (window-placement.md §5).
-Future<Future<void> Function()> prepareDockWindow() async {
+Future<Future<void> Function()> prepareWindow() async {
   await windowManager.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   const options = WindowOptions(
-    size: dockDefaultSize,
-    minimumSize: dockMinimumSize,
+    size: windowDefaultSize,
+    minimumSize: windowMinimumSize,
     title: AppIdentity.displayName,
   );
   final placed = Completer<void>();
   await windowManager.waitUntilReadyToShow(options, () async {
-    if (!await _restoreBounds(prefs)) await _centerDockWindow();
+    if (!await _restoreBounds(prefs)) await _centerWindow();
     placed.complete();
   });
   return () async {
@@ -71,7 +64,7 @@ Future<bool> _restoreBounds(SharedPreferences prefs) async {
     return await _frameChannel.invokeMethod<bool>('setFrame', frame) ?? false;
   }
   final saved = _readBounds(prefs, _boundsKey);
-  if (saved == null || saved.width < dockMinimumSize.width || saved.height < dockMinimumSize.height) {
+  if (saved == null || saved.width < windowMinimumSize.width || saved.height < windowMinimumSize.height) {
     return false;
   }
   await windowManager.setBounds(saved);
@@ -98,22 +91,12 @@ Future<void> _saveBounds(SharedPreferences prefs) async {
 /// 좌표(그 화면 배율 기준)를 창이 있는 화면의 배율로 되돌려, 노트북 LCD와
 /// 외부 모니터처럼 배율이 다른 화면이 섞이면 창이 화면 밖으로 밀려난다.
 /// 창이 있는 화면은 좌표 배율이 창과 같아서 안전하다.
-Future<void> _centerDockWindow() async {
+Future<void> _centerWindow() async {
   final area = await _workArea();
-  final height = area.height < dockDefaultSize.height ? area.height : dockDefaultSize.height;
+  final height = area.height < windowDefaultSize.height ? area.height : windowDefaultSize.height;
   await windowManager.setBounds(
-    Rect.fromCenter(center: area.center, width: dockDefaultSize.width, height: height),
+    Rect.fromCenter(center: area.center, width: windowDefaultSize.width, height: height),
   );
-}
-
-/// 창이 있는 화면의 오른쪽·왼쪽 가장자리에 붙인다 — 작업 영역 높이 전체, 폭 440.
-Future<void> snapDockWindow({required bool right}) async {
-  final area = await _workArea();
-  await windowManager.setBounds(
-    Rect.fromLTWH(right ? area.right - _dockWidth : area.left, area.top, _dockWidth, area.height),
-  );
-  // window_manager는 사용자가 끌어서 옮길 때만 이동 이벤트를 보낸다.
-  await _saveBounds(await SharedPreferences.getInstance());
 }
 
 /// 창 가운데가 걸친 화면의 작업 영역(메뉴 막대·Dock·작업 표시줄 제외).
@@ -157,61 +140,4 @@ class _BoundsSaver with WindowListener {
 
   @override
   void onWindowMoved() => _schedule();
-}
-
-enum _DockAction { snapRight, snapLeft }
-
-/// 앱 바의 창 메뉴: 오른쪽·왼쪽에 붙이기.
-class DockMenuButton extends StatelessWidget {
-  const DockMenuButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return PopupMenuButton<_DockAction>(
-      tooltip: l10n.windowMenuTooltip,
-      icon: const Icon(Icons.view_sidebar_outlined),
-      position: PopupMenuPosition.under,
-      onSelected: (action) => snapDockWindow(right: action == _DockAction.snapRight),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: _DockAction.snapRight,
-          child: Text(l10n.menuSnapRight),
-        ),
-        PopupMenuItem(
-          value: _DockAction.snapLeft,
-          child: Text(l10n.menuSnapLeft),
-        ),
-      ],
-    );
-  }
-}
-
-/// 창 하나를 여러 화면(홈, 압축 목록)이 공유하므로 항상 위 상태도 하나만 둔다.
-final _alwaysOnTop = ValueNotifier(false);
-
-/// 앱 바의 항상 위에 표시 토글 — 켜면 핀이 채워진다 (Branch Dock과 같은 모양).
-class AlwaysOnTopButton extends StatelessWidget {
-  const AlwaysOnTopButton({super.key});
-
-  Future<void> _toggle() async {
-    final pinned = !_alwaysOnTop.value;
-    await windowManager.setAlwaysOnTop(pinned);
-    _alwaysOnTop.value = pinned;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ValueListenableBuilder(
-      valueListenable: _alwaysOnTop,
-      builder: (context, pinned, _) => IconButton(
-        tooltip: pinned ? l10n.alwaysOnTopOffTooltip : l10n.alwaysOnTopOnTooltip,
-        isSelected: pinned,
-        icon: const Icon(Icons.push_pin_outlined),
-        selectedIcon: const Icon(Icons.push_pin),
-        onPressed: _toggle,
-      ),
-    );
-  }
 }

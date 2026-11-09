@@ -20,7 +20,6 @@ import '../../settings/settings_dialog.dart';
 import '../widgets/error_snackbar.dart';
 import 'recent_archives_provider.dart';
 import '../widgets/error_message.dart';
-import '../window/dock_window.dart';
 import '../../window/focus_tint.dart';
 
 /// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
@@ -220,10 +219,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Text(l10n.appTitle),
         // conventions: 오른쪽 끝 순서는 테마 | 언어 | 정보, 전환은 체크 메뉴.
         actions: [
-          if (hasDockWindow) ...[
-            const AlwaysOnTopButton(),
-            const DockMenuButton(),
-          ],
           IconButton(
             tooltip: l10n.settingsTooltip,
             icon: const Icon(Icons.settings_outlined),

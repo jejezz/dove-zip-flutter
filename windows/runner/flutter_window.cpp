@@ -87,7 +87,7 @@ bool FlutterWindow::OnCreate() {
   RegisterFrameChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  // window_manager controls when the window is shown (see dock_window.dart:
+  // window_manager controls when the window is shown (see window_placement.dart:
   // it calls show() only after placement/restore finishes and a post-restore
   // frame renders). Showing here on the first frame would show the window
   // before it moves to its final monitor/scale, causing a flash/resize jump

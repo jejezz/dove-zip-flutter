@@ -70,6 +70,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPaletteHighContrast => 'High contrast';
 
   @override
+  String get settingsTextSize => 'Text size';
+
+  @override
   String get homeDropHint => 'Drag an archive here\nor click to open';
 
   @override
@@ -438,21 +441,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String imageLoadError(String error) {
     return 'Couldn\'t load the image: $error';
   }
-
-  @override
-  String get windowMenuTooltip => 'Window placement';
-
-  @override
-  String get menuSnapRight => 'Snap to right edge';
-
-  @override
-  String get menuSnapLeft => 'Snap to left edge';
-
-  @override
-  String get alwaysOnTopOnTooltip => 'Keep on top';
-
-  @override
-  String get alwaysOnTopOffTooltip => 'Stop keeping on top';
 
   @override
   String get aboutTooltip => 'About';

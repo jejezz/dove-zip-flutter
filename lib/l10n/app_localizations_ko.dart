@@ -70,6 +70,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsPaletteHighContrast => '고대비';
 
   @override
+  String get settingsTextSize => '화면 글자 크기';
+
+  @override
   String get homeDropHint => '압축파일을 여기로 드래그하거나\n클릭해서 열기';
 
   @override
@@ -427,21 +430,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String imageLoadError(String error) {
     return '이미지를 열지 못했습니다: $error';
   }
-
-  @override
-  String get windowMenuTooltip => '창 배치';
-
-  @override
-  String get menuSnapRight => '화면 오른쪽에 붙이기';
-
-  @override
-  String get menuSnapLeft => '화면 왼쪽에 붙이기';
-
-  @override
-  String get alwaysOnTopOnTooltip => '항상 위에 표시';
-
-  @override
-  String get alwaysOnTopOffTooltip => '항상 위에 표시 끄기';
 
   @override
   String get aboutTooltip => '정보';

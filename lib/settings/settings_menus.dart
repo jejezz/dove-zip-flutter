@@ -181,3 +181,31 @@ class LanguageSegmentedButton extends StatelessWidget {
     );
   }
 }
+
+/// 설정 화면 "외형" 구역의 화면 글자 크기 슬라이더 (80%–180%, 10% 단위).
+class TextScaleSlider extends StatelessWidget {
+  const TextScaleSlider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = AppSettingsScope.of(context);
+    final l10n = AppLocalizations.of(context);
+    final percent = (settings.textScale * 100).round();
+    return Row(
+      children: [
+        Expanded(
+          child: Slider(
+            value: settings.textScale,
+            min: AppSettings.minTextScale,
+            max: AppSettings.maxTextScale,
+            divisions: AppSettings.textScaleSteps,
+            label: '$percent%',
+            semanticFormatterCallback: (v) => '${(v * 100).round()}%',
+            onChanged: (v) => settings.setTextScale((v * 10).round() / 10),
+          ),
+        ),
+        SizedBox(width: 48, child: Text('$percent%', textAlign: TextAlign.end, semanticsLabel: l10n.settingsTextSize)),
+      ],
+    );
+  }
+}

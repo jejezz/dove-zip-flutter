@@ -36,7 +36,6 @@ import '../widgets/password_prompt_dialog.dart';
 import 'extract_mode_bar.dart';
 import 'last_extract_mode_provider.dart';
 import '../widgets/error_message.dart';
-import '../window/dock_window.dart';
 
 /// 압축파일 탐색 화면 (UI_UX.md 6.2).
 ///
@@ -754,10 +753,6 @@ class _ArchiveBrowserScreenState extends ConsumerState<ArchiveBrowserScreen> {
                   ),
               ],
             ),
-          if (!_isSearching && hasDockWindow) ...[
-            const AlwaysOnTopButton(),
-            const DockMenuButton(),
-          ],
           if (!_isSearching)
             IconButton(
               icon: const Icon(Icons.close),

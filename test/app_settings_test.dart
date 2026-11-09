@@ -41,4 +41,18 @@ void main() {
     expect(AppSettings.resolveLocale(const Locale('ja'), supported), const Locale('en'));
     expect(AppSettings.resolveLocale(null, supported), const Locale('en'));
   });
+
+  test('text scale defaults to 100%, persists and is clamped', () async {
+    SharedPreferences.setMockInitialValues({});
+    final s = await AppSettings.load();
+    expect(s.textScale, 1.0);
+    await s.setTextScale(1.2);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getDouble('text_scale'), 1.2);
+    await s.setTextScale(5);
+    expect(s.textScale, AppSettings.maxTextScale);
+
+    SharedPreferences.setMockInitialValues({'text_scale': 0.1});
+    expect((await AppSettings.load()).textScale, AppSettings.minTextScale);
+  });
 }

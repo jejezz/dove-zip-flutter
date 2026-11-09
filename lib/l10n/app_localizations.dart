@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'고대비'**
   String get settingsPaletteHighContrast;
 
+  /// No description provided for @settingsTextSize.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 글자 크기'**
+  String get settingsTextSize;
+
   /// No description provided for @homeDropHint.
   ///
   /// In ko, this message translates to:
@@ -769,36 +775,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이미지를 열지 못했습니다: {error}'**
   String imageLoadError(String error);
-
-  /// 앱 바의 창 메뉴 — 화면 가장자리에 붙이기 (UI_UX.md 9장)
-  ///
-  /// In ko, this message translates to:
-  /// **'창 배치'**
-  String get windowMenuTooltip;
-
-  /// No description provided for @menuSnapRight.
-  ///
-  /// In ko, this message translates to:
-  /// **'화면 오른쪽에 붙이기'**
-  String get menuSnapRight;
-
-  /// No description provided for @menuSnapLeft.
-  ///
-  /// In ko, this message translates to:
-  /// **'화면 왼쪽에 붙이기'**
-  String get menuSnapLeft;
-
-  /// 앱 바 핀 버튼 — 꺼져 있을 때 (UI_UX.md 9장)
-  ///
-  /// In ko, this message translates to:
-  /// **'항상 위에 표시'**
-  String get alwaysOnTopOnTooltip;
-
-  /// No description provided for @alwaysOnTopOffTooltip.
-  ///
-  /// In ko, this message translates to:
-  /// **'항상 위에 표시 끄기'**
-  String get alwaysOnTopOffTooltip;
 
   /// No description provided for @aboutTooltip.
   ///
