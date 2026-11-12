@@ -81,13 +81,43 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get defaultAppDescriptionWindows =>
-      'Windows에서는 기본 앱을 설정 앱에서만 바꿀 수 있습니다. 열리는 Dove Zip 페이지에서 \"기본값 설정\"을 누르세요.';
+      'Windows는 앱이 기본 앱을 직접 바꾸지 못하게 막아 둡니다. 설정 앱에서 아래 순서대로 Dove Zip을 고르세요.';
 
   @override
   String get defaultAppSetButton => '기본 앱으로 설정';
 
   @override
   String get defaultAppOpenSettingsButton => 'Windows 설정 열기';
+
+  @override
+  String get defaultAppWindowsStep1 =>
+      '\"Windows 설정 열기\"를 누릅니다. 설정 앱에 Dove Zip 페이지가 열립니다.';
+
+  @override
+  String get defaultAppWindowsStep2 =>
+      '페이지 맨 위에 \"기본값 설정\" 단추가 있으면 누릅니다. 아래 형식이 한 번에 모두 바뀌니 여기서 끝입니다.';
+
+  @override
+  String get defaultAppWindowsStep3 =>
+      '단추가 없으면 아래 형식 하나를 눌러 복사하고, 설정 앱 맨 위의 파일 형식 검색 칸에 붙여 넣습니다.';
+
+  @override
+  String get defaultAppWindowsStep4 =>
+      '검색 결과에 보이는 지금의 앱을 누르고, 목록에서 Dove Zip을 고른 뒤 \"기본값 설정\"을 누릅니다.';
+
+  @override
+  String get defaultAppWindowsStep5 => '남은 형식도 3–4단계를 되풀이합니다.';
+
+  @override
+  String get defaultAppFileTypesLabel => 'Dove Zip으로 열 파일 형식 (눌러서 복사)';
+
+  @override
+  String get defaultAppCopyTooltip => '복사';
+
+  @override
+  String defaultAppCopied(String fileType) {
+    return '$fileType을(를) 복사했습니다. 설정 앱의 검색 칸에 붙여 넣으세요.';
+  }
 
   @override
   String get defaultAppDone => '이제 압축파일을 Dove Zip으로 엽니다.';

@@ -2,6 +2,7 @@ import 'package:dove_zip/domain/repositories/default_app_registrar.dart';
 import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/presentation/settings/default_app_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -55,6 +56,33 @@ void main() {
 
     expect(registrar.calls, 1);
     expect(find.text('Archives now open in Dove Zip.'), findsNothing);
+  });
+
+  testWidgets('Windows: 따라 할 단계와 파일 형식을 보이고, 형식을 누르면 복사한다', (tester) async {
+    final copied = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await tester.pumpWidget(_app(_FakeRegistrar(opensSystemSettings: true)));
+
+    expect(find.textContaining('Repeat steps 3–4'), findsOneWidget);
+    for (final ext in associatedExtensions) {
+      expect(find.text('.$ext'), findsOneWidget);
+    }
+
+    await tester.tap(find.text('.7z'));
+    await tester.pumpAndSettle();
+
+    expect(copied, ['.7z']);
+    expect(find.textContaining('Copied .7z'), findsOneWidget);
+  });
+
+  testWidgets('macOS·Linux에는 Windows 안내가 없다', (tester) async {
+    await tester.pumpWidget(_app(_FakeRegistrar()));
+    expect(find.text('.zip'), findsNothing);
   });
 
   testWidgets('실패하면 전용 예외의 문구를 보인다', (tester) async {

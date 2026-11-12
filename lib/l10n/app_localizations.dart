@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @defaultAppDescriptionWindows.
   ///
   /// In ko, this message translates to:
-  /// **'Windows에서는 기본 앱을 설정 앱에서만 바꿀 수 있습니다. 열리는 Dove Zip 페이지에서 \"기본값 설정\"을 누르세요.'**
+  /// **'Windows는 앱이 기본 앱을 직접 바꾸지 못하게 막아 둡니다. 설정 앱에서 아래 순서대로 Dove Zip을 고르세요.'**
   String get defaultAppDescriptionWindows;
 
   /// No description provided for @defaultAppSetButton.
@@ -253,6 +253,54 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'Windows 설정 열기'**
   String get defaultAppOpenSettingsButton;
+
+  /// No description provided for @defaultAppWindowsStep1.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"Windows 설정 열기\"를 누릅니다. 설정 앱에 Dove Zip 페이지가 열립니다.'**
+  String get defaultAppWindowsStep1;
+
+  /// No description provided for @defaultAppWindowsStep2.
+  ///
+  /// In ko, this message translates to:
+  /// **'페이지 맨 위에 \"기본값 설정\" 단추가 있으면 누릅니다. 아래 형식이 한 번에 모두 바뀌니 여기서 끝입니다.'**
+  String get defaultAppWindowsStep2;
+
+  /// No description provided for @defaultAppWindowsStep3.
+  ///
+  /// In ko, this message translates to:
+  /// **'단추가 없으면 아래 형식 하나를 눌러 복사하고, 설정 앱 맨 위의 파일 형식 검색 칸에 붙여 넣습니다.'**
+  String get defaultAppWindowsStep3;
+
+  /// No description provided for @defaultAppWindowsStep4.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과에 보이는 지금의 앱을 누르고, 목록에서 Dove Zip을 고른 뒤 \"기본값 설정\"을 누릅니다.'**
+  String get defaultAppWindowsStep4;
+
+  /// No description provided for @defaultAppWindowsStep5.
+  ///
+  /// In ko, this message translates to:
+  /// **'남은 형식도 3–4단계를 되풀이합니다.'**
+  String get defaultAppWindowsStep5;
+
+  /// No description provided for @defaultAppFileTypesLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'Dove Zip으로 열 파일 형식 (눌러서 복사)'**
+  String get defaultAppFileTypesLabel;
+
+  /// No description provided for @defaultAppCopyTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'복사'**
+  String get defaultAppCopyTooltip;
+
+  /// No description provided for @defaultAppCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'{fileType}을(를) 복사했습니다. 설정 앱의 검색 칸에 붙여 넣으세요.'**
+  String defaultAppCopied(String fileType);
 
   /// No description provided for @defaultAppDone.
   ///
