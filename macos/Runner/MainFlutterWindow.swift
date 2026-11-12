@@ -54,10 +54,12 @@ enum DefaultAppBridge {
       setAsDefault(rest, failed: failed + [ext], app: app, done: done)
       return
     }
-    NSWorkspace.shared.setDefaultApplication(at: app, toOpenContentType: type) { error in
+    // Swift 이름은 `setDefaultApplication(at:toOpen:completionHandler:)`
+    // (Objective-C의 `…toOpenContentType:completionHandler:`).
+    NSWorkspace.shared.setDefaultApplication(at: app, toOpen: type, completionHandler: { error in
       DispatchQueue.main.async {
         setAsDefault(rest, failed: error == nil ? failed : failed + [ext], app: app, done: done)
       }
-    }
+    })
   }
 }
