@@ -32,34 +32,29 @@ enum DefaultAppBridge {
         result(FlutterMethodNotImplemented)
         return
       }
-      setAsDefault(extensions[...], failed: [], app: Bundle.main.bundleURL) { failed in
-        result(failed)
+      Task { @MainActor in
+        result(await setAsDefault(extensions, app: Bundle.main.bundleURL))
       }
     }
   }
 
   /// 하나씩 차례로 바꾼다 — 동시에 부르면 macOS가 확인 창을 여러 개 띄울 수 있다.
-  private static func setAsDefault(
-    _ remaining: ArraySlice<String>,
-    failed: [String],
-    app: URL,
-    done: @escaping ([String]) -> Void
-  ) {
-    guard let ext = remaining.first else {
-      done(failed)
-      return
-    }
-    let rest = remaining.dropFirst()
-    guard let type = UTType(filenameExtension: ext) else {
-      setAsDefault(rest, failed: failed + [ext], app: app, done: done)
-      return
-    }
-    // Swift 이름은 `setDefaultApplication(at:toOpen:completionHandler:)`
-    // (Objective-C의 `…toOpenContentType:completionHandler:`).
-    NSWorkspace.shared.setDefaultApplication(at: app, toOpen: type, completionHandler: { error in
-      DispatchQueue.main.async {
-        setAsDefault(rest, failed: error == nil ? failed : failed + [ext], app: app, done: done)
+  /// 이 SDK의 Swift 이름은 `async throws`인 `setDefaultApplication(at:toOpen:)`
+  /// 하나뿐이다(완료 블록 형태는 Swift에 들어오지 않는다).
+  @MainActor
+  private static func setAsDefault(_ extensions: [String], app: URL) async -> [String] {
+    var failed: [String] = []
+    for ext in extensions {
+      guard let type = UTType(filenameExtension: ext) else {
+        failed.append(ext)
+        continue
       }
-    })
+      do {
+        try await NSWorkspace.shared.setDefaultApplication(at: app, toOpen: type)
+      } catch {
+        failed.append(ext)
+      }
+    }
+    return failed
   }
 }
