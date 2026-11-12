@@ -154,6 +154,16 @@
   컨텍스트 메뉴와 같은 다리)를 거쳐 `HomeScreen`의 평소 "열기" 경로
   (`_openArchivePath`)로 그대로 이어붙인다 — 자동 해제 없이 그냥 연다는
   점에서 "여기에 풀기" 서비스와 다르다.
+  - 설정 "기본 앱" 구역(`lib/presentation/settings/default_app_section.dart`)의
+    단추로 사용자가 명시적으로 기본 앱을 정한다. macOS는
+    `NSWorkspace.setDefaultApplication`(`MainFlutterWindow.swift`의
+    `DefaultAppBridge`), Linux는 `xdg-mime default`(`.desktop`에 `MimeType=`·
+    `%F` 추가, `install.sh` 필요). Windows는 앱이 바꾸는 것을 OS가 막아,
+    설치 프로그램이 `OpenWithProgids`·`RegisteredApplications`로 후보로만
+    등록하고 단추는 설정 앱의 Dove Zip 페이지
+    (`ms-settings:defaultapps?registeredApp…`)를 연다. 셋 다 실기기
+    확인 전 — Windows는 더블클릭할 때마다 새 창이 뜬다(단일 인스턴스 미정,
+    ARCHITECTURE.md 11장).
 - `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — ✅ **macOS만** 완료.
   Windows는 실제 Windows 머신에서 이어가고(이 macOS 개발 환경에서는
   툴체인이 없어 진행 불가 — 등록 방식·Dart 진입점·미결정 사항은

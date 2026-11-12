@@ -73,6 +73,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTextSize => 'Text size';
 
   @override
+  String get settingsSectionDefaultApp => 'Default app';
+
+  @override
+  String get defaultAppDescription =>
+      'Open archives such as zip, 7z, rar and tar in Dove Zip when you double-click them.';
+
+  @override
+  String get defaultAppDescriptionWindows =>
+      'Windows only lets you change default apps in Settings. On the Dove Zip page that opens, click \"Set default\".';
+
+  @override
+  String get defaultAppSetButton => 'Set as default app';
+
+  @override
+  String get defaultAppOpenSettingsButton => 'Open Windows Settings';
+
+  @override
+  String get defaultAppDone => 'Archives now open in Dove Zip.';
+
+  @override
+  String get errorDefaultAppNotInstalledLinux =>
+      'Dove Zip isn\'t installed in the app list. Run install.sh from the download first, then try again.';
+
+  @override
+  String get errorDefaultAppNotInstalledWindows =>
+      'Dove Zip isn\'t registered with Windows. Install it with the setup program, then try again.';
+
+  @override
+  String errorDefaultAppToolMissing(String tool) {
+    return '$tool was not found. Install xdg-utils, then try again.';
+  }
+
+  @override
+  String errorDefaultAppFailed(String detail) {
+    return 'Couldn\'t set Dove Zip as the default app: $detail';
+  }
+
+  @override
   String get homeDropHint => 'Drag an archive here\nor click to open';
 
   @override

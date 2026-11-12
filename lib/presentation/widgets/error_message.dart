@@ -7,6 +7,7 @@ import '../../core/cancel_token.dart';
 import '../../domain/entities/extract_failure.dart';
 import '../../domain/repositories/archive_reader.dart';
 import '../../domain/repositories/archive_writer.dart';
+import '../../domain/repositories/default_app_registrar.dart';
 import '../../l10n/app_localizations.dart';
 
 /// 예외를 사용자에게 보여 줄 문구로 바꾼다.
@@ -30,7 +31,11 @@ String describeError(AppLocalizations l10n, Object error) => switch (error) {
       DragOutTooLargeException() => l10n.dragOutTooLarge(formatBytes(DragOutStaging.maxBytes)),
       DragOutExtractFailedException(:final failures) =>
         failures.map((f) => describeFailure(l10n, f)).join('\n'),
-      _ => '$error',
+      DesktopEntryMissingException() => l10n.errorDefaultAppNotInstalledLinux,
+      WindowsAppNotRegisteredException() => l10n.errorDefaultAppNotInstalledWindows,
+      DefaultAppToolMissingException(:final tool) => l10n.errorDefaultAppToolMissing(tool),
+      DefaultAppFailedException(:final detail) => l10n.errorDefaultAppFailed(detail),
+      _ =>'$error',
     };
 
 /// 손상 항목 목록의 한 줄 — `경로: 이유`.

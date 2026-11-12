@@ -73,6 +73,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsTextSize => '화면 글자 크기';
 
   @override
+  String get settingsSectionDefaultApp => '기본 앱';
+
+  @override
+  String get defaultAppDescription =>
+      'zip, 7z, rar, tar 같은 압축파일을 더블클릭하면 Dove Zip으로 열리게 합니다.';
+
+  @override
+  String get defaultAppDescriptionWindows =>
+      'Windows에서는 기본 앱을 설정 앱에서만 바꿀 수 있습니다. 열리는 Dove Zip 페이지에서 \"기본값 설정\"을 누르세요.';
+
+  @override
+  String get defaultAppSetButton => '기본 앱으로 설정';
+
+  @override
+  String get defaultAppOpenSettingsButton => 'Windows 설정 열기';
+
+  @override
+  String get defaultAppDone => '이제 압축파일을 Dove Zip으로 엽니다.';
+
+  @override
+  String get errorDefaultAppNotInstalledLinux =>
+      'Dove Zip이 앱 목록에 설치되어 있지 않습니다. 내려받은 파일의 install.sh를 먼저 실행한 뒤 다시 시도하세요.';
+
+  @override
+  String get errorDefaultAppNotInstalledWindows =>
+      'Dove Zip이 Windows에 등록되어 있지 않습니다. 설치 프로그램으로 설치한 뒤 다시 시도하세요.';
+
+  @override
+  String errorDefaultAppToolMissing(String tool) {
+    return '$tool을(를) 찾을 수 없습니다. xdg-utils를 설치한 뒤 다시 시도하세요.';
+  }
+
+  @override
+  String errorDefaultAppFailed(String detail) {
+    return '기본 앱으로 설정하지 못했습니다: $detail';
+  }
+
+  @override
   String get homeDropHint => '압축파일을 여기로 드래그하거나\n클릭해서 열기';
 
   @override

@@ -24,6 +24,30 @@
   "settingsPaletteSlate": "슬레이트",
   "settingsPaletteHighContrast": "고대비",
   "settingsTextSize": "화면 글자 크기",
+  "settingsSectionDefaultApp": "기본 앱",
+  "defaultAppDescription": "zip, 7z, rar, tar 같은 압축파일을 더블클릭하면 Dove Zip으로 열리게 합니다.",
+  "defaultAppDescriptionWindows": "Windows에서는 기본 앱을 설정 앱에서만 바꿀 수 있습니다. 열리는 Dove Zip 페이지에서 \"기본값 설정\"을 누르세요.",
+  "defaultAppSetButton": "기본 앱으로 설정",
+  "defaultAppOpenSettingsButton": "Windows 설정 열기",
+  "defaultAppDone": "이제 압축파일을 Dove Zip으로 엽니다.",
+  "errorDefaultAppNotInstalledLinux": "Dove Zip이 앱 목록에 설치되어 있지 않습니다. 내려받은 파일의 install.sh를 먼저 실행한 뒤 다시 시도하세요.",
+  "errorDefaultAppNotInstalledWindows": "Dove Zip이 Windows에 등록되어 있지 않습니다. 설치 프로그램으로 설치한 뒤 다시 시도하세요.",
+  "errorDefaultAppToolMissing": "{tool}을(를) 찾을 수 없습니다. xdg-utils를 설치한 뒤 다시 시도하세요.",
+  "@errorDefaultAppToolMissing": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDefaultAppFailed": "기본 앱으로 설정하지 못했습니다: {detail}",
+  "@errorDefaultAppFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "homeDropHint": "압축파일을 여기로 드래그하거나\n클릭해서 열기",
   "homeDropRelease": "놓으면 열거나 압축합니다",
   "openButton": "열기",
