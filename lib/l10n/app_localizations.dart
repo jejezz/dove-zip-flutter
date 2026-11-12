@@ -224,6 +224,66 @@ abstract class AppLocalizations {
   /// **'화면 글자 크기'**
   String get settingsTextSize;
 
+  /// No description provided for @settingsSectionDefaultApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 앱'**
+  String get settingsSectionDefaultApp;
+
+  /// No description provided for @defaultAppDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'zip, 7z, rar, tar 같은 압축파일을 더블클릭하면 Dove Zip으로 열리게 합니다.'**
+  String get defaultAppDescription;
+
+  /// No description provided for @defaultAppDescriptionWindows.
+  ///
+  /// In ko, this message translates to:
+  /// **'Windows에서는 기본 앱을 설정 앱에서만 바꿀 수 있습니다. 열리는 Dove Zip 페이지에서 \"기본값 설정\"을 누르세요.'**
+  String get defaultAppDescriptionWindows;
+
+  /// No description provided for @defaultAppSetButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 앱으로 설정'**
+  String get defaultAppSetButton;
+
+  /// No description provided for @defaultAppOpenSettingsButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'Windows 설정 열기'**
+  String get defaultAppOpenSettingsButton;
+
+  /// No description provided for @defaultAppDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이제 압축파일을 Dove Zip으로 엽니다.'**
+  String get defaultAppDone;
+
+  /// No description provided for @errorDefaultAppNotInstalledLinux.
+  ///
+  /// In ko, this message translates to:
+  /// **'Dove Zip이 앱 목록에 설치되어 있지 않습니다. 내려받은 파일의 install.sh를 먼저 실행한 뒤 다시 시도하세요.'**
+  String get errorDefaultAppNotInstalledLinux;
+
+  /// No description provided for @errorDefaultAppNotInstalledWindows.
+  ///
+  /// In ko, this message translates to:
+  /// **'Dove Zip이 Windows에 등록되어 있지 않습니다. 설치 프로그램으로 설치한 뒤 다시 시도하세요.'**
+  String get errorDefaultAppNotInstalledWindows;
+
+  /// No description provided for @errorDefaultAppToolMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'{tool}을(를) 찾을 수 없습니다. xdg-utils를 설치한 뒤 다시 시도하세요.'**
+  String errorDefaultAppToolMissing(String tool);
+
+  /// No description provided for @errorDefaultAppFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 앱으로 설정하지 못했습니다: {detail}'**
+  String errorDefaultAppFailed(String detail);
+
   /// No description provided for @homeDropHint.
   ///
   /// In ko, this message translates to:

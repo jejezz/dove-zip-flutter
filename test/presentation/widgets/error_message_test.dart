@@ -4,6 +4,7 @@ import 'package:dove_zip/core/cancel_token.dart';
 import 'package:dove_zip/domain/entities/extract_failure.dart';
 import 'package:dove_zip/domain/repositories/archive_reader.dart';
 import 'package:dove_zip/domain/repositories/archive_writer.dart';
+import 'package:dove_zip/domain/repositories/default_app_registrar.dart';
 import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/presentation/widgets/error_message.dart';
 import 'package:flutter/material.dart';
@@ -62,5 +63,12 @@ void main() {
 
   test('전용 예외가 아니면 텍스트 그대로', () {
     expect(describeError(ko, const FormatException('bad header')), 'FormatException: bad header');
+  });
+
+  test('기본 앱 등록 실패는 플랫폼별로 무엇을 할지 알린다', () {
+    expect(describeError(en, const DesktopEntryMissingException('a.desktop')), contains('install.sh'));
+    expect(describeError(ko, const WindowsAppNotRegisteredException()), contains('설치 프로그램'));
+    expect(describeError(en, const DefaultAppToolMissingException('xdg-mime')), contains('xdg-mime was not found'));
+    expect(describeError(ko, const DefaultAppFailedException('.rar')), '기본 앱으로 설정하지 못했습니다: .rar');
   });
 }

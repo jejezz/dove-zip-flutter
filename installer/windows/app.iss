@@ -62,6 +62,8 @@ Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+; The [Registry] file associations below — tell Explorer to refresh its icons.
+ChangesAssociations=yes
 ; No license page: MIT apps have nothing to agree to (conventions/licensing.md §4).
 
 [Languages]
@@ -83,6 +85,60 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+[Registry]
+; File associations (PLAN.md 1.4 "OS 파일 연결"). Windows doesn't let an app
+; make itself the default, so this only *registers* Dove Zip as a candidate:
+; it shows up in "Open with", and Settings > Default apps gets a "Dove Zip"
+; page (RegisteredApplications) whose "Set default" button the app's
+; "Set as default app" setting opens. Existing defaults are left alone.
+; The extension list matches CFBundleDocumentTypes in macos/Runner/Info.plist
+; and lib/domain/repositories/default_app_registrar.dart (a test checks).
+Root: HKA; Subkey: "Software\Classes\DoveZip.Archive"; ValueType: string; ValueData: "{#MyAppName} Archive"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\DoveZip.Archive\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\DoveZip.Archive\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#MyAppName}"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKA; Subkey: "Software\DoveZip"; Flags: uninsdeletekeyifempty
+Root: HKA; Subkey: "Software\DoveZip\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#MyAppName}"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\DoveZip\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "{#MyAppName}"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities"; ValueType: string; ValueName: "ApplicationIcon"; ValueData: "{app}\{#MyAppExeName},0"
+; The value name must stay "{#MyAppName}" — the app opens
+; ms-settings:defaultapps?registeredApp…={#MyAppName} to reach this page.
+Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: "Software\DoveZip\Capabilities"; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.zip\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.tar\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.gz\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.tgz\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.bz2\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.tbz2\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.tbz\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.xz\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.txz\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.7z\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.rar\OpenWithProgids"; ValueType: string; ValueName: "DoveZip.Archive"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".zip"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".tar"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".gz"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".tgz"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".bz2"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".tbz2"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".tbz"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".xz"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".txz"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".7z"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".rar"; ValueData: ""
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".zip"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tar"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".gz"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tgz"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".bz2"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tbz2"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tbz"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xz"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".txz"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".7z"; ValueData: "DoveZip.Archive"
+Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: string; ValueName: ".rar"; ValueData: "DoveZip.Archive"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
