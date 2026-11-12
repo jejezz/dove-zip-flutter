@@ -57,7 +57,10 @@ bool hasSingleTopLevelFolderNamed(List<ArchiveEntry> entries, String name) {
   return entries.every((entry) => _topLevelSegment(entry.pathInArchive) == name);
 }
 
+/// 첫 경로 구분자 앞까지. `\`도 구분자로 본다 — 옛 Windows 도구(.NET
+/// Framework의 ZipFile 등)는 `docs\c.txt`처럼 저장하고, 해제할 때도 Windows가
+/// 그것을 폴더로 풀기 때문이다.
 String _topLevelSegment(String pathInArchive) {
-  final slashIndex = pathInArchive.indexOf('/');
+  final slashIndex = pathInArchive.indexOf(RegExp(r'[/\\]'));
   return slashIndex == -1 ? pathInArchive : pathInArchive.substring(0, slashIndex);
 }

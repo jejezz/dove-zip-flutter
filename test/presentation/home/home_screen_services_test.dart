@@ -176,7 +176,7 @@ void main() {
 
     expect(find.widgetWithText(AppBar, 'sample.zip'), findsOneWidget);
     // 더블클릭으로 연 것뿐이니 자동으로 해제되지는 않아야 한다 — 그건
-    // "여기에 풀기" 서비스 전용이다.
+    // "알아서 풀기" 서비스 전용이다.
     expect(find.textContaining('압축 해제 완료'), findsNothing);
   });
 

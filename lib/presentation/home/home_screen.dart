@@ -33,7 +33,7 @@ import '../../window/focus_tint.dart';
 /// 이 채널로 전달) — 보내는 쪽은 macOS뿐이다. Windows 탐색기 메뉴는
 /// 명령줄 인자로 같은 요청을 넘긴다([LaunchRequest]).
 /// - Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist`)로
-///   들어오는 "여기에 압축"/"여기에 풀기" 요청(PLAN.md 1.4 "OS 컨텍스트
+///   들어오는 "압축하기"/"알아서 풀기" 요청(PLAN.md 1.4 "OS 컨텍스트
 ///   메뉴", ARCHITECTURE.md 5장).
 /// - 파일 연결(`CFBundleDocumentTypes`)로 등록해 둔 확장자를 더블클릭했을
 ///   때, 또는 Dock 아이콘에 파일을 드래그했을 때(PLAN.md 1.4 "OS 파일 연결").
@@ -157,8 +157,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // progress는 dispose하지 않는다 — 닫히는 다이얼로그가 애니메이션 동안 아직 듣고 있다.
   }
 
-  /// 평소 "열기"([_openArchivePath])와 달리, 화면이 뜨자마자 곧바로 here
-  /// 모드 해제까지 자동 실행한다 — Finder·탐색기의 "여기에 풀기" 메뉴 전용.
+  /// 평소 "열기"([_openArchivePath])와 달리, 화면이 뜨자마자 곧바로 "알아서"
+  /// 해제(압축파일 이름의 새 폴더)까지 자동 실행한다 — Finder 서비스 메뉴 전용.
   Future<void> _openArchiveForAutoExtract(String path) async {
     try {
       final handle = await const OpenArchive()(Uri.file(path));
@@ -168,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         MaterialPageRoute(
           builder: (_) => ArchiveBrowserScreen(
             handle: handle,
-            autoExtractMode: ExtractDestinationMode.here,
+            autoExtractMode: ExtractDestinationMode.smart,
           ),
         ),
       );

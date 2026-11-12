@@ -125,7 +125,7 @@ void main() {
       cancelToken,
     }) async {
       passwords.add(password);
-      expect(mode, ExtractDestinationMode.here);
+      expect(mode, ExtractDestinationMode.smart);
       if (password == null) throw const ArchivePasswordRequiredException('secret.txt');
       return ExtractResult(destination: Uri.directory(r'C:\work'), failures: const []);
     });

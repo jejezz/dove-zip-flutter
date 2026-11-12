@@ -78,6 +78,14 @@ void main() {
       expect(hasSingleTopLevelFolderNamed(entries, 'photos'), isFalse);
     });
 
+    test('역슬래시로 경로를 저장한 zip(옛 Windows 도구)도 폴더로 본다', () {
+      const entries = [
+        ArchiveEntry(pathInArchive: r'docs\c.txt', isDirectory: false),
+        ArchiveEntry(pathInArchive: r'docs\sub\d.txt', isDirectory: false),
+      ];
+      expect(hasSingleTopLevelFolderNamed(entries, 'docs'), isTrue);
+    });
+
     test('대소문자가 다르면 다른 이름으로 취급한다(엄격 매칭)', () {
       const entries = [
         ArchiveEntry(pathInArchive: 'Photos/a.jpg', isDirectory: false),

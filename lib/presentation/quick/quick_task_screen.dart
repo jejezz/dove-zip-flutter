@@ -21,7 +21,7 @@ import '../widgets/conflict_dialog.dart';
 import '../widgets/error_message.dart';
 import '../widgets/password_prompt_dialog.dart';
 
-/// 탐색기 우클릭 메뉴("압축하기"/"여기에 풀기")를 창 없이 처리한다 —
+/// 탐색기 우클릭 메뉴("압축하기"/"알아서 풀기")를 창 없이 처리한다 —
 /// Windows 기본 압축처럼 사용자가 거의 눈치채지 못하게 (PLAN.md 1.4).
 ///
 /// 창은 처음에 숨겨 둔다. [revealAfter] 안에 끝나면 끝내 보이지 않고 앱이
@@ -173,7 +173,7 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     return null;
   }
 
-  /// 고른 압축파일을 차례로 같은 폴더에 푼다. 손상 항목이 있었으면 그 요약.
+  /// 고른 압축파일을 차례로 "알아서" 푼다 — 압축파일 이름의 새 폴더에. 손상 항목이 있었으면 그 요약.
   Future<String?> _extract() async {
     final l10n = AppLocalizations.of(context);
     final summaries = <String>[];
@@ -196,7 +196,7 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
 
   Future<ExtractResult> _extractOne(ArchiveHandle handle, String? password) => widget.extractEntries(
         handle: handle,
-        mode: ExtractDestinationMode.here,
+        mode: ExtractDestinationMode.smart,
         password: password,
         onConflict: (conflict) async {
           await _reveal(prompt: true);

@@ -27,7 +27,7 @@ final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLin
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 탐색기 우클릭 메뉴("압축하기"/"여기에 풀기")는 앱 창 없이 처리하고 끝낸다.
+  // 탐색기 우클릭 메뉴("압축하기"/"알아서 풀기")는 앱 창 없이 처리하고 끝낸다.
   if (Platform.isWindows) {
     final request = LaunchRequest.parse(args);
     if (request.action != LaunchAction.openFiles && request.paths.isNotEmpty) {

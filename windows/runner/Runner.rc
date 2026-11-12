@@ -114,8 +114,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VERB_COMPRESS       "Compress"
-    IDS_VERB_EXTRACT_HERE   "Extract Here"
+    IDS_VERB_COMPRESS       "Compress with Dove Zip"
+    IDS_VERB_SMART_EXTRACT  "Smart Extract with Dove Zip"
 END
 
 #endif    // English (United States) resources
@@ -129,8 +129,8 @@ LANGUAGE LANG_KOREAN, SUBLANG_KOREAN
 
 STRINGTABLE
 BEGIN
-    IDS_VERB_COMPRESS       "압축하기"
-    IDS_VERB_EXTRACT_HERE   "여기에 풀기"
+    IDS_VERB_COMPRESS       "Dove Zip으로 압축하기"
+    IDS_VERB_SMART_EXTRACT  "Dove Zip이 알아서 풀기"
 END
 
 // Korean (Korea) resources

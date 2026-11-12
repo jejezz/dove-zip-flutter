@@ -43,7 +43,7 @@
   volumes (`name.zip.001`, `.002`, … — Dove Zip's own scheme)
 - **Drag in, drag out** — drop files to open or compress them; drag entries out to Finder or Explorer to
   extract them right there
-- **Right-click menu** — *Compress* and *Extract Here* in File Explorer (under *Show more options* on
+- **Right-click menu** — *Compress with Dove Zip* and *Smart Extract with Dove Zip* (into a new folder named after the archive) in File Explorer (under *Show more options* on
   Windows 11) and in Finder's Services menu. *Compress* uses the format you pick in Settings (ZIP by
   default). On Windows they run in the background, like Windows' own zip — a small window shows up
   only if the job takes more than a second or needs to ask something

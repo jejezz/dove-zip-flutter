@@ -13,7 +13,7 @@ void main() {
   int resourceId(String name) =>
       int.parse(RegExp('#define $name\\s+(\\d+)').firstMatch(resourceH)!.group(1)!);
 
-  test('"여기에 풀기"는 기본 앱 목록과 같은 압축 형식에 붙는다', () {
+  test('"알아서 풀기"는 기본 앱 목록과 같은 압축 형식에 붙는다', () {
     final extensions = RegExp(r'SystemFileAssociations\\\.([^\\"]+)\\shell\\DoveZip\.Extract"; ValueType: string; ValueName: "MUIVerb"')
         .allMatches(iss)
         .map((m) => m.group(1))
@@ -43,7 +43,7 @@ void main() {
 
   test('메뉴 이름 id는 Runner.rc의 영어·한국어 문자열 표에 있다', () {
     final compress = resourceId('IDS_VERB_COMPRESS');
-    final extract = resourceId('IDS_VERB_EXTRACT_HERE');
+    final extract = resourceId('IDS_VERB_SMART_EXTRACT');
     final ids = RegExp(r'MUIVerb"; ValueData: "@\{app\}\\\{#MyAppExeName\},-(\d+)"')
         .allMatches(iss)
         .map((m) => int.parse(m.group(1)!))
@@ -51,7 +51,7 @@ void main() {
     expect(ids, {compress, extract});
     expect(RegExp(r'^STRINGTABLE', multiLine: true).allMatches(rc).length, 2);
     expect(RegExp(r'IDS_VERB_COMPRESS\s+"').allMatches(rc).length, 2);
-    expect(RegExp(r'IDS_VERB_EXTRACT_HERE\s+"').allMatches(rc).length, 2);
+    expect(RegExp(r'IDS_VERB_SMART_EXTRACT\s+"').allMatches(rc).length, 2);
     expect(rc, contains('LANGUAGE LANG_KOREAN, SUBLANG_KOREAN'));
   });
 
