@@ -394,7 +394,7 @@ abstract class FileViewer {
   > **Windows 탐색기 우클릭 메뉴 (구현, PLAN.md 1.4)**: COM DLL 없이
   > 클래식 셸 verb만 쓴다(`installer/windows/app.iss`의 `[Registry]`).
   > 압축 형식 확장자에는 `SystemFileAssociations\.<ext>\shell\DoveZip.Extract`
-  > ("여기에 풀기"), 그 밖의 파일(`*`, `AppliesTo`로 압축 형식 제외)과
+  > ("알아서 풀기" — smart 모드, 압축파일 이름의 새 폴더), 그 밖의 파일(`*`, `AppliesTo`로 압축 형식 제외)과
   > 폴더(`Directory`)에는 `DoveZip.Compress`("압축하기")를 둔다. 둘 다
   > `dove_zip.exe --extract-here|--compress-here "%1"`을 실행하고,
   > `LaunchRequest.parse`(`lib/application/launch_request.dart`)가 읽어

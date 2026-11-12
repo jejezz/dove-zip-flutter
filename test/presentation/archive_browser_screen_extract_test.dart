@@ -115,7 +115,7 @@ void main() {
   });
 
   testWidgets('autoExtractMode가 있으면 버튼을 누르지 않아도 화면이 뜨자마자 자동으로 해제된다', (tester) async {
-    // macOS Finder 서비스 메뉴 "여기에 풀기"(PLAN.md 1.4 "OS 컨텍스트
+    // macOS Finder 서비스 메뉴 "알아서 풀기"(PLAN.md 1.4 "OS 컨텍스트
     // 메뉴", HomeScreen._openArchiveForAutoExtract) 전용 경로 — 버튼 탭
     // 없이도 initState의 postFrameCallback이 곧장 _runExtraction을
     // 실행해야 한다.

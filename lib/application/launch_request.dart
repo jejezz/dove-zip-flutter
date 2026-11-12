@@ -8,7 +8,10 @@ enum LaunchAction {
   /// 고른 파일·폴더로 "새 압축 만들기" 창을 연다.
   compressHere,
 
-  /// 압축파일을 열고 곧바로 같은 폴더에 푼다.
+  /// 압축파일을 곧바로 "알아서" 푼다 — 압축파일 이름의 새 폴더를 만들고 그
+  /// 안에(`ExtractDestinationMode.smart`). 이름은 처음 "여기에 풀기"였던
+  /// 때의 것이다 — macOS `Info.plist`의 `NSMessage`, 설치 프로그램의 명령
+  /// 플래그와 맞물려 있어 바꾸지 않았다.
   extractHere;
 
   /// macOS 채널의 메서드 이름에서 고른다. 모르는 이름이면 null.

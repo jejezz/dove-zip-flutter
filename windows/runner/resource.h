@@ -6,8 +6,11 @@
 
 // Explorer right-click menu labels: installer/windows/app.iss refers to
 // them as MUIVerb "@dove_zip.exe,-<id>". Keep the ids in sync.
-#define IDS_VERB_COMPRESS               1001
-#define IDS_VERB_EXTRACT_HERE           1002
+// Give a changed label a new id: Explorer caches these strings by id, so an
+// upgrade would keep showing the old text (1001 "Compress", 1002 "Extract
+// Here" were used before).
+#define IDS_VERB_COMPRESS               1003
+#define IDS_VERB_SMART_EXTRACT          1004
 
 // Next default values for new objects
 //

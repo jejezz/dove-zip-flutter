@@ -99,7 +99,7 @@
   에도 동일한 3개 메뉴 항목("여기에 압축 풀기"/"압축 풀기"/"다른 이름으로 압축
   풀기")으로 그대로 노출 — 로직은 앱 내부와 100% 공유(아래 ARCHITECTURE.md
   `ResolveExtractDestination` 유스케이스 참고). **축소 완료**: macOS
-  NSServices와 Windows 탐색기 메뉴는 지금 "여기에 풀기"(here 모드) 하나만 노출한다 — Services
+  NSServices와 Windows 탐색기 메뉴는 지금 "알아서 풀기"(smart 모드 — 압축파일 이름의 새 폴더) 하나만 노출한다 — Services
   메뉴 항목 하나당 별도 등록/핸들러가 필요해, 나머지 두 모드(스마트/다른
   이름으로)는 필요해지면 Info.plist에 항목만 추가하고 같은 패턴
   (`autoExtractMode`)을 재사용하면 된다.
@@ -153,7 +153,7 @@
   `AppDelegate.application(_:open:)`가 받아 `ServicesBridge`(위 OS
   컨텍스트 메뉴와 같은 다리)를 거쳐 `HomeScreen`의 평소 "열기" 경로
   (`_openArchivePath`)로 그대로 이어붙인다 — 자동 해제 없이 그냥 연다는
-  점에서 "여기에 풀기" 서비스와 다르다.
+  점에서 "알아서 풀기" 서비스와 다르다.
   - 설정 "기본 앱" 구역(`lib/presentation/settings/default_app_section.dart`)의
     단추로 사용자가 명시적으로 기본 앱을 정한다. macOS는
     `NSWorkspace.setDefaultApplication`(`MainFlutterWindow.swift`의
@@ -164,8 +164,8 @@
     (`ms-settings:defaultapps?registeredApp…`)를 연다. 셋 다 실기기
     확인 전 — Windows는 더블클릭할 때마다 새 창이 뜬다(단일 인스턴스 미정,
     ARCHITECTURE.md 11장).
-- `P2` OS 컨텍스트 메뉴("압축하기", "여기에 풀기") — ✅ **macOS·Windows**
-  완료(Windows 2026-11-12). 압축 형식 파일에는 "여기에 풀기"만, 그 밖의
+- `P2` OS 컨텍스트 메뉴("압축하기", "알아서 풀기") — ✅ **macOS·Windows**
+  완료(Windows 2026-11-12). 압축 형식 파일에는 "알아서 풀기"(압축파일 이름의 새 폴더에 해제)만, 그 밖의
   파일·폴더·여러 항목에는 "압축하기"만 보인다. 둘 다 창 없이 바로 실행한다 —
   "압축하기"는 설정의 "압축하기" 구역에서 고른 형식(ZIP/7Z/TAR/TAR.GZ/
   TAR.BZ2/TAR.XZ, 기본 ZIP)으로 같은 폴더에 만든다(항목 하나는 그 이름,
@@ -182,7 +182,7 @@
   경로를 Flutter `MethodChannel`(`dove_zip/services`)로 그대로 넘긴다.
   Dart 쪽(`HomeScreen._handleServiceCall`)은 그 경로를 앱 내부 버튼을
   눌렀을 때와 **완전히 같은 코드 경로**로 이어붙인다 — "압축하기"는
-  `_quickCompress`(`CreateArchive`와 압축 창의 진행률 다이얼로그 재사용), "여기에 풀기"는
+  `_quickCompress`(`CreateArchive`와 압축 창의 진행률 다이얼로그 재사용), "알아서 풀기"는
   `ArchiveBrowserScreen`에 새로 추가한 `autoExtractMode` 파라미터로 화면이
   뜨자마자 기존 `_runExtraction(here)`을 자동 실행한다(진행률/충돌/부분
   실패 처리 전부 동일하게 재사용, ARCHITECTURE.md 5장 참고).
