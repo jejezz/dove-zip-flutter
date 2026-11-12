@@ -76,6 +76,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionDefaultApp => '기본 앱';
 
   @override
+  String get settingsSectionQuickCompress => '압축하기';
+
+  @override
+  String get quickCompressDescription =>
+      '탐색기·Finder에서 파일이나 폴더를 우클릭해 \"압축하기\"를 누르면, 창을 띄우지 않고 이 형식으로 같은 폴더에 바로 만듭니다.';
+
+  @override
   String get defaultAppDescription =>
       'zip, 7z, rar, tar 같은 압축파일을 더블클릭하면 Dove Zip으로 열리게 합니다.';
 

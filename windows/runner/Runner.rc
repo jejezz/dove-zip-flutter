@@ -105,10 +105,36 @@ BEGIN
     END
 END
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+// Explorer right-click menu labels (installer/windows/app.iss MUIVerb).
+// Explorer picks the block that matches the Windows display language.
+
+STRINGTABLE
+BEGIN
+    IDS_VERB_COMPRESS       "Compress"
+    IDS_VERB_EXTRACT_HERE   "Extract Here"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// Korean (Korea) resources
+
+LANGUAGE LANG_KOREAN, SUBLANG_KOREAN
+
+STRINGTABLE
+BEGIN
+    IDS_VERB_COMPRESS       "압축하기"
+    IDS_VERB_EXTRACT_HERE   "여기에 풀기"
+END
+
+// Korean (Korea) resources
+/////////////////////////////////////////////////////////////////////////////
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

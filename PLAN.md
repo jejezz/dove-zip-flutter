@@ -99,7 +99,7 @@
   에도 동일한 3개 메뉴 항목("여기에 압축 풀기"/"압축 풀기"/"다른 이름으로 압축
   풀기")으로 그대로 노출 — 로직은 앱 내부와 100% 공유(아래 ARCHITECTURE.md
   `ResolveExtractDestination` 유스케이스 참고). **축소 완료**: macOS
-  NSServices는 지금 "여기에 풀기"(here 모드) 하나만 노출한다 — Services
+  NSServices와 Windows 탐색기 메뉴는 지금 "여기에 풀기"(here 모드) 하나만 노출한다 — Services
   메뉴 항목 하나당 별도 등록/핸들러가 필요해, 나머지 두 모드(스마트/다른
   이름으로)는 필요해지면 Info.plist에 항목만 추가하고 같은 패턴
   (`autoExtractMode`)을 재사용하면 된다.
@@ -164,19 +164,24 @@
     (`ms-settings:defaultapps?registeredApp…`)를 연다. 셋 다 실기기
     확인 전 — Windows는 더블클릭할 때마다 새 창이 뜬다(단일 인스턴스 미정,
     ARCHITECTURE.md 11장).
-- `P2` OS 컨텍스트 메뉴("여기에 압축", "여기에 풀기") — ✅ **macOS만** 완료.
-  Windows는 실제 Windows 머신에서 이어가고(이 macOS 개발 환경에서는
-  툴체인이 없어 진행 불가 — 등록 방식·Dart 진입점·미결정 사항은
-  ARCHITECTURE.md 11장의 "다음 버전 작업 메모" 참고, 원래 가정했던 COM
-  DLL이 꼭 필요한지부터 재검토할 것), Linux(파일관리자별 플러그인)는 보류
-  — 아래 "1차 범위 밖" 항목 참고. macOS는 Finder Sync
+- `P2` OS 컨텍스트 메뉴("압축하기", "여기에 풀기") — ✅ **macOS·Windows**
+  완료(Windows 2026-11-12). 압축 형식 파일에는 "여기에 풀기"만, 그 밖의
+  파일·폴더·여러 항목에는 "압축하기"만 보인다. 둘 다 창 없이 바로 실행한다 —
+  "압축하기"는 설정의 "압축하기" 구역에서 고른 형식(ZIP/7Z/TAR/TAR.GZ/
+  TAR.BZ2/TAR.XZ, 기본 ZIP)으로 같은 폴더에 만든다(항목 하나는 그 이름,
+  여러 개는 든 폴더 이름, 겹치면 `이름 (2)`). Windows는 COM DLL 없이 셸
+  verb 레지스트리만 쓰고, Windows 11에서는 "추가 옵션 표시" 안에 나온다
+  (첫 메뉴는 서명된 sparse 패키지가 필요해 하지 않음). 탐색기가 항목마다
+  띄우는 프로세스는 `LaunchSpool`이 하나로 모은다 — ARCHITECTURE.md 11장.
+  Linux(파일관리자별 플러그인)는 보류 — 아래 "1차 범위 밖" 항목 참고.
+  macOS는 Finder Sync
   Extension이 아니라 더 가벼운 **NSServices**(Finder 우클릭 → 서비스
-  메뉴)로 구현했다: `macos/Runner/Info.plist`에 "Compress Here"/"Extract
+  메뉴)로 구현했다: `macos/Runner/Info.plist`에 "Compress"/"Extract
   Here" 두 항목을 등록하고, `ServicesBridge.swift`가 선택된 파일/폴더
   경로를 Flutter `MethodChannel`(`dove_zip/services`)로 그대로 넘긴다.
   Dart 쪽(`HomeScreen._handleServiceCall`)은 그 경로를 앱 내부 버튼을
-  눌렀을 때와 **완전히 같은 코드 경로**로 이어붙인다 — "여기에 압축"은
-  `_openCompressDialog`(기존 `CompressDialog` 그대로), "여기에 풀기"는
+  눌렀을 때와 **완전히 같은 코드 경로**로 이어붙인다 — "압축하기"는
+  `_quickCompress`(`CreateArchive`와 압축 창의 진행률 다이얼로그 재사용), "여기에 풀기"는
   `ArchiveBrowserScreen`에 새로 추가한 `autoExtractMode` 파라미터로 화면이
   뜨자마자 기존 `_runExtraction(here)`을 자동 실행한다(진행률/충돌/부분
   실패 처리 전부 동일하게 재사용, ARCHITECTURE.md 5장 참고).
@@ -202,12 +207,10 @@
   `doc/design/end-callback-and-file-promises.md`). Linux도 1단계.
 
 ## 2. 1차 범위 밖 (비목표)
-- OS 셸 확장 — **macOS(NSServices)는 위에서 완료**. **Windows는 실제 Windows
-  머신에서 이어간다**(2026-09-23 결정) — 등록·디버깅에 Windows 툴체인
-  (Visual Studio, 레지스트리 등)이 있어야 해서 이 macOS 개발 환경에서는
-  진행할 수 없다(구체적인 접근 방식은 ARCHITECTURE.md 11장 "다음 버전
-  작업 메모" 참고 — 원래 가정했던 COM `IContextMenu`/`IExplorerCommand`
-  DLL이 꼭 필요한지부터 재검토 대상). **Linux는 보류**(같은 날 결정) —
+- OS 셸 확장 — **macOS(NSServices)·Windows(셸 verb)는 위에서 완료**.
+  Windows 11 첫 우클릭 메뉴(`IExplorerCommand` DLL + 서명된 sparse 패키지)는
+  코드 서명·MSIX를 쓰지 않는 지금 규약에서는 하지 않는다.
+  **Linux는 보류**(2026-09-23 결정) —
   데스크톱 환경별(GNOME/KDE 등 Nautilus/Dolphin/Thunar)로 구현이 전부
   다르고 공유 API가 없어, 지금 당장 계획이 없다.
 - RAR **생성**(압축) — 3장 참고, 라이선스상 사실상 불가능(업계 전체 공통 제약)

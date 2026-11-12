@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:dove_zip/l10n/app_localizations.dart';
 import 'package:dove_zip/presentation/home/home_screen.dart';
+import 'package:dove_zip/presentation/settings/quick_compress_format_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,32 +47,78 @@ void main() {
   });
 
   tearDown(() async {
-    if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    try {
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    } on FileSystemException {
+      // Windows: 테스트가 끝까지 기다리지 않는 자동 해제가 아직 압축파일을 열고
+      // 있으면 지울 수 없다 — 임시 폴더라 남겨 둔다.
+    }
   });
 
-  Future<void> pumpHome(WidgetTester tester) async {
-    await tester.pumpWidget(await withAppSettings(const ProviderScope(
+  Future<void> pumpHome(WidgetTester tester, {List<String> launchPaths = const []}) async {
+    await tester.pumpWidget(await withAppSettings(ProviderScope(
       child: MaterialApp(
-        locale: Locale('ko'),
+        locale: const Locale('ko'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: HomeScreen(),
+        home: HomeScreen(launchPaths: launchPaths),
       ),
     )));
-    await tester.pumpAndSettle();
+    // 명령줄로 시작하면 첫 프레임 뒤 곧바로 진행률 다이얼로그가 돌아 settle되지 않는다.
+    if (launchPaths.isEmpty) await tester.pumpAndSettle();
   }
 
-  testWidgets('compressHere가 오면 선택된 경로로 압축 다이얼로그가 뜬다', (tester) async {
+  /// 실제 파일 쓰기가 끝날 때까지 기다린다 — 진짜 시간은 runAsync 안에서
+  /// 흘려보내고, 가짜 시간 쪽에서 시작된 Future는 pump로 이어 준다.
+  Future<void> waitForFile(WidgetTester tester, File file) async {
+    for (var i = 0; i < 100 && !file.existsSync(); i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+    // 쓰기를 마치고 파일을 닫을 시간.
+    for (var i = 0; i < 4; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+  }
+
+  testWidgets('compressHere가 오면 창 없이 같은 폴더에 ZIP을 바로 만든다', (tester) async {
     final file = File('${tempDir.path}/photo.jpg')..writeAsStringSync('fake image bytes');
 
     await pumpHome(tester);
-    _sendServiceCall('compressHere', [file.path]);
-    await tester.pumpAndSettle();
+    await tester.runAsync(() async => _sendServiceCall('compressHere', [file.path]));
+    final zip = File('${tempDir.path}/photo.zip');
+    await waitForFile(tester, zip);
 
-    // "새 압축 만들기"는 홈 화면 버튼 라벨과도 겹쳐, 다이얼로그
-    // 안에서만 찾아야 한다.
-    expect(find.widgetWithText(AlertDialog, '새 압축 만들기'), findsOneWidget);
-    expect(find.textContaining('photo.jpg'), findsOneWidget);
+    expect(zip.existsSync(), isTrue);
+    expect(ZipDecoder().decodeBytes(zip.readAsBytesSync()).files.map((f) => f.name), ['photo.jpg']);
+    expect(find.widgetWithText(AlertDialog, '새 압축 만들기'), findsNothing);
+  });
+
+  testWidgets('설정의 압축하기 형식이 TAR면 TAR로 만든다', (tester) async {
+    SharedPreferences.setMockInitialValues({quickCompressFormatKey: 'tar'});
+    final a = File('${tempDir.path}/a.txt')..writeAsStringSync('a');
+    final b = File('${tempDir.path}/b.txt')..writeAsStringSync('b');
+
+    await pumpHome(tester);
+    await tester.runAsync(() async => _sendServiceCall('compressHere', [a.path, b.path]));
+    // 여러 항목은 그 항목들이 든 폴더 이름으로 만든다.
+    final tar = File('${tempDir.path}/${tempDir.uri.pathSegments.where((s) => s.isNotEmpty).last}.tar');
+    await waitForFile(tester, tar);
+
+    expect(tar.existsSync(), isTrue);
+    expect(TarDecoder().decodeBytes(tar.readAsBytesSync()).files.map((f) => f.name), containsAll(['a.txt', 'b.txt']));
+  });
+
+  testWidgets('Windows 탐색기 메뉴의 명령줄(--compress-here)도 같은 길로 간다', (tester) async {
+    final file = File('${tempDir.path}/notes.txt')..writeAsStringSync('hello');
+
+    await pumpHome(tester, launchPaths: ['--compress-here', file.path]);
+    await tester.pump(); // 첫 프레임 뒤 콜백이 압축을 시작한다.
+    final zip = File('${tempDir.path}/notes.zip');
+    await waitForFile(tester, zip);
+
+    expect(zip.existsSync(), isTrue);
   });
 
   testWidgets('extractHere가 오면 압축파일을 열고 탐색 화면으로 넘어간다', (tester) async {

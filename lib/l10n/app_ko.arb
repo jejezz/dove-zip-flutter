@@ -25,6 +25,8 @@
   "settingsPaletteHighContrast": "고대비",
   "settingsTextSize": "화면 글자 크기",
   "settingsSectionDefaultApp": "기본 앱",
+  "settingsSectionQuickCompress": "압축하기",
+  "quickCompressDescription": "탐색기·Finder에서 파일이나 폴더를 우클릭해 \"압축하기\"를 누르면, 창을 띄우지 않고 이 형식으로 같은 폴더에 바로 만듭니다.",
   "defaultAppDescription": "zip, 7z, rar, tar 같은 압축파일을 더블클릭하면 Dove Zip으로 열리게 합니다.",
   "defaultAppDescriptionWindows": "Windows는 앱이 기본 앱을 직접 바꾸지 못하게 막아 둡니다. 설정 앱에서 아래 순서대로 Dove Zip을 고르세요.",
   "defaultAppSetButton": "기본 앱으로 설정",
