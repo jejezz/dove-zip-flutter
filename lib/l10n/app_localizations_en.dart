@@ -81,13 +81,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get defaultAppDescriptionWindows =>
-      'Windows only lets you change default apps in Settings. On the Dove Zip page that opens, click \"Set default\".';
+      'Windows doesn\'t let apps change default apps themselves. Pick Dove Zip in the Settings app by following these steps.';
 
   @override
   String get defaultAppSetButton => 'Set as default app';
 
   @override
   String get defaultAppOpenSettingsButton => 'Open Windows Settings';
+
+  @override
+  String get defaultAppWindowsStep1 =>
+      'Click \"Open Windows Settings\". The Settings app opens on the Dove Zip page.';
+
+  @override
+  String get defaultAppWindowsStep2 =>
+      'If there\'s a \"Set default\" button at the top of the page, click it. That switches every file type below at once, and you\'re done.';
+
+  @override
+  String get defaultAppWindowsStep3 =>
+      'If there\'s no such button, click a file type below to copy it, then paste it into the file type search box at the top of the Settings app.';
+
+  @override
+  String get defaultAppWindowsStep4 =>
+      'Click the app shown under the result, choose Dove Zip from the list, then click \"Set default\".';
+
+  @override
+  String get defaultAppWindowsStep5 =>
+      'Repeat steps 3–4 for the remaining file types.';
+
+  @override
+  String get defaultAppFileTypesLabel =>
+      'File types to open with Dove Zip (click to copy)';
+
+  @override
+  String get defaultAppCopyTooltip => 'Copy';
+
+  @override
+  String defaultAppCopied(String fileType) {
+    return 'Copied $fileType. Paste it into the search box in the Settings app.';
+  }
 
   @override
   String get defaultAppDone => 'Archives now open in Dove Zip.';
