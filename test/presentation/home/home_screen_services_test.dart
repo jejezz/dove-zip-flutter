@@ -110,7 +110,7 @@ void main() {
     expect(TarDecoder().decodeBytes(tar.readAsBytesSync()).files.map((f) => f.name), containsAll(['a.txt', 'b.txt']));
   });
 
-  testWidgets('Windows 탐색기 메뉴의 명령줄(--compress-here)도 같은 길로 간다', (tester) async {
+  testWidgets('명령줄 플래그(--compress-here)로 시작해도 같은 길로 간다', (tester) async {
     final file = File('${tempDir.path}/notes.txt')..writeAsStringSync('hello');
 
     await pumpHome(tester, launchPaths: ['--compress-here', file.path]);

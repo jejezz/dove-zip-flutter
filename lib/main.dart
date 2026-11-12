@@ -14,6 +14,8 @@ import 'application/launch_request.dart';
 import 'data/launch_spool.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/home/home_screen.dart';
+import 'presentation/quick/quick_task_screen.dart';
+import 'presentation/settings/quick_compress_format_provider.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/window/window_placement.dart';
 import 'settings/app_settings.dart';
@@ -25,16 +27,12 @@ final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLin
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 탐색기에서 여러 항목을 골라 "압축하기"/"여기에 풀기"를 누르면 항목마다
-  // 프로세스가 따로 뜬다 — 창을 띄우기 전에 하나로 모으고, 나머지는 끝낸다.
-  var launchArgs = args;
+  // 탐색기 우클릭 메뉴("압축하기"/"여기에 풀기")는 앱 창 없이 처리하고 끝낸다.
   if (Platform.isWindows) {
     final request = LaunchRequest.parse(args);
     if (request.action != LaunchAction.openFiles && request.paths.isNotEmpty) {
-      final spool = LaunchSpool(Directory(p.join(Directory.systemTemp.path, 'dove_zip_launch', request.action.name)));
-      final paths = await spool.gather(request.paths);
-      if (paths == null) exit(0);
-      launchArgs = LaunchRequest(request.action, paths).toArgs();
+      await _runQuickTask(request);
+      return;
     }
   }
 
@@ -54,7 +52,7 @@ Future<void> main(List<String> args) async {
     UpdateScope(
       service: updates,
       child: ProviderScope(
-        child: DoveZipApp(settings: settings, launchPaths: launchArgs, updates: updates),
+        child: DoveZipApp(settings: settings, launchPaths: args, updates: updates),
       ),
     ),
   );
@@ -63,6 +61,42 @@ Future<void> main(List<String> args) async {
     final show = showWindow;
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(show()));
   }
+}
+
+/// 탐색기는 고른 항목마다 프로세스를 따로 띄운다 — 하나로 모은 뒤(나머지는
+/// 창 없이 끝남) 숨긴 창으로 처리한다. 오래 걸리거나 물어볼 것이 있을 때만
+/// 작은 창이 보인다([QuickTaskScreen]).
+Future<void> _runQuickTask(LaunchRequest request) async {
+  final spool = LaunchSpool(Directory(p.join(Directory.systemTemp.path, 'dove_zip_launch', request.action.name)));
+  final paths = await spool.gather(request.paths);
+  if (paths == null) exit(0);
+
+  final settings = await AppSettings.load(legacyKeys: {'locale': AppSettings.localeKey});
+  final window = await prepareQuickWindow();
+  runApp(
+    MaterialApp(
+      title: AppIdentity.displayName,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(palette: settings.accentPalette),
+      darkTheme: AppTheme.dark(palette: settings.accentPalette),
+      themeMode: settings.themeMode,
+      locale: settings.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: AppSettings.resolveLocale,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(settings.textScale)),
+        child: child!,
+      ),
+      home: QuickTaskScreen(
+        request: LaunchRequest(request.action, paths),
+        showWindow: window.show,
+        closeRequests: window.closeRequests,
+        exitApp: () => exit(0),
+        readFormat: QuickCompressFormatController.read,
+      ),
+    ),
+  );
 }
 
 class DoveZipApp extends StatefulWidget {

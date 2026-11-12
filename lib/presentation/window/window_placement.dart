@@ -141,3 +141,61 @@ class _BoundsSaver with WindowListener {
   @override
   void onWindowMoved() => _schedule();
 }
+
+/// 우클릭 메뉴용 작은 창(진행률·취소, 오류)의 크기.
+const quickWindowSize = Size(480, 240);
+
+/// 이름 충돌·비밀번호를 물을 때의 크기 — 충돌 대화상자의 단추 여섯 개가 들어간다.
+const quickPromptWindowSize = Size(620, 520);
+
+/// 우클릭 메뉴로 실행됐을 때의 창 — 숨긴 채로 준비만 하고, 크기·위치를
+/// 저장하지 않는다. 돌려주는 `show`를 불러야 보인다. 창의 X는 바로 닫지
+/// 않고 `closeRequests`로 알린다(작업 중이면 취소부터 하도록). `show(prompt:
+/// true)`는 무엇을 묻기 전에 부른다 — 창을 [quickPromptWindowSize]로 키운다.
+Future<({Future<void> Function({bool prompt}) show, Stream<void> closeRequests})> prepareQuickWindow() async {
+  await windowManager.ensureInitialized();
+  final closes = StreamController<void>.broadcast();
+  const options = WindowOptions(size: quickWindowSize, minimumSize: quickWindowSize, title: AppIdentity.displayName);
+  final placed = Completer<void>();
+  await windowManager.waitUntilReadyToShow(options, () async {
+    final area = await _workArea();
+    await windowManager.setBounds(
+      Rect.fromCenter(center: area.center, width: quickWindowSize.width, height: quickWindowSize.height),
+    );
+    await windowManager.setResizable(false);
+    await windowManager.setMaximizable(false);
+    await windowManager.setPreventClose(true);
+    windowManager.addListener(_CloseForwarder(closes));
+    placed.complete();
+  });
+  var shown = false;
+  var large = false;
+  return (
+    show: ({bool prompt = false}) async {
+      await placed.future;
+      if (prompt && !large) {
+        large = true;
+        final center = (await windowManager.getBounds()).center;
+        await windowManager.setMinimumSize(quickPromptWindowSize);
+        await windowManager.setBounds(
+          Rect.fromCenter(center: center, width: quickPromptWindowSize.width, height: quickPromptWindowSize.height),
+        );
+      }
+      if (shown) return;
+      shown = true;
+      await _nextFrame();
+      await windowManager.show();
+      await windowManager.focus();
+    },
+    closeRequests: closes.stream,
+  );
+}
+
+class _CloseForwarder with WindowListener {
+  _CloseForwarder(this.closes);
+
+  final StreamController<void> closes;
+
+  @override
+  void onWindowClose() => closes.add(null);
+}

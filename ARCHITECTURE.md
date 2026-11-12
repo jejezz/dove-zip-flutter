@@ -414,7 +414,21 @@ abstract class FileViewer {
   > - "압축하기"는 압축 창 없이 설정의 "압축하기" 형식(`quick_compress_format`,
   >   기본 ZIP)으로 같은 폴더에 바로 만든다(`quickCompressDestination`:
   >   항목 하나는 그 이름, 여러 개는 든 폴더 이름, 겹치면 `이름 (2)`).
-  >   macOS 서비스 메뉴도 같은 코드로 같게 동작한다.
+  > - **앱 창 없이 처리한다** — `main`이 `DoveZipApp` 대신 `QuickTaskScreen`
+  >   (`lib/presentation/quick/`)을 숨긴 창(`prepareQuickWindow`)으로 띄운다.
+  >   1초 안에 끝나면 창은 끝내 보이지 않고 앱이 끝난다. 더 걸리면 진행률·
+  >   취소만 있는 작은 창(480×240)을 띄우고 끝나면 스스로 닫는다. 이름 충돌·
+  >   비밀번호는 창을 620×520으로 키워 묻고, 오류·손상 항목은 창에 남겨
+  >   "닫기"로 끝낸다. 창의 X는 작업 중이면 취소다.
+  > - 그러려면 압축·해제가 UI isolate를 막지 않아야 한다 — 지금의 라이터·
+  >   리더는 파일 하나를 메모리에서 동기적으로 인코딩해, UI isolate에서 돌리면
+  >   그동안 타이머도 화면도 멈춘다(앱 안의 진행률 다이얼로그도 같은 한계).
+  >   `background_jobs.dart`가 `CreateArchive`/`OpenArchive`/`ExtractEntries`를
+  >   백그라운드 isolate에서 돌리고 진행률·충돌 묻기·취소를 메시지로 주고받는다.
+  >   취소 뒤 0.3초 안에 끝나지 않으면 isolate를 죽인다(만들던 압축파일은 지움).
+  > - macOS 서비스 메뉴는 아직 앱 창에서 처리한다(`HomeScreen._handleLaunch` —
+  >   이름·바로 압축은 같음). 창 없이 처리하려면 `ServicesBridge.swift`를
+  >   고쳐야 해 Mac에서 따로 한다.
 
 - **Linux**: 배포판별 압축 유틸리티(예: `unrar` 비패키지 배포판)와 무관하게 동작해야
   하므로 libarchive를 반드시 정적 링크 또는 AppImage/Flatpak 내부에 동봉,

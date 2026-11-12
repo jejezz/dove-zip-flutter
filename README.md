@@ -44,8 +44,9 @@
 - **Drag in, drag out** — drop files to open or compress them; drag entries out to Finder or Explorer to
   extract them right there
 - **Right-click menu** — *Compress* and *Extract Here* in File Explorer (under *Show more options* on
-  Windows 11) and in Finder's Services menu. Both run at once, without a dialog; *Compress* uses the
-  format you pick in Settings (ZIP by default)
+  Windows 11) and in Finder's Services menu. *Compress* uses the format you pick in Settings (ZIP by
+  default). On Windows they run in the background, like Windows' own zip — a small window shows up
+  only if the job takes more than a second or needs to ask something
 - **Remembers your window** — it reopens at the size and position you left it
 - **Light & dark, English & 한국어, adjustable text size** — follows the system, or pick one in Settings
 
