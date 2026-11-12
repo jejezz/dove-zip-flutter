@@ -42,7 +42,10 @@
   the ratio after, extension filters, symlink handling, **AES-256 passwords** for ZIP and 7Z, and split
   volumes (`name.zip.001`, `.002`, … — Dove Zip's own scheme)
 - **Drag in, drag out** — drop files to open or compress them; drag entries out to Finder or Explorer to
-  extract them right there. On macOS, Finder's Services menu adds *Compress here* / *Extract here*
+  extract them right there
+- **Right-click menu** — *Compress* and *Extract Here* in File Explorer (under *Show more options* on
+  Windows 11) and in Finder's Services menu. Both run at once, without a dialog; *Compress* uses the
+  format you pick in Settings (ZIP by default)
 - **Remembers your window** — it reopens at the size and position you left it
 - **Light & dark, English & 한국어, adjustable text size** — follows the system, or pick one in Settings
 

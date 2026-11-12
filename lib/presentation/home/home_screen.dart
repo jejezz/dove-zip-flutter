@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
@@ -9,7 +8,15 @@ import 'package:flutter_drag_out/flutter_drag_out.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../application/launch_request.dart';
+import '../../application/quick_compress.dart';
+import '../../application/usecases/create_archive.dart';
 import '../../application/usecases/open_archive.dart';
+import '../../core/cancel_token.dart';
+import '../../domain/entities/compress_progress.dart';
+import '../../domain/entities/compression_options.dart';
+import '../settings/quick_compress_format_provider.dart';
+import '../widgets/compress_progress_dialog.dart';
 import '../../data/format_registry.dart';
 import '../../domain/entities/extract_destination_mode.dart';
 import '../../l10n/app_localizations.dart';
@@ -23,8 +30,8 @@ import '../widgets/error_message.dart';
 import '../../window/focus_tint.dart';
 
 /// macOS 쪽 두 가지 네이티브 이벤트를 받는 채널(`ServicesBridge.swift`가
-/// 이 채널로 전달) — Windows/Linux는 이번 범위 밖이라 채널 자체가 macOS
-/// 에서만 등록된다.
+/// 이 채널로 전달) — 보내는 쪽은 macOS뿐이다. Windows 탐색기 메뉴는
+/// 명령줄 인자로 같은 요청을 넘긴다([LaunchRequest]).
 /// - Finder의 "서비스" 메뉴(NSServices, `macos/Runner/Info.plist`)로
 ///   들어오는 "여기에 압축"/"여기에 풀기" 요청(PLAN.md 1.4 "OS 컨텍스트
 ///   메뉴", ARCHITECTURE.md 5장).
@@ -40,7 +47,8 @@ const _servicesChannel = MethodChannel('dove_zip/services');
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key, this.launchPaths = const []});
 
-  /// 명령줄 인자로 받은 경로(Windows/Linux의 파일 연결). 압축파일만 연다.
+  /// 명령줄 인자(Windows/Linux의 파일 연결, Windows 탐색기 우클릭 메뉴).
+  /// [LaunchRequest.parse]가 읽는다.
   final List<String> launchPaths;
 
   @override
@@ -54,27 +62,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isMacOS) {
-      _servicesChannel.setMethodCallHandler(_handleServiceCall);
-    }
+    // macOS만 이 채널로 보내지만, 다른 플랫폼에 등록해 둬도 해가 없고 테스트가 어디서나 돈다.
+    _servicesChannel.setMethodCallHandler(_handleServiceCall);
     if (widget.launchPaths.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _openLaunchPaths());
     }
   }
 
+  /// Windows 탐색기 우클릭 메뉴(`--compress-here`/`--extract-here`)와 파일
+  /// 연결(경로만)은 명령줄로 들어온다 — macOS 서비스 메뉴와 같은 길로 보낸다.
   Future<void> _openLaunchPaths() async {
-    for (final path in widget.launchPaths) {
-      if (!mounted) return;
-      if (FormatRegistry.detectFromFileName(p.basename(path)) == null) continue;
-      await _openArchivePath(path);
-    }
+    final request = LaunchRequest.parse(widget.launchPaths);
+    await _handleLaunch(request.action, request.paths);
   }
 
   @override
   void dispose() {
-    if (Platform.isMacOS) {
-      _servicesChannel.setMethodCallHandler(null);
-    }
+    _servicesChannel.setMethodCallHandler(null);
     super.dispose();
   }
 
@@ -82,21 +86,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 넘겨준 파일/폴더 경로를 받아, 앱 내부 버튼을 눌렀을 때와 완전히 같은
   /// 경로로 이어붙인다(PLAN.md 1.4 — 로직 100% 공유가 목표).
   Future<void> _handleServiceCall(MethodCall call) async {
-    final paths = (call.arguments as List).cast<String>();
-    if (paths.isEmpty) return;
+    final action = LaunchAction.fromMethod(call.method);
+    if (action == null) return;
+    await _handleLaunch(action, (call.arguments as List).cast<String>());
+  }
 
-    switch (call.method) {
-      case 'compressHere':
-        await _openCompressDialog(paths.map(Uri.file).toList());
-      case 'extractHere':
+  /// OS 메뉴·파일 연결로 들어온 요청을 앱 안의 단추와 같은 코드로 처리한다.
+  Future<void> _handleLaunch(LaunchAction action, List<String> paths) async {
+    if (paths.isEmpty || !mounted) return;
+
+    switch (action) {
+      case LaunchAction.compressHere:
+        await _quickCompress(paths);
+      case LaunchAction.extractHere:
         for (final path in paths) {
+          if (!mounted) return;
           if (FormatRegistry.detectFromFileName(p.basename(path)) == null) {
             continue; // 압축파일이 아닌 항목이 섞여 있으면 조용히 건너뛴다.
           }
           await _openArchiveForAutoExtract(path);
         }
-      case 'openFiles':
+      case LaunchAction.openFiles:
         for (final path in paths) {
+          if (!mounted) return;
           if (FormatRegistry.detectFromFileName(p.basename(path)) == null) {
             continue;
           }
@@ -105,8 +117,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// 우클릭 메뉴의 "압축하기" — 압축 창 없이 설정의 형식으로 같은 폴더에 바로
+  /// 만든다([quickCompressDestination]). 진행률·취소·완료/실패 알림은 압축
+  /// 창과 같은 것을 쓴다.
+  Future<void> _quickCompress(List<String> paths) async {
+    final format = await QuickCompressFormatController.read();
+    if (!mounted) return;
+    final destination = quickCompressDestination(paths, format);
+    final cancelToken = CancelToken();
+    final progress = ValueNotifier<CompressProgress?>(null);
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => CompressProgressDialog(progress: progress, onCancel: cancelToken.cancel),
+      ),
+    );
+    try {
+      await const CreateArchive()(
+        sources: paths.map(Uri.file).toList(),
+        destination: destination,
+        options: CompressionOptions(format: format),
+        onProgress: (value) => progress.value = value,
+        cancelToken: cancelToken,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(); // 진행률 다이얼로그
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).compressCompleted(destination.toFilePath()))),
+      );
+    } on OperationCancelledException {
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, l10n.compressFailed(describeError(l10n, e)));
+    }
+    // progress는 dispose하지 않는다 — 닫히는 다이얼로그가 애니메이션 동안 아직 듣고 있다.
+  }
+
   /// 평소 "열기"([_openArchivePath])와 달리, 화면이 뜨자마자 곧바로 here
-  /// 모드 해제까지 자동 실행한다 — Finder의 "여기에 풀기" 서비스 전용.
+  /// 모드 해제까지 자동 실행한다 — Finder·탐색기의 "여기에 풀기" 메뉴 전용.
   Future<void> _openArchiveForAutoExtract(String path) async {
     try {
       final handle = await const OpenArchive()(Uri.file(path));

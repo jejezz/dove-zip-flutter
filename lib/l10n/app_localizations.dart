@@ -230,6 +230,18 @@ abstract class AppLocalizations {
   /// **'기본 앱'**
   String get settingsSectionDefaultApp;
 
+  /// No description provided for @settingsSectionQuickCompress.
+  ///
+  /// In ko, this message translates to:
+  /// **'압축하기'**
+  String get settingsSectionQuickCompress;
+
+  /// No description provided for @quickCompressDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색기·Finder에서 파일이나 폴더를 우클릭해 \"압축하기\"를 누르면, 창을 띄우지 않고 이 형식으로 같은 폴더에 바로 만듭니다.'**
+  String get quickCompressDescription;
+
   /// No description provided for @defaultAppDescription.
   ///
   /// In ko, this message translates to:

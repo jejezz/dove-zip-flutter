@@ -4,6 +4,11 @@
 //
 #define IDI_APP_ICON                    101
 
+// Explorer right-click menu labels: installer/windows/app.iss refers to
+// them as MUIVerb "@dove_zip.exe,-<id>". Keep the ids in sync.
+#define IDS_VERB_COMPRESS               1001
+#define IDS_VERB_EXTRACT_HERE           1002
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

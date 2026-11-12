@@ -3,12 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:window_manager/window_manager.dart';
 
 import 'about/app_menu_bar.dart';
 import 'about/dove_zip_about.dart';
 import 'about/extra_licenses.dart';
 import 'app_identity.dart';
+import 'application/launch_request.dart';
+import 'data/launch_spool.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/home/home_screen.dart';
 import 'presentation/theme/app_theme.dart';
@@ -21,6 +24,20 @@ final bool _isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLin
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 탐색기에서 여러 항목을 골라 "압축하기"/"여기에 풀기"를 누르면 항목마다
+  // 프로세스가 따로 뜬다 — 창을 띄우기 전에 하나로 모으고, 나머지는 끝낸다.
+  var launchArgs = args;
+  if (Platform.isWindows) {
+    final request = LaunchRequest.parse(args);
+    if (request.action != LaunchAction.openFiles && request.paths.isNotEmpty) {
+      final spool = LaunchSpool(Directory(p.join(Directory.systemTemp.path, 'dove_zip_launch', request.action.name)));
+      final paths = await spool.gather(request.paths);
+      if (paths == null) exit(0);
+      launchArgs = LaunchRequest(request.action, paths).toArgs();
+    }
+  }
+
   registerExtraLicenses();
 
   // 저장해 둔 크기·위치로 창을 연다 (UI_UX.md 9장).
@@ -37,7 +54,7 @@ Future<void> main(List<String> args) async {
     UpdateScope(
       service: updates,
       child: ProviderScope(
-        child: DoveZipApp(settings: settings, launchPaths: args, updates: updates),
+        child: DoveZipApp(settings: settings, launchPaths: launchArgs, updates: updates),
       ),
     ),
   );
@@ -53,7 +70,7 @@ class DoveZipApp extends StatefulWidget {
 
   final AppSettings settings;
 
-  /// "연결 프로그램"/더블클릭으로 실행될 때 명령줄로 넘어온 파일 경로.
+  /// 명령줄 인자 — 파일 연결(경로만)이나 탐색기 우클릭 메뉴(`--compress-here` 등).
   final List<String> launchPaths;
 
   /// 시작할 때 새 버전을 확인한다. null 이면 업데이트 확인을 쓰지 않는다.

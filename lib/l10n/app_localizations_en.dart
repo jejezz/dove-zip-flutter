@@ -76,6 +76,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionDefaultApp => 'Default app';
 
   @override
+  String get settingsSectionQuickCompress => 'Compress';
+
+  @override
+  String get quickCompressDescription =>
+      'When you right-click files or folders in File Explorer or Finder and choose \"Compress\", Dove Zip creates an archive in this format right next to them, without asking.';
+
+  @override
   String get defaultAppDescription =>
       'Open archives such as zip, 7z, rar and tar in Dove Zip when you double-click them.';
 

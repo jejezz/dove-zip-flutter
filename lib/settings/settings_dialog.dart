@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../presentation/settings/default_app_section.dart';
+import '../presentation/settings/quick_compress_section.dart';
 import 'settings_menus.dart';
 
 /// 설정 대화상자: 데스크톱 전용 앱이라 모달로 띄운다 (settings-screen.md §1).
@@ -44,6 +45,8 @@ class SettingsDialog extends StatelessWidget {
               const SizedBox(height: 24),
               // 앱 고유 구역은 "외형" 다음에 둔다 (settings-screen.md §3).
               const DefaultAppSection(),
+              const SizedBox(height: 24),
+              const QuickCompressSection(),
             ],
           ),
         ),

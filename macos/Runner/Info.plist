@@ -59,9 +59,9 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Dove Zip: Compress Here</string>
+				<string>Compress</string>
 				<key>ko</key>
-				<string>Dove Zip: 여기에 압축</string>
+				<string>압축하기</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>compressHere</string>
@@ -81,9 +81,9 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Dove Zip: Extract Here</string>
+				<string>Extract Here</string>
 				<key>ko</key>
-				<string>Dove Zip: 여기에 풀기</string>
+				<string>여기에 풀기</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>extractHere</string>
