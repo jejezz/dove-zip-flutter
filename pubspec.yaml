@@ -94,7 +94,8 @@ dependencies:
   app_updater:
     git:
       url: https://github.com/jejezz/application-release-templates
-      ref: updater-v0.1.0
+      # updater-v0.2.0 상당 (태그 발행 전이라 커밋 SHA 로 고정; 태그가 생기면 교체)
+      ref: 5a21d66db05b2da98985b0611c2b985321005e5d
       path: updater
 
 dev_dependencies:
