@@ -19,6 +19,7 @@ import '../../domain/repositories/archive_reader.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/conflict_dialog.dart';
 import '../widgets/error_message.dart';
+import '../widgets/name_prompt_dialog.dart';
 import '../widgets/password_prompt_dialog.dart';
 
 /// 탐색기 우클릭 메뉴("압축하기"/"알아서 풀기")를 창 없이 처리한다 —
@@ -36,6 +37,7 @@ class QuickTaskScreen extends StatefulWidget {
     this.closeRequests,
     this.revealAfter = const Duration(seconds: 1),
     this.readFormat,
+    this.pathExists = quickPathTaken,
     this.createArchive = compressInBackground,
     this.openArchive = openArchiveInBackground,
     this.extractEntries = extractInBackground,
@@ -57,6 +59,9 @@ class QuickTaskScreen extends StatefulWidget {
 
   /// "압축하기" 형식. null이면 기본값(ZIP).
   final Future<ArchiveFormat> Function()? readFormat;
+
+  /// "이름을 정해 압축하기"가 이미 있는 이름을 막는 데 쓴다. 테스트가 바꾼다.
+  final bool Function(String path) pathExists;
 
   /// 기본은 백그라운드 isolate([compressInBackground] 등) — 큰 파일을
   /// 처리하는 동안에도 작은 창이 뜨고 반응한다. 테스트는 유스케이스의
@@ -135,7 +140,9 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     try {
       message = switch (widget.request.action) {
         LaunchAction.compressHere => await _compress(),
+        LaunchAction.compressAs => await _compress(askName: true),
         LaunchAction.extractHere => await _extract(),
+        LaunchAction.extractTo => await _extract(askName: true),
         LaunchAction.openFiles => null,
       };
     } on OperationCancelledException {
@@ -143,7 +150,7 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
-      message = widget.request.action == LaunchAction.compressHere
+      message = _isCompress
           ? l10n.compressFailed(describeError(l10n, e))
           : l10n.extractFailed(describeError(l10n, e));
     }
@@ -160,12 +167,62 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     await _reveal();
   }
 
-  Future<String?> _compress() async {
+  bool get _isCompress =>
+      widget.request.action == LaunchAction.compressHere || widget.request.action == LaunchAction.compressAs;
+
+  /// 이름을 묻는 창을 띄워 받는다. 취소하면 작업 전체를 취소한다.
+  Future<String> _askName({
+    required String title,
+    required String initialName,
+    String? suffix,
+    String? Function(String name)? validateMore,
+  }) async {
+    await _reveal(prompt: true);
+    if (!mounted) throw const OperationCancelledException();
+    final l10n = AppLocalizations.of(context);
+    final name = await showNamePromptDialog(
+      context,
+      title: title,
+      label: title,
+      initialName: initialName,
+      suffix: suffix,
+      validate: (name) {
+        final problem = switch (quickNameProblem(name)) {
+          QuickNameProblem.empty => l10n.nameProblemEmpty,
+          QuickNameProblem.invalidCharacters => l10n.nameProblemInvalidCharacters,
+          QuickNameProblem.reserved => l10n.nameProblemReserved,
+          null => null,
+        };
+        return problem ?? validateMore?.call(name);
+      },
+    );
+    if (name == null) throw const OperationCancelledException();
+    return name;
+  }
+
+  /// [askName]이면 압축파일 이름을 물어(처음 값: [quickCompressBaseName]) 그 이름으로 만든다.
+  Future<String?> _compress({bool askName = false}) async {
     final paths = widget.request.paths;
     final format = await (widget.readFormat?.call() ?? Future.value(defaultQuickCompressFormat));
+    final Uri destination;
+    if (askName) {
+      if (!mounted) throw const OperationCancelledException();
+      final l10n = AppLocalizations.of(context);
+      final name = await _askName(
+        title: l10n.promptCompressTitle,
+        initialName: quickCompressBaseName(paths),
+        suffix: '.${FormatRegistry.of(format).extensions.first}',
+        validateMore: (name) => widget.pathExists(quickCompressDestinationNamed(paths, name, format).toFilePath())
+            ? l10n.nameProblemExists
+            : null,
+      );
+      destination = quickCompressDestinationNamed(paths, name, format);
+    } else {
+      destination = quickCompressDestination(paths, format);
+    }
     await widget.createArchive(
       sources: paths.map(Uri.file).toList(),
-      destination: quickCompressDestination(paths, format),
+      destination: destination,
       options: CompressionOptions(format: format),
       onProgress: (v) => _progress.value = (done: v.done, total: v.total, currentName: v.currentName),
       cancelToken: _cancelToken,
@@ -173,16 +230,31 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     return null;
   }
 
-  /// 고른 압축파일을 차례로 "알아서" 푼다 — 압축파일 이름의 새 폴더에. 손상 항목이 있었으면 그 요약.
-  Future<String?> _extract() async {
+  /// 고른 압축파일을 차례로 푼다. 손상 항목이 있었으면 그 요약.
+  ///
+  /// 기본은 "알아서" — 압축파일 이름의 새 폴더에. [askName]이면 폴더 이름을
+  /// 물어, 압축파일이 하나면 그 폴더에 바로, 여럿이면 그 아래 압축파일 이름의
+  /// 하위 폴더로 나눠 푼다.
+  Future<String?> _extract({bool askName = false}) async {
     final l10n = AppLocalizations.of(context);
+    final archives = [
+      for (final path in widget.request.paths)
+        if (FormatRegistry.detectFromFileName(p.basename(path)) != null) path,
+    ];
+    if (archives.isEmpty) return null;
+    final targets = askName
+        ? quickExtractTargets(
+            archives,
+            await _askName(title: l10n.promptExtractTitle, initialName: quickExtractFolderName(archives)),
+          )
+        : null;
     final summaries = <String>[];
     String? password;
-    for (final path in widget.request.paths) {
-      if (FormatRegistry.detectFromFileName(p.basename(path)) == null) continue;
+    for (var i = 0; i < archives.length; i++) {
       _cancelToken.throwIfCancelled();
-      final handle = await widget.openArchive(Uri.file(path));
-      final (result, used) = await _withPassword(password, (pw) => _extractOne(handle, pw));
+      final handle = await widget.openArchive(Uri.file(archives[i]));
+      final folder = targets?[i].destination;
+      final (result, used) = await _withPassword(password, (pw) => _extractOne(handle, pw, folder));
       password = used; // 같은 비밀번호로 묶은 여러 압축파일을 한 번만 묻는다.
       if (result.failures.isNotEmpty && mounted) {
         final detail = result.failures.map((f) => '- ${describeFailure(l10n, f)}').join('\n');
@@ -194,9 +266,11 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     return summaries.isEmpty ? null : summaries.join('\n\n');
   }
 
-  Future<ExtractResult> _extractOne(ArchiveHandle handle, String? password) => widget.extractEntries(
+  /// [folder]가 null이면 "알아서"(압축파일 이름의 새 폴더), 아니면 그 폴더에 푼다.
+  Future<ExtractResult> _extractOne(ArchiveHandle handle, String? password, Uri? folder) => widget.extractEntries(
         handle: handle,
-        mode: ExtractDestinationMode.smart,
+        mode: folder == null ? ExtractDestinationMode.smart : ExtractDestinationMode.chooseFolder,
+        userChosenFolder: folder,
         password: password,
         onConflict: (conflict) async {
           await _reveal(prompt: true);
@@ -229,7 +303,7 @@ class _QuickTaskScreenState extends State<QuickTaskScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final message = _message;
-    final title = widget.request.action == LaunchAction.compressHere ? l10n.compressingTitle : l10n.extractingTitle;
+    final title = _isCompress ? l10n.compressingTitle : l10n.extractingTitle;
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),

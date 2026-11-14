@@ -116,6 +116,8 @@ STRINGTABLE
 BEGIN
     IDS_VERB_COMPRESS       "Compress with Dove Zip"
     IDS_VERB_SMART_EXTRACT  "Smart Extract with Dove Zip"
+    IDS_VERB_COMPRESS_AS    "Compress as... with Dove Zip"
+    IDS_VERB_EXTRACT_TO     "Extract to named folder... with Dove Zip"
 END
 
 #endif    // English (United States) resources
@@ -131,6 +133,8 @@ STRINGTABLE
 BEGIN
     IDS_VERB_COMPRESS       "Dove Zip으로 압축하기"
     IDS_VERB_SMART_EXTRACT  "Dove Zip이 알아서 풀기"
+    IDS_VERB_COMPRESS_AS    "Dove Zip으로 이름 정해 압축하기..."
+    IDS_VERB_EXTRACT_TO     "Dove Zip으로 폴더 이름 정해 풀기..."
 END
 
 // Korean (Korea) resources

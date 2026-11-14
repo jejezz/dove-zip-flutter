@@ -144,7 +144,9 @@ Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: 
 ; verbs, no COM DLL; on Windows 11 they sit under "Show more options".
 ; Archives get "Smart Extract with Dove Zip" (into a new folder named after
 ; the archive), everything else (files, folders) "Compress with Dove Zip";
-; both run at once, without a dialog. Labels are indirect strings
+; both run at once, without a dialog. "Compress as..." and "Extract to named
+; folder..." (DoveZip.CompressAs / DoveZip.ExtractTo) ask for a name first:
+; the archive name, or the folder to extract into. Labels are indirect strings
 ; (MUIVerb "@exe,-id") from the STRINGTABLE in windows/runner/Runner.rc, so
 ; Explorer shows them in the Windows display language. Explorer starts one
 ; process per selected item; lib/data/launch_spool.dart gathers them into one.
@@ -203,6 +205,59 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.E
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.Extract"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.Extract"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.Extract\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-here ""%1"""
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1005"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "AppliesTo"; ValueData: "NOT System.FileExtension:=.zip AND NOT System.FileExtension:=.tar AND NOT System.FileExtension:=.gz AND NOT System.FileExtension:=.tgz AND NOT System.FileExtension:=.bz2 AND NOT System.FileExtension:=.tbz2 AND NOT System.FileExtension:=.tbz AND NOT System.FileExtension:=.xz AND NOT System.FileExtension:=.txz AND NOT System.FileExtension:=.7z AND NOT System.FileExtension:=.rar"
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%1"""
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1005"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tar\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.gz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.gz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.gz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.gz\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tgz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tgz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tgz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tgz\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.bz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.bz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.bz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.bz2\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz2\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz2\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tbz\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.xz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.xz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.xz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.xz\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.txz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.txz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.txz\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.txz\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.7z\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.7z\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.7z\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.7z\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rar\shell\DoveZip.ExtractTo\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --extract-to ""%1"""
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

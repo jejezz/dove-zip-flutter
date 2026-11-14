@@ -400,6 +400,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'OK';
 
   @override
+  String get promptCompressTitle => 'Archive name';
+
+  @override
+  String get promptExtractTitle => 'Folder name';
+
+  @override
+  String get nameProblemEmpty => 'Enter a name.';
+
+  @override
+  String get nameProblemInvalidCharacters =>
+      'The name has characters that aren\'t allowed. (\\ / : * ? \" < > |)';
+
+  @override
+  String get nameProblemReserved => 'Windows doesn\'t allow this name.';
+
+  @override
+  String get nameProblemExists => 'That name already exists.';
+
+  @override
   String get newArchiveTitle => 'New Archive';
 
   @override

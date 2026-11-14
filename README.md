@@ -46,7 +46,9 @@
 - **Right-click menu** — *Compress with Dove Zip* and *Smart Extract with Dove Zip* (into a new folder named after the archive) in File Explorer (under *Show more options* on
   Windows 11) and in Finder's Services menu. *Compress* uses the format you pick in Settings (ZIP by
   default). On Windows they run in the background, like Windows' own zip — a small window shows up
-  only if the job takes more than a second or needs to ask something
+  only if the job takes more than a second or needs to ask something. On Windows there are also
+  *Compress as… with Dove Zip* and *Extract to named folder… with Dove Zip*, which ask for the
+  archive name or the folder name first (several archives go into sub-folders of that folder)
 - **Remembers your window** — it reopens at the size and position you left it
 - **Light & dark, English & 한국어, adjustable text size** — follows the system, or pick one in Settings
 

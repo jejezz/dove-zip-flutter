@@ -391,6 +391,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get confirm => '확인';
 
   @override
+  String get promptCompressTitle => '압축 파일 이름';
+
+  @override
+  String get promptExtractTitle => '풀 폴더 이름';
+
+  @override
+  String get nameProblemEmpty => '이름을 입력하세요.';
+
+  @override
+  String get nameProblemInvalidCharacters =>
+      '이름에 쓸 수 없는 문자가 있습니다. (\\ / : * ? \" < > |)';
+
+  @override
+  String get nameProblemReserved => 'Windows에서 쓸 수 없는 이름입니다.';
+
+  @override
+  String get nameProblemExists => '같은 이름이 이미 있습니다.';
+
+  @override
   String get newArchiveTitle => '새 압축 만들기';
 
   @override

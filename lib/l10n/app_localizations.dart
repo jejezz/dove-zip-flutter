@@ -734,6 +734,42 @@ abstract class AppLocalizations {
   /// **'확인'**
   String get confirm;
 
+  /// No description provided for @promptCompressTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'압축 파일 이름'**
+  String get promptCompressTitle;
+
+  /// No description provided for @promptExtractTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'풀 폴더 이름'**
+  String get promptExtractTitle;
+
+  /// No description provided for @nameProblemEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름을 입력하세요.'**
+  String get nameProblemEmpty;
+
+  /// No description provided for @nameProblemInvalidCharacters.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름에 쓸 수 없는 문자가 있습니다. (\\ / : * ? \" < > |)'**
+  String get nameProblemInvalidCharacters;
+
+  /// No description provided for @nameProblemReserved.
+  ///
+  /// In ko, this message translates to:
+  /// **'Windows에서 쓸 수 없는 이름입니다.'**
+  String get nameProblemReserved;
+
+  /// No description provided for @nameProblemExists.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 이름이 이미 있습니다.'**
+  String get nameProblemExists;
+
   /// No description provided for @newArchiveTitle.
   ///
   /// In ko, this message translates to:

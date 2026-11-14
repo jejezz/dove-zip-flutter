@@ -231,6 +231,12 @@
   "passwordWrongHint": "비밀번호가 틀렸습니다. 다시 시도해 주세요.",
   "passwordHint": "비밀번호",
   "confirm": "확인",
+  "promptCompressTitle": "압축 파일 이름",
+  "promptExtractTitle": "풀 폴더 이름",
+  "nameProblemEmpty": "이름을 입력하세요.",
+  "nameProblemInvalidCharacters": "이름에 쓸 수 없는 문자가 있습니다. (\\ / : * ? \" < > |)",
+  "nameProblemReserved": "Windows에서 쓸 수 없는 이름입니다.",
+  "nameProblemExists": "같은 이름이 이미 있습니다.",
   "newArchiveTitle": "새 압축 만들기",
   "compressTargetLabel": "대상: {summary}",
   "@compressTargetLabel": {

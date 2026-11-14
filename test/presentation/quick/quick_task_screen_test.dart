@@ -29,6 +29,7 @@ void main() {
     LaunchRequest request, {
     CompressJob? compress,
     ExtractJob? extract,
+    bool Function(String path)? pathExists,
   }) async {
     await tester.pumpWidget(MaterialApp(
       locale: const Locale('ko'),
@@ -39,6 +40,7 @@ void main() {
         showWindow: ({bool prompt = false}) async => shows.add(prompt),
         exitApp: () => exits++,
         revealAfter: const Duration(seconds: 1),
+        pathExists: pathExists ?? (_) => false,
         createArchive: compress ?? _noCompress,
         openArchive: (uri) async => ArchiveHandle(location: uri, format: ArchiveFormat.zip, entries: const []),
         extractEntries: extract ?? _noExtract,
@@ -165,6 +167,156 @@ void main() {
     await tester.pump();
     expect(calls, 0);
     expect(exits, 1);
+  });
+
+  group('이름을 묻는 메뉴', () {
+    Future<void> settle(WidgetTester tester) async {
+      // 진행 막대가 계속 움직여 settle되지 않는다 — 대화상자 애니메이션만큼 넘긴다.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('압축: 창을 키워 이름(처음 값은 폴더 이름)을 묻는다', (tester) async {
+      await pump(tester, const LaunchRequest(LaunchAction.compressAs, [r'C:\work\Trip']));
+      await settle(tester);
+      expect(shows, [true]);
+      expect(exits, 0);
+      expect(find.widgetWithText(TextField, 'Trip'), findsOneWidget);
+      expect(find.text('.zip'), findsOneWidget);
+
+      await tester.tap(find.text('확인'));
+      await settle(tester);
+      expect(exits, 1);
+    });
+
+    testWidgets('압축: 입력한 이름으로 destination을 넘긴다', (tester) async {
+      final destinations = <Uri>[];
+      await pump(
+        tester,
+        const LaunchRequest(LaunchAction.compressAs, [r'C:\work\Trip']),
+        compress: ({required sources, required destination, required options, onProgress, cancelToken}) async {
+          destinations.add(destination);
+        },
+      );
+      await settle(tester);
+      await tester.enterText(find.byType(TextField), 'MyTrip');
+      await tester.pump();
+      await tester.tap(find.text('확인'));
+      await settle(tester);
+      expect(destinations.single.pathSegments.last, 'MyTrip.zip');
+    });
+
+    testWidgets('압축: 이미 있는 이름이나 쓸 수 없는 이름은 확인할 수 없다', (tester) async {
+      var created = 0;
+      await pump(
+        tester,
+        const LaunchRequest(LaunchAction.compressAs, [r'C:\work\Trip']),
+        pathExists: (path) => path.endsWith('Trip.zip'),
+        compress: ({required sources, required destination, required options, onProgress, cancelToken}) async {
+          created++;
+        },
+      );
+      await settle(tester);
+      expect(find.text('같은 이름이 이미 있습니다.'), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, '확인')).onPressed, isNull);
+
+      await tester.enterText(find.byType(TextField), 'a/b');
+      await tester.pump();
+      expect(find.textContaining('쓸 수 없는 문자'), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, '확인')).onPressed, isNull);
+      expect(created, 0);
+    });
+
+    testWidgets('이름 입력을 취소하면 아무것도 하지 않고 끝낸다', (tester) async {
+      var created = 0;
+      await pump(
+        tester,
+        const LaunchRequest(LaunchAction.compressAs, [r'C:\work\Trip']),
+        compress: ({required sources, required destination, required options, onProgress, cancelToken}) async {
+          created++;
+        },
+      );
+      await settle(tester);
+      // 뒤의 진행 화면에도 "취소"가 있다 — 이름 창 안의 것을 누른다.
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('취소')));
+      await settle(tester);
+      expect(created, 0);
+      expect(exits, 1);
+    });
+
+    testWidgets('풀기: 압축파일이 하나면 입력한 폴더에 바로 푼다', (tester) async {
+      final folders = <Uri?>[];
+      await pump(
+        tester,
+        const LaunchRequest(LaunchAction.extractTo, [r'C:\work\a.zip']),
+        extract: ({
+          required handle,
+          required mode,
+          entryPaths,
+          password,
+          userChosenFolder,
+          required onConflict,
+          onProgress,
+          cancelToken,
+        }) async {
+          expect(mode, ExtractDestinationMode.chooseFolder);
+          folders.add(userChosenFolder);
+          return ExtractResult(destination: userChosenFolder!, failures: const []);
+        },
+      );
+      await settle(tester);
+      expect(shows, [true]);
+      expect(find.widgetWithText(TextField, 'a'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Out');
+      await tester.pump();
+      await tester.tap(find.text('확인'));
+      await settle(tester);
+
+      expect(folders.map((f) => f!.pathSegments.where((s) => s.isNotEmpty).toList()), [
+        ['C:', 'work', 'Out'],
+      ]);
+      expect(exits, 1);
+    });
+
+    testWidgets('풀기: 압축파일이 여럿이면 폴더 아래 압축파일 이름으로 나눠 푼다', (tester) async {
+      final folders = <Uri?>[];
+      await pump(
+        tester,
+        const LaunchRequest(LaunchAction.extractTo, [r'C:\work\a.zip', r'C:\work\b.tar.gz', r'C:\work\notes.txt']),
+        extract: ({
+          required handle,
+          required mode,
+          entryPaths,
+          password,
+          userChosenFolder,
+          required onConflict,
+          onProgress,
+          cancelToken,
+        }) async {
+          folders.add(userChosenFolder);
+          return ExtractResult(destination: userChosenFolder!, failures: const []);
+        },
+      );
+      await settle(tester);
+      expect(find.widgetWithText(TextField, 'work'), findsOneWidget); // 압축파일들이 든 폴더 이름
+      await tester.enterText(find.byType(TextField), 'Out');
+      await tester.pump();
+      await tester.tap(find.text('확인'));
+      await settle(tester);
+
+      expect(folders.map((f) => f!.pathSegments.where((s) => s.isNotEmpty).toList()), [
+        ['C:', 'work', 'Out', 'a'],
+        ['C:', 'work', 'Out', 'b'],
+      ]);
+      expect(exits, 1);
+    });
+
+    testWidgets('풀기: 압축파일이 하나도 없으면 묻지 않고 끝낸다', (tester) async {
+      await pump(tester, const LaunchRequest(LaunchAction.extractTo, [r'C:\work\notes.txt']));
+      await tester.pump();
+      expect(shows, isEmpty);
+      expect(exits, 1);
+    });
   });
 }
 

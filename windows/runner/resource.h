@@ -11,6 +11,8 @@
 // Here" were used before).
 #define IDS_VERB_COMPRESS               1003
 #define IDS_VERB_SMART_EXTRACT          1004
+#define IDS_VERB_COMPRESS_AS            1005
+#define IDS_VERB_EXTRACT_TO             1006
 
 // Next default values for new objects
 //

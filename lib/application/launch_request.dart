@@ -12,7 +12,16 @@ enum LaunchAction {
   /// 안에(`ExtractDestinationMode.smart`). 이름은 처음 "여기에 풀기"였던
   /// 때의 것이다 — macOS `Info.plist`의 `NSMessage`, 설치 프로그램의 명령
   /// 플래그와 맞물려 있어 바꾸지 않았다.
-  extractHere;
+  extractHere,
+
+  /// "압축 파일 이름을 정해 압축하기" — 이름을 물은 뒤 같은 폴더에 만든다
+  /// (Windows 탐색기 메뉴 전용).
+  compressAs,
+
+  /// "폴더 이름을 정해 풀기" — 폴더 이름을 물은 뒤 그 폴더에 푼다. 압축파일이
+  /// 여럿이면 그 폴더 아래 압축파일 이름의 하위 폴더로 나눠 푼다
+  /// (Windows 탐색기 메뉴 전용).
+  extractTo;
 
   /// macOS 채널의 메서드 이름에서 고른다. 모르는 이름이면 null.
   static LaunchAction? fromMethod(String method) {
@@ -31,6 +40,8 @@ class LaunchRequest {
   /// 등록하는 명령의 첫 인자.
   static const compressHereFlag = '--compress-here';
   static const extractHereFlag = '--extract-here';
+  static const compressAsFlag = '--compress-as';
+  static const extractToFlag = '--extract-to';
 
   final LaunchAction action;
   final List<String> paths;
@@ -42,6 +53,8 @@ class LaunchRequest {
     final action = switch (args.firstOrNull) {
       compressHereFlag => LaunchAction.compressHere,
       extractHereFlag => LaunchAction.extractHere,
+      compressAsFlag => LaunchAction.compressAs,
+      extractToFlag => LaunchAction.extractTo,
       _ => LaunchAction.openFiles,
     };
     final paths = args.where((a) => !a.startsWith('--') && a.isNotEmpty).toList();
@@ -52,6 +65,8 @@ class LaunchRequest {
   List<String> toArgs() => [
         if (action == LaunchAction.compressHere) compressHereFlag,
         if (action == LaunchAction.extractHere) extractHereFlag,
+        if (action == LaunchAction.compressAs) compressAsFlag,
+        if (action == LaunchAction.extractTo) extractToFlag,
         ...paths,
       ];
 }

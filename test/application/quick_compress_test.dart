@@ -11,6 +11,46 @@ void main() {
   String dest(List<String> paths, ArchiveFormat format, {Set<String> taken = const {}}) =>
       quickCompressDestination(paths, format, exists: taken.contains).toFilePath();
 
+  group('이름을 정해 압축하기·풀기', () {
+    test('처음 이름: 항목 하나면 그 이름, 여럿이면 든 폴더 이름', () {
+      expect(quickCompressBaseName([path('photos')]), 'photos');
+      expect(quickCompressBaseName([path('a.jpg'), path('b.jpg')]), 'Trip');
+    });
+
+    test('압축파일은 입력한 이름으로, 고른 항목과 같은 폴더에 만든다', () {
+      expect(quickCompressDestinationNamed([path('photos')], '  My Photos ', ArchiveFormat.zip).toFilePath(), path('My Photos.zip'));
+    });
+
+    test('풀 폴더의 처음 이름: 압축파일 하나면 그 이름(압축 확장자를 뺀), 여럿이면 든 폴더 이름', () {
+      expect(quickExtractFolderName([path('data.tar.gz')]), 'data');
+      expect(quickExtractFolderName([path('a.zip'), path('b.7z')]), 'Trip');
+    });
+
+    test('압축파일이 하나면 그 폴더에 바로 푼다', () {
+      final targets = quickExtractTargets([path('a.zip')], 'Out');
+      expect(targets.single.destination.toFilePath(), path('Out'));
+    });
+
+    test('압축파일이 여럿이면 폴더 아래 압축파일 이름의 하위 폴더로 나눠 푼다', () {
+      final targets = quickExtractTargets([path('a.zip'), path('b.tar.gz')], 'Out');
+      expect(targets.map((t) => t.destination.toFilePath()), [p.join(path('Out'), 'a'), p.join(path('Out'), 'b')]);
+      expect(targets.map((t) => t.archive), [path('a.zip'), path('b.tar.gz')]);
+    });
+
+    test('Windows에서 쓸 수 없는 이름을 가려낸다', () {
+      expect(quickNameProblem('Photos 2024'), isNull);
+      expect(quickNameProblem('v1.2'), isNull);
+      expect(quickNameProblem('   '), QuickNameProblem.empty);
+      for (final bad in ['a/b', r'a\b', 'a:b', 'a*', 'a?', 'a"b', 'a<b', 'a>b', 'a|b', 'dot.']) {
+        expect(quickNameProblem(bad), QuickNameProblem.invalidCharacters, reason: bad);
+      }
+      expect(quickNameProblem('con'), QuickNameProblem.reserved);
+      expect(quickNameProblem('NUL.txt'), QuickNameProblem.reserved);
+      expect(quickNameProblem('COM1'), QuickNameProblem.reserved);
+      expect(quickNameProblem('console'), isNull);
+    });
+  });
+
   test('항목 하나: 그 이름, 파일이면 확장자를 뺀다', () {
     expect(dest([path('photos')], ArchiveFormat.zip), path('photos.zip'));
     expect(dest([path('report.pdf')], ArchiveFormat.zip), path('report.zip'));

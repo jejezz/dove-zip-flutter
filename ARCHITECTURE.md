@@ -399,6 +399,12 @@ abstract class FileViewer {
   > `dove_zip.exe --extract-here|--compress-here "%1"`을 실행하고,
   > `LaunchRequest.parse`(`lib/application/launch_request.dart`)가 읽어
   > macOS 서비스 채널과 같은 `HomeScreen._handleLaunch`로 보낸다.
+  > - 이름을 먼저 묻는 두 verb가 더 있다 — `DoveZip.CompressAs`
+  >   (`--compress-as`: 압축파일 이름, 처음 값은 항목/든 폴더 이름)와
+  >   `DoveZip.ExtractTo`(`--extract-to`: 풀 폴더 이름). 입력 창은
+  >   `QuickTaskScreen`이 창을 키워 띄운다(`name_prompt_dialog.dart`).
+  >   압축파일이 하나면 그 폴더에 바로, 여럿이면 `폴더/압축파일이름`으로 나눠
+  >   푼다(`quickExtractTargets`). 기존 verb와 플래그는 그대로다.
   > - 메뉴 이름은 `MUIVerb "@dove_zip.exe,-1001/-1002"` — `windows/runner/
   >   Runner.rc`의 영어·한국어 STRINGTABLE에서 **Windows 표시 언어**에 맞는
   >   것을 탐색기가 고른다(`.iss`에 한국어를 두지 않는 규약 때문).

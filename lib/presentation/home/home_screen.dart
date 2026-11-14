@@ -96,9 +96,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (paths.isEmpty || !mounted) return;
 
     switch (action) {
-      case LaunchAction.compressHere:
+      case LaunchAction.compressHere || LaunchAction.compressAs: // 이름 묻기는 Windows 빠른 작업 전용
         await _quickCompress(paths);
-      case LaunchAction.extractHere:
+      case LaunchAction.extractHere || LaunchAction.extractTo:
         for (final path in paths) {
           if (!mounted) return;
           if (FormatRegistry.detectFromFileName(p.basename(path)) == null) {

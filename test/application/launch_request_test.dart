@@ -9,6 +9,14 @@ void main() {
     expect(request.paths, [r'C:\a.zip', r'C:\b.7z']);
   });
 
+  test('--compress-as / --extract-to', () {
+    expect(LaunchRequest.parse(['--compress-as', r'C:\photos']).action, LaunchAction.compressAs);
+    final extract = LaunchRequest.parse(['--extract-to', r'C:\a.zip', r'C:\b.zip']);
+    expect(extract.action, LaunchAction.extractTo);
+    expect(extract.paths, [r'C:\a.zip', r'C:\b.zip']);
+    expect(LaunchRequest.parse(extract.toArgs()).action, LaunchAction.extractTo);
+  });
+
   test('--compress-here / --extract-here', () {
     expect(LaunchRequest.parse(['--compress-here', r'C:\photos']).action, LaunchAction.compressHere);
     final extract = LaunchRequest.parse(['--extract-here', r'C:\a.zip']);
