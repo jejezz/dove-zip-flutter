@@ -151,16 +151,19 @@ Root: HKA; Subkey: "Software\DoveZip\Capabilities\FileAssociations"; ValueType: 
 ; Explorer shows them in the Windows display language. Explorer starts one
 ; process per selected item; lib/data/launch_spool.dart gathers them into one.
 ; The flags match lib/application/launch_request.dart (a test checks).
+; The compress verbs pass "%L", not "%1": for a shortcut (.lnk) "%1" is the
+; shortcut's *target*, so Desktop shortcuts would compress the program (and
+; try to write the archive into its folder) instead of the shortcut itself.
 ; MultiSelectModel "Player" keeps the verb for selections over 15 items.
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1003"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress"; ValueType: string; ValueName: "AppliesTo"; ValueData: "NOT System.FileExtension:=.zip AND NOT System.FileExtension:=.tar AND NOT System.FileExtension:=.gz AND NOT System.FileExtension:=.tgz AND NOT System.FileExtension:=.bz2 AND NOT System.FileExtension:=.tbz2 AND NOT System.FileExtension:=.tbz AND NOT System.FileExtension:=.xz AND NOT System.FileExtension:=.txz AND NOT System.FileExtension:=.7z AND NOT System.FileExtension:=.rar"
-Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-here ""%1"""
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.Compress\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-here ""%L"""
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.Compress"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1003"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.Compress"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.Compress"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.Compress\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-here ""%1"""
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.Compress\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-here ""%L"""
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.Extract"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1004"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.Extract"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.Extract"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
@@ -209,11 +212,11 @@ Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: str
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
 Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "AppliesTo"; ValueData: "NOT System.FileExtension:=.zip AND NOT System.FileExtension:=.tar AND NOT System.FileExtension:=.gz AND NOT System.FileExtension:=.tgz AND NOT System.FileExtension:=.bz2 AND NOT System.FileExtension:=.tbz2 AND NOT System.FileExtension:=.tbz AND NOT System.FileExtension:=.xz AND NOT System.FileExtension:=.txz AND NOT System.FileExtension:=.7z AND NOT System.FileExtension:=.rar"
-Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%1"""
+Root: HKA; Subkey: "Software\Classes\*\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%L"""
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1005"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%1"""
+Root: HKA; Subkey: "Software\Classes\Directory\shell\DoveZip.CompressAs\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --compress-as ""%L"""
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MUIVerb"; ValueData: "@{app}\{#MyAppExeName},-1006"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\DoveZip.ExtractTo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
