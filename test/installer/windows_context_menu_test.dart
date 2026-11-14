@@ -53,7 +53,9 @@ void main() {
         'DoveZip.ExtractTo' => LaunchRequest.extractToFlag,
         _ => fail('모르는 메뉴: $verb'),
       };
-      expect(command, contains(' $flag ""%1""'), reason: verb);
+      // 압축은 "%L" — "%1"은 바로 가기(.lnk)를 그 대상 파일로 풀어 넘긴다.
+      final placeholder = verb.startsWith('DoveZip.Compress') ? '%L' : '%1';
+      expect(command, contains(' $flag ""$placeholder""'), reason: verb);
     }
   });
 
